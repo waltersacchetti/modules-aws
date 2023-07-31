@@ -10,8 +10,6 @@ variable "aws" {
         cluster_version = string
         vpc             = string
         subnets         = list(string)
-
-
       }))
       vpc = map(object({
         tags                  = map(any)

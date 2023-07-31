@@ -11,14 +11,24 @@ locals {
 AWS Information:
         ╠ Profile: ${var.aws.profile}
         ╠ Region: ${var.translation_regions[var.aws.region]}
+        ╠ Environment: ${var.translation_environments[element(split("-", var.aws.profile), 1)]}
         ╚ Owner: ${var.aws.owner}
 EOT
 
-  output_vpc = <<EOT
+  output_vpc = length(module.vpc) == 0 ? "No VPC deployed" : <<EOT
 VPC Information:
 ${join("\n", [
   for vpc_key, vpc_value in module.vpc : (
     "→ (${vpc_key})${vpc_value.name}:\n\t╠ ID: ${vpc_value.vpc_id}\n\t╠ Public Subnets: ${join(", ", try(vpc_value.public_subnets, []))}\n\t╠ Private Subnets: ${join(", ", try(vpc_value.private_subnets, []))}\n\t╠ Database Subnets: ${join(", ", try(vpc_value.database_subnets, []))}\n\t╚ Elasticache Subnets: ${join(", ", try(vpc_value.elasticache_subnets, []))}"
+  )
+])}
+EOT
+
+  output_eks = length(module.eks) == 0 ? "No EKS clusters deployed" :  <<EOT
+EKS Information:
+${join("\n", [
+  for eks_key, eks_value in module.eks : (
+    "→ (${eks_key})${eks_value.cluster_name}:\n\t╚ oidc_provider_arn: ${eks_value.oidc_provider_arn}"
   )
 ])}
 EOT
