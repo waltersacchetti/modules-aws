@@ -11,6 +11,27 @@ variable "aws" {
         vpc             = string
         subnets         = list(string)
       }))
+      rds = map(object({
+        tags                   = map(any)
+        vpc                    = string
+        engine                 = string
+        engine_version         = string
+        instance_class         = string
+        allocated_storage      = number
+        db_name                = string
+        username               = string
+        password               = string
+        port                   = string
+        iam_db_auth_enabled    = bool
+        maintenance_window     = string
+        backup_window          = string
+        create_db_subnet_group = bool
+        subnet_ids             = list(string)
+        family                 = string
+        major_engine_version   = string
+        deletion_protection    = bool
+        multi_az               = bool
+      }))
       vpc = map(object({
         tags                  = map(any)
         cidr                  = string
@@ -34,8 +55,6 @@ variable "aws" {
         create_elasticache_subnet_group       = bool
         create_elasticache_subnet_route_table = bool
         elasticache_subnets                   = map(string)
-
-
       }))
     })
   })

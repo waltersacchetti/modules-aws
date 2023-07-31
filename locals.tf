@@ -24,13 +24,24 @@ ${join("\n", [
 ])}
 EOT
 
-  output_eks = length(module.eks) == 0 ? "No EKS clusters deployed" :  <<EOT
+  output_eks = length(module.eks) == 0 ? "No EKS clusters deployed" : <<EOT
 EKS Information:
 ${join("\n", [
-  for eks_key, eks_value in module.eks : (
-    "→ (${eks_key})${eks_value.cluster_name}:\n\t╚ oidc_provider_arn: ${eks_value.oidc_provider_arn}"
-  )
+for eks_key, eks_value in module.eks : (
+  "→ (${eks_key})${eks_value.cluster_name}:\n\t╚ oidc_provider_arn: ${eks_value.oidc_provider_arn}"
+)
+])}
+EOT
+
+  output_rds = length(module.rds) == 0 ? "No RDS clusters deployed" : <<EOT
+RDS Information:
+${join("\n", [
+for key, value in module.rds : (
+  "→ (${key})${value.db_instance_identifier}:\n\t╠ Endpoint: ${value.db_instance_endpoint}\n\t╠ Port: ${value.db_instance_port}\n\t╠ Engine: ${value.db_instance_engine}\n\t╠ Version: ${value.db_instance_engine_version_actual}\n\t╠ Username: ${value.db_instance_username}\n\t╚ Password: ${var.aws.resources.rds[key].password == null || var.aws.resources.rds[key].password == "" ? random_password.rds[key].result : var.aws.resources.rds[key].password}"
+)
 ])}
 EOT
 
 }
+
+
