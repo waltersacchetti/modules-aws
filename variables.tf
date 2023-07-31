@@ -3,27 +3,11 @@ variable "aws" {
   type =  map(object({
     region = string
     profile = string
-    resources = var.resources
-  }))
-  default = {}
-}
-
-variable "resources" {
-  description = "AWS Resources definition"
-  type = map(object({
-    vpc = var.vpc
-    # eks = var.eks
-    # rds = var.rds
-    # ec2 = var.ec2
-    # s3 = var.s3
-  }))
-  default = {}
-}
-
-variable "vpc" {
-  description = "VPC Configuration"
-  type = map(object({
-    cidr = string
+    resources = map(object({
+        vpc =  map(object({
+          cidr = string
+        }))
+    }))
   }))
   default = {}
 }
