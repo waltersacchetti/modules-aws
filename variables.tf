@@ -22,7 +22,7 @@ variable "resources" {
 
 variable "vpc" {
   description = "VPC Configuration"
-  type = mpa(object({
+  type = map(object({
     cidr = string
   }))
   default = {}
