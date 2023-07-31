@@ -1,20 +1,18 @@
 variable "aws" {
-  description = "Main AWS Configuration"
-  type =  map(object({
-    region = string
-    profile = string
-    resources = map(object({
-        vpc =  map(object({
-          cidr = string
+  description   = "Main AWS Configuration"
+  type          = object({
+    region      = string
+    profile     = string
+    resources   = object({
+        vpc     = map(object({
+          cidr  = string
         }))
-    }))
-  }))
-  default = {}
+    })
+  })
 }
-
 variable "translation_map" {
-  type = map(string)
-  default = {
+  type      = map(string)
+  default   = {
     "euw1" = "eu-west-1"
   }
 }
