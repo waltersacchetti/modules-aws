@@ -1,4 +1,4 @@
 provider "aws" {
-  region = lookup(var.translation_map, var.aws.region, "")
+  region  = lookup(var.translation_map, var.aws.region, "")
   profile = var.aws.profile
 }
