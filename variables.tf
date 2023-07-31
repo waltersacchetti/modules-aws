@@ -23,16 +23,22 @@ variable "resources" {
 variable "vpc" {
   description = "VPC Configuration"
   type = mpa(object({
-    name = string
     cidr = string
   }))
   default = {}
 }
 
+variable "translation_map" {
+  type = map(string)
+  default = {
+    "euw1" = "eu-west-1"
+  }
+}
+
+
 # variable "eks" {
 #   description = "EKS Configuration"
 #   type = map(object({
-#     name = string
 #     version = string
 #     instance_type = string
 #     min_size = number
@@ -47,7 +53,6 @@ variable "vpc" {
 # variable "rds" {
 #   description = "RDS Configuration"
 #   type = map(object({
-#     name = string
 #     engine = string
 #     engine_version = string
 #     instance_class = string
@@ -64,7 +69,6 @@ variable "vpc" {
 # variable "ec2" {
 #   description = "EC2 Configuration"
 #   type = map(object({
-#     name = string
 #     ami = string
 #     instance_type = string
 #     key_name = string
@@ -77,7 +81,6 @@ variable "vpc" {
 # variable "s3" {
 #   description = "S3 Configuration"
 #   type = map(object({
-#     name = string
 #     bucket = string
 #     acl = string
 #     force_destroy = bool
