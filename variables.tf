@@ -4,6 +4,11 @@ variable "aws" {
     region  = string
     profile = string
     resources = object({
+      eks = map(object({
+        cluster_version = string
+        vpc           = string
+        subnets    = list(string)
+      }))
       vpc = map(object({
         cidr                  = string
         secondary_cidr_blocks = list(string)
