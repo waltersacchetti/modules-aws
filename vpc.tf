@@ -5,6 +5,7 @@ module "vpc" {
   azs                   = each.value.azs
   cidr                  = each.value.cidr
   secondary_cidr_blocks = each.value.secondary_cidr_blocks
+  tags                  = merge(local.common_tags, each.value.tags)
 
   enable_nat_gateway   = each.value.enable_nat_gateway
   single_nat_gateway   = each.value.single_nat_gateway
@@ -28,4 +29,6 @@ module "vpc" {
   create_elasticache_subnet_route_table = each.value.create_elasticache_subnet_route_table
   elasticache_subnets                   = [for value in each.value.elasticache_subnets : join(",", [value])]
   elasticache_subnet_names              = [for key, _ in each.value.elasticache_subnets : join(",", ["${var.aws.region}-${var.aws.profile}-vpc-${each.key}-${key}"])]
+
+
 }
