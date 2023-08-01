@@ -5,6 +5,18 @@ variable "aws" {
     profile = string
     owner   = string
     resources = object({
+      asg = map(object({
+        min_size                  = number
+        max_size                  = number
+        desired_capacity          = number 
+        wait_for_capacity_timeout = string   
+        health_check_type         = string  
+        vpc_zone_identifier       = list(string)
+        vpc                       = string
+        image_id                  = string
+        instance_type             = string
+        tags                      = map(any)
+      }))
       eks = map(object({
         tags            = map(any)
         cluster_version = string
