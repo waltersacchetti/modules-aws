@@ -28,7 +28,7 @@ output_eks = length(module.eks) == 0 ? "No EKS clusters deployed" : <<EOT
 EKS Information:
 ${join("\n", [
 for eks_key, eks_value in module.eks : (
-  "→ (${eks_key})${eks_value.cluster_name}:\n\t╚ oidc_provider_arn: ${eks_value.oidc_provider_arn}"
+  "→ (${eks_key})${eks_value.cluster_name}:\n\t╚ oidc_provider_arn: None"
 )
 ])}
 EOT
