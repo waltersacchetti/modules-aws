@@ -7,7 +7,7 @@ module "eks" {
 
   vpc_id                      = module.vpc[each.value.vpc].vpc_id
   subnet_ids                  = data.aws_subnets.eks_network[each.key].ids
-  cluster_security_group_name = module.sg[each.value.sg].security_group_name
+  cluster_security_group_id   = module.sg[each.value.sg].security_group_id
 
   cluster_endpoint_public_access  = each.value.public == true ? false : true
   cluster_endpoint_private_access = each.value.public == true ? true : false
