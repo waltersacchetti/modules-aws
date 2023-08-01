@@ -24,7 +24,7 @@ ${join("\n", [
 ])}
 EOT
 
-  output_eks = length(module.eks) == 0 ? "No EKS clusters deployed" : <<EOT
+output_eks = length(module.eks) == 0 ? "No EKS clusters deployed" : <<EOT
 EKS Information:
 ${join("\n", [
 for eks_key, eks_value in module.eks : (
@@ -33,7 +33,7 @@ for eks_key, eks_value in module.eks : (
 ])}
 EOT
 
-  output_rds = length(module.rds) == 0 ? "No RDS clusters deployed" : <<EOT
+output_rds = length(module.rds) == 0 ? "No RDS clusters deployed" : <<EOT
 RDS Information:
 ${join("\n", [
 for key, value in module.rds : (

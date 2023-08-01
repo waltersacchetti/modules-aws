@@ -20,8 +20,29 @@ variable "aws" {
       eks = map(object({
         tags            = map(any)
         cluster_version = string
-        vpc             = string
-        subnets         = list(string)
+
+        vpc     = string
+        subnets = list(string)
+        sg      = string
+        public  = bool
+
+        aws_auth_roles = list(object({
+          arn      = string
+          username = string
+          groups   = list(string)
+        }))
+
+        eks_managed_node_groups = map(object({
+          ami_type           = string
+          desired_capacity   = number
+          max_size           = number
+          min_size           = number
+          instance_type      = string
+          disk_size          = number
+          additional_sg_ids  = list(string)
+          kubelet_extra_args = string
+        }))
+
       }))
       rds = map(object({
         tags                   = map(any)
@@ -50,11 +71,11 @@ variable "aws" {
         vpc  = string
       }))
       sg_ingress_rules = map(object({
-          ingress = list(object({
-            port   = number
-            protocol    = string
-            source_security_group = string
-          }))
+        ingress = list(object({
+          port                  = number
+          protocol              = string
+          source_security_group = string
+        }))
       }))
       vpc = map(object({
         tags                  = map(any)
