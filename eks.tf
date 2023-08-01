@@ -5,12 +5,12 @@ module "eks" {
   cluster_name    = "${var.aws.region}-${var.aws.profile}-eks-${each.key}"
   cluster_version = each.value.cluster_version
 
-  vpc_id                      = module.vpc[each.value.vpc].vpc_id
-  subnet_ids                  = data.aws_subnets.eks_network[each.key].ids
-  cluster_security_group_id   = module.sg[each.value.sg].security_group_id
+  vpc_id                    = module.vpc[each.value.vpc].vpc_id
+  subnet_ids                = data.aws_subnets.eks_network[each.key].ids
+  cluster_security_group_id = module.sg[each.value.sg].security_group_id
 
-  cluster_endpoint_public_access  = each.value.public == true ? false : true
-  cluster_endpoint_private_access = each.value.public == true ? true : false
+  cluster_endpoint_public_access  = each.value.public == true ? true : false
+  cluster_endpoint_private_access = each.value.public == true ? false : true
 
   manage_aws_auth_configmap = true
   aws_auth_roles = [
