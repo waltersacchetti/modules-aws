@@ -5,7 +5,14 @@ module "sg" {
   name     = "${var.aws.region}-${var.aws.profile}-sg-${each.key}"
   vpc_id   = module.vpc[each.value.vpc].vpc_id
   tags     = merge(local.common_tags, each.value.tags)
-  egress_with_cidr_blocks = [
+
+
+  egress_with_cidr_blocks = each.value.egress_restricted == true ? [for cidr in concat([module.vpc[each.value.vpc].vpc_cidr_block], module.vpc[each.value.vpc].vpc_secondary_cidr_blocks) :
+    {
+      rule        = "all-all"
+      cidr_blocks = cidr
+    }
+    ] : [
     {
       rule        = "all-all"
       cidr_blocks = "0.0.0.0/0"

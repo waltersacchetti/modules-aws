@@ -6,5 +6,6 @@ output "output" {
 
 output "extras" {
   value = ""
+  # value = "${jsonencode(module.vpc["main"])}"
   # value = "${jsonencode(module.sg_ingress_rules)}"
 }

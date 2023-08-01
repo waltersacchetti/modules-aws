@@ -67,8 +67,9 @@ variable "aws" {
         multi_az               = bool
       }))
       sg = map(object({
-        tags = map(any)
-        vpc  = string
+        tags              = map(any)
+        vpc               = string
+        egress_restricted = bool
       }))
       sg_ingress_rules = map(object({
         ingress = list(object({
