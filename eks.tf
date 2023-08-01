@@ -7,11 +7,13 @@ module "eks" {
 
   vpc_id                                = module.vpc[each.value.vpc].vpc_id
   subnet_ids                            = data.aws_subnets.eks_network[each.key].ids
+
+  node_security_group_name              = "${var.aws.region}-${var.aws.profile}-sg-eks-node-${each.key}"
   cluster_security_group_name           = "${var.aws.region}-${var.aws.profile}-sg-eks-cluster-${each.key}"
   cluster_additional_security_group_ids = [module.sg[each.value.sg].security_group_id]
 
   cluster_endpoint_public_access  = each.value.public == true ? true : false
-  cluster_endpoint_private_access = each.value.public == true ? false : true
+  cluster_endpoint_private_access = true
 
   manage_aws_auth_configmap = true
   aws_auth_roles = [
@@ -71,7 +73,7 @@ module "eks" {
       max_size           = value.max_size
       desired_capacity   = value.desired_capacity
       disk_size          = value.disk_size
-      additional_sg_ids  = concat(value.additional_sg_ids, [module.sg[each.value.sg].security_group_id])
+      additional_sg_ids  = concat([module.sg[each.value.sg].security_group_id], value.additional_sg_ids)
       kubelet_extra_args = value.kubelet_extra_args
     }
   }

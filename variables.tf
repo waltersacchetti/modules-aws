@@ -106,15 +106,16 @@ variable "aws" {
   })
 }
 variable "translation_regions" {
-  type = map(string)
+  type        = map(string)
+  description = "Map of region names to their corresponding names in the AWS account"
   default = {
     "euw1" = "eu-west-1"
   }
 }
 
-
 variable "translation_environments" {
-  type = map(string)
+  type        = map(string)
+  description = "Map of environment names to their corresponding names in the AWS account"
   default = {
     "tst"  = "test"
     "dev"  = "development"
