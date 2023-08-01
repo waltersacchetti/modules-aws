@@ -16,6 +16,7 @@ module "rds" {
 
   db_subnet_group_name   = module.vpc[each.value.vpc].database_subnet_group
   create_db_subnet_group = each.value.create_db_subnet_group
+  vpc_security_group_ids = [module.sg[each.value.sg].security_group_id]
 
   engine               = each.value.engine
   engine_version       = each.value.engine_version

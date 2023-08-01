@@ -5,6 +5,6 @@ output "output" {
 
 
 output "extras" {
-  # value = ""
-  value = "${nonsensitive(local.output_rds)}"
+  value = ""
+  # value = "${jsonencode(module.sg_ingress_rules)}"
 }

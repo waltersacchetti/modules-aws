@@ -8,9 +8,9 @@ variable "aws" {
       asg = map(object({
         min_size                  = number
         max_size                  = number
-        desired_capacity          = number 
-        wait_for_capacity_timeout = string   
-        health_check_type         = string  
+        desired_capacity          = number
+        wait_for_capacity_timeout = string
+        health_check_type         = string
         vpc_zone_identifier       = list(string)
         vpc                       = string
         image_id                  = string
@@ -26,6 +26,7 @@ variable "aws" {
       rds = map(object({
         tags                   = map(any)
         vpc                    = string
+        sg                     = string
         engine                 = string
         engine_version         = string
         instance_class         = string
@@ -43,6 +44,17 @@ variable "aws" {
         major_engine_version   = string
         deletion_protection    = bool
         multi_az               = bool
+      }))
+      sg = map(object({
+        tags = map(any)
+        vpc  = string
+      }))
+      sg_ingress_rules = map(object({
+          ingress = list(object({
+            port   = number
+            protocol    = string
+            source_security_group = string
+          }))
       }))
       vpc = map(object({
         tags                  = map(any)
