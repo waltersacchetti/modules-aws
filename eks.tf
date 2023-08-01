@@ -12,7 +12,7 @@ module "eks" {
   cluster_security_group_name           = "${var.aws.region}-${var.aws.profile}-sg-eks-cluster-${each.key}"
   cluster_additional_security_group_ids = [module.sg[each.value.sg].security_group_id]
 
-  cluster_endpoint_public_access  = each.value.public == true ? true : false
+  cluster_endpoint_public_access  = each.value.public
   cluster_endpoint_private_access = true
 
   manage_aws_auth_configmap = true
@@ -32,10 +32,10 @@ module "eks" {
     "scheduler"
   ]
   cluster_addons = {
-    aws-ebs-csi-driver = {}
-    aws-efs-csi-driver = {}
-    coredns            = {}
-    kube-proxy         = {}
+    # aws-ebs-csi-driver = {}
+    # aws-efs-csi-driver = {}
+    # coredns            = {}
+    # kube-proxy         = {}
     vpc-cni = {
       # Specify the VPC CNI addon should be deployed before compute to ensure
       # the addon is configured before data plane compute resources are created
