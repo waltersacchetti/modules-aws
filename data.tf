@@ -29,3 +29,7 @@ data "aws_subnets" "asg_network" {
 #     values = [module.vpc[each.value.vpc].vpc_id]
 #   }
 # }
+
+# data "aws_eks_cluster_auth" "cluster_auth" {
+#   name = lookup(var.aws.resources.eks, "main", null) == null ? "" : "${var.aws.region}-${var.aws.profile}-eks-main"
+# }

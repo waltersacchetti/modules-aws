@@ -13,10 +13,62 @@ variable "aws" {
         health_check_type         = string
         vpc_zone_identifier       = list(string)
         vpc                       = string
-        image_id                  = string
-        instance_type             = string
-        tags                      = map(any)
+        initial_lifecycle_hooks = list(object({
+          name                  = string
+          default_result        = string
+          heartbeat_timeout     = string
+          lifecycle_transition  = string
+          notification_metadata = map(string)
+        }))
+        /*
+                instance_refresh = list(object({
+                  strategy = string
+                  preferences = list(object({
+                    checkpoint_delay       = number
+                    checkpoint_percentages = list(number)
+                    instance_warmup        = number
+                    min_healthy_percentage = number
+                  }))
+                  triggers = list(string)
+                }))
+        */
+        launch_template_name        = string
+        launch_template_description = string
+        update_default_version      = string
+
+        image_id          = string
+        instance_type     = string
+        ebs_optimized     = bool
+        enable_monitoring = bool
+
+        # IAM role & instance profile
+        create_iam_instance_profile = bool
+        iam_role_name               = string
+        iam_role_path               = string
+        iam_role_description        = string
+        /*         iam_role_tags               = list(object({
+                  CustomIamRole             = string
+                }))
+                iam_role_policies           = list(object({
+                  AmazonSSMManagedInstanceCore = string
+                }))
+        */
+        iam_role_tags     = map(string)
+        iam_role_policies = map(string)
+
+        block_device_mappings = list(object({
+          device_name = string
+          no_device   = number
+          ebs = list(object({
+            delete_on_termination = bool
+            encrypted             = bool
+            volume_size           = number
+            volume_type           = string
+          }))
+        }))
+        tags = map(any)
       }))
+      # The eks module can't define multiple cluster, force to only one called main
       eks = map(object({
         tags            = map(any)
         cluster_version = string

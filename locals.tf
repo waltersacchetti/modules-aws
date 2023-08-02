@@ -32,6 +32,7 @@ for eks_key, eks_value in module.eks : (
 )
 ])}
 EOT
+# output_eks = ""
 
 output_rds = length(module.rds) == 0 ? "No RDS clusters deployed" : <<EOT
 RDS Information:
