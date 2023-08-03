@@ -78,7 +78,6 @@ module "eks" {
       instance_type      = value.instance_type
       min_size           = value.min_size
       max_size           = value.max_size
-      desired_capacity   = value.desired_capacity
       disk_size          = value.disk_size
       kubelet_extra_args = value.kubelet_extra_args
     }

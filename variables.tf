@@ -102,7 +102,6 @@ variable "aws" {
           min_size           = number
           instance_type      = string
           disk_size          = number
-          additional_sg_ids  = list(string)
           kubelet_extra_args = string
         }))
         role_binding = list(object({
