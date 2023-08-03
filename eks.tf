@@ -19,7 +19,7 @@ module "eks" {
   cluster_endpoint_public_access  = each.value.public
   cluster_endpoint_private_access = true
 
-  # create_aws_auth_configmap = each.key == "main" ? true : false
+  create_aws_auth_configmap = each.key == "main" ? length(each.value.eks_managed_node_groups) == 0 ? true: false : false
   manage_aws_auth_configmap = each.key == "main" ? true : false
   aws_auth_roles = [
     for role in each.value.aws_auth_roles : {
