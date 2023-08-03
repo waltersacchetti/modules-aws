@@ -6,6 +6,7 @@ output "output" {
 
 output "extras" {
   value = ""
+  # value = local.eks_map_role_binding
   # value = "${jsonencode(module.vpc["main"])}"
   # value = "${jsonencode(module.sg_ingress_rules)}"
 }

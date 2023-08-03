@@ -20,42 +20,32 @@ variable "aws" {
           lifecycle_transition  = string
           notification_metadata = map(string)
         }))
-        /*
-                instance_refresh = list(object({
-                  strategy = string
-                  preferences = list(object({
-                    checkpoint_delay       = number
-                    checkpoint_percentages = list(number)
-                    instance_warmup        = number
-                    min_healthy_percentage = number
-                  }))
-                  triggers = list(string)
-                }))
-        */
+        instance_refresh = object({
+          strategy = string
+          preferences = object({
+            checkpoint_delay       = number
+            checkpoint_percentages = list(number)
+            instance_warmup        = number
+            min_healthy_percentage = number
+          })
+          triggers = list(string)
+        })
         launch_template_name        = string
         launch_template_description = string
         update_default_version      = string
-
-        image_id          = string
-        instance_type     = string
-        ebs_optimized     = bool
-        enable_monitoring = bool
-
+        image_id                    = string
+        instance_type               = string
+        ebs_optimized               = bool
+        enable_monitoring           = bool
         # IAM role & instance profile
         create_iam_instance_profile = bool
         iam_role_name               = string
         iam_role_path               = string
         iam_role_description        = string
-        /*         iam_role_tags               = list(object({
-                  CustomIamRole             = string
-                }))
-                iam_role_policies           = list(object({
-                  AmazonSSMManagedInstanceCore = string
-                }))
-        */
-        iam_role_tags     = map(string)
-        iam_role_policies = map(string)
-
+        iam_role_tags               = map(string)
+        iam_role_policies           = map(string)
+        iam_role_tags               = map(string)
+        iam_role_policies           = map(string)
         block_device_mappings = list(object({
           device_name = string
           no_device   = number
@@ -65,6 +55,27 @@ variable "aws" {
             volume_size           = number
             volume_type           = string
           }))
+        }))
+        capacity_reservation_specification = map(string)
+        cpu_options                        = map(string)
+        credit_specification               = map(string)
+        instance_market_options = list(object({
+          market_type = string
+          spot_options = list(object({
+            block_duration_minutes = number
+          }))
+        }))
+        metadata_options = map(string)
+        network_interfaces = list(object({
+          delete_on_termination = bool
+          description           = string
+          device_index          = number
+          security_groups       = string
+        }))
+        placement = map(string)
+        tag_specifications = list(object({
+          resource_type = string
+          tags          = map(string)
         }))
         tags = map(any)
       }))
@@ -94,7 +105,15 @@ variable "aws" {
           additional_sg_ids  = list(string)
           kubelet_extra_args = string
         }))
-
+        role_binding = list(object({
+            username  = string
+            clusterrole = string
+            namespace = string
+          }))
+        cluster_role_binding = list(object({
+          username  = string
+          clusterrole = string
+        }))
       }))
       rds = map(object({
         tags                   = map(any)
@@ -122,8 +141,6 @@ variable "aws" {
         tags              = map(any)
         vpc               = string
         egress_restricted = bool
-      }))
-      sg_ingress_rules = map(object({
         ingress = list(object({
           port                  = number
           protocol              = string

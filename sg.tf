@@ -23,7 +23,7 @@ module "sg" {
 module "sg_ingress_rules" {
   source            = "terraform-aws-modules/security-group/aws"
   version           = "5.1.0"
-  for_each          = var.aws.resources.sg_ingress_rules
+  for_each          = var.aws.resources.sg
   create_sg         = false
   security_group_id = module.sg[each.key].security_group_id
   ingress_with_source_security_group_id = [

@@ -7,6 +7,35 @@ locals {
     Terraform   = "true"
   }
 
+  eks_list_role_binding = flatten([
+    for key, value in var.aws.resources.eks : [
+      for role in value.role_binding : {
+        namespace   = role.namespace
+        clusterrole = role.clusterrole
+        username    = role.username
+        eks         = key
+      }
+    ]
+  ])
+
+  eks_map_role_binding = {
+    for role in local.eks_list_role_binding : "${role.eks}_${role.namespace}_${role.clusterrole}_${role.username}" => role
+  }
+
+  eks_list_cluster_role_binding = flatten([
+    for key, value in var.aws.resources.eks : [
+      for role in value.cluster_role_binding : {
+        clusterrole = role.clusterrole
+        username    = role.username
+        eks         = key
+      }
+    ]
+  ])
+
+  eks_map_cluster_role_binding = {
+    for role in local.eks_list_cluster_role_binding : "${role.eks}_${role.clusterrole}_${role.username}" => role
+  }
+
   output_aws = <<EOT
 AWS Information:
         ╠ Profile: ${var.aws.profile}
@@ -15,7 +44,7 @@ AWS Information:
         ╚ Owner: ${var.aws.owner}
 EOT
 
-  output_vpc = length(module.vpc) == 0 ? "No VPC deployed" : <<EOT
+  output_vpc = length(module.vpc) == 0 ? "No VPC deployed\n" : <<EOT
 VPC Information:
 ${join("\n", [
   for vpc_key, vpc_value in module.vpc : (
@@ -24,7 +53,7 @@ ${join("\n", [
 ])}
 EOT
 
-output_eks = length(module.eks) == 0 ? "No EKS clusters deployed" : <<EOT
+output_eks = length(module.eks) == 0 ? "No EKS clusters deployed\n" : <<EOT
 EKS Information:
 ${join("\n", [
 for eks_key, eks_value in module.eks : (
@@ -34,7 +63,7 @@ for eks_key, eks_value in module.eks : (
 EOT
 # output_eks = ""
 
-output_rds = length(module.rds) == 0 ? "No RDS clusters deployed" : <<EOT
+output_rds = length(module.rds) == 0 ? "No RDS clusters deployed\n" : <<EOT
 RDS Information:
 ${join("\n", [
 for key, value in module.rds : (

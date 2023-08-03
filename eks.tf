@@ -1,69 +1,7 @@
 # The module of the EKS cluster does not support to define dynamic providers
-# module "eks" {
-#     source          = "terraform-aws-modules/eks/aws"
-#     cluster_name = "main"
-#     cluster_version = "1.26"
-#     cluster_security_group_name = "eks-main"
-#     iam_role_name = "eks-main"
-#     node_security_group_name = "eks-main"
-#     cluster_encryption_policy_name = "eks-main"
-#     manage_aws_auth_configmap = true
-#     cluster_enabled_log_types = [
-#         "api",
-#         "audit",
-#         "authenticator",
-#         "controllerManager",
-#         "scheduler"
-#     ]
-#     vpc_id     = module.vpc["main"].vpc_id
-#     subnet_ids = data.aws_subnets.eks_network["main"].ids
-#     cluster_endpoint_public_access = true
-#     cluster_endpoint_private_access = true
-#     cluster_addons = {
-#       coredns            = {}
-#       kube-proxy         = {}
-#       aws-ebs-csi-driver = {}
-#       vpc-cni = {
-#         # Specify the VPC CNI addon should be deployed before compute to ensure
-#         # the addon is configured before data plane compute resources are created
-#         # See README for further details
-#         before_compute = true
-#         most_recent    = true # To ensure access to the latest settings provided
-#         configuration_values = jsonencode({
-#           env = {
-#             # Reference https://aws.github.io/aws-eks-best-practices/reliability/docs/networkmanagement/#cni-custom-networking
-#             AWS_VPC_K8S_CNI_CUSTOM_NETWORK_CFG = "false"
-#             ENI_CONFIG_LABEL_DEF               = "topology.kubernetes.io/zone"
-
-#             # Reference docs https://docs.aws.amazon.com/eks/latest/userguide/cni-increase-ip-addresses.html
-#             ENABLE_PREFIX_DELEGATION = "true"
-#             WARM_PREFIX_TARGET       = "1"
-#           }
-#         })
-#       }
-#     }
-#     eks_managed_node_group_defaults = {
-#         ami_type = "AL2_x86_64"
-#     }
-#     eks_managed_node_groups = {
-#         main = {
-#             name = "main"
-#             instance_type = "t3.medium"
-#             min_size = 1
-#             max_size = 2
-#             disk_size = 1
-#         }
-#     }
-#     tags = local.common_tags
-
-# }
-
-
-
-
 module "eks" {
   source   = "terraform-aws-modules/eks/aws"
-  version         = "19.7.0"
+  version  = "19.7.0"
   for_each = var.aws.resources.eks
 
   cluster_name    = "${var.aws.region}-${var.aws.profile}-eks-${each.key}"
@@ -81,7 +19,7 @@ module "eks" {
   cluster_endpoint_public_access  = each.value.public
   cluster_endpoint_private_access = true
 
-  create_aws_auth_configmap = each.key == "main" ? true : false
+  # create_aws_auth_configmap = each.key == "main" ? true : false
   manage_aws_auth_configmap = each.key == "main" ? true : false
   aws_auth_roles = [
     for role in each.value.aws_auth_roles : {
@@ -99,10 +37,10 @@ module "eks" {
     "scheduler"
   ]
   cluster_addons = {
-    # aws-ebs-csi-driver = {}
-    # aws-efs-csi-driver = {}
-    # coredns            = {}
-    kube-proxy = {}
+    aws-ebs-csi-driver = {}
+    aws-efs-csi-driver = {}
+    coredns            = {}
+    kube-proxy         = {}
     vpc-cni = {
       # Specify the VPC CNI addon should be deployed before compute to ensure
       # the addon is configured before data plane compute resources are created
@@ -125,10 +63,10 @@ module "eks" {
 
   eks_managed_node_group_defaults = {
     ami_type                   = "AL2_x86_64"
-    # iam_role_attach_cni_policy = true
-    # subnets                    = data.aws_subnets.eks_network[each.key].ids
-    # tags                       = merge(local.common_tags, each.value.tags)
-    # instance_type              = "t3.medium"
+    iam_role_attach_cni_policy = true
+    subnets                    = data.aws_subnets.eks_network[each.key].ids
+    tags                       = merge(local.common_tags, each.value.tags)
+    instance_type              = "t3.medium"
   }
 
   eks_managed_node_groups = {
@@ -145,5 +83,129 @@ module "eks" {
       kubelet_extra_args = value.kubelet_extra_args
     }
   }
+  tags = merge(local.common_tags, each.value.tags)
+}
+
+module "eks_iam_role_alb" {
+  source   = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  version  = "5.28.0"
+  for_each = var.aws.resources.eks
+
+  role_name                              = "${var.aws.region}-${var.aws.profile}-eks-iam-${each.key}"
+  attach_load_balancer_controller_policy = true
+
+  oidc_providers = {
+    main = {
+      provider_arn               = module.eks[each.key].oidc_provider_arn
+      namespace_service_accounts = ["kube-system:aws-load-balancer-controller"]
+    }
+  }
+
+  tags = merge(local.common_tags, each.value.tags)
+}
+
+resource "kubernetes_service_account" "aws_load_balancer_controller" {
+  for_each = var.aws.resources.eks
+  metadata {
+    name      = "aws-load-balancer-controller"
+    namespace = "kube-system"
+    labels = {
+      "app.kubernetes.io/name"      = "aws-load-balancer-controller"
+      "app.kubernetes.io/component" = "controller"
+    }
+    annotations = {
+      "eks.amazonaws.com/role-arn"               = module.eks_iam_role_alb[each.key].iam_role_arn
+      "eks.amazonaws.com/sts-regional-endpoints" = "true"
+    }
+  }
+}
+
+resource "helm_release" "aws_load_balancer_controller" {
+  for_each   = var.aws.resources.eks
+  name       = "aws-load-balancer-controller"
+  repository = "https://aws.github.io/eks-charts"
+  chart      = "aws-load-balancer-controller"
+  namespace  = "kube-system"
+  depends_on = [kubernetes_service_account.aws_load_balancer_controller]
+  set {
+    name  = "region"
+    value = var.aws.region
+  }
+
+  set {
+    name  = "vpcId"
+    value = module.vpc[each.value.vpc].vpc_id
+  }
+
+  set {
+    name  = "image.repository"
+    value = "public.ecr.aws/eks/aws-load-balancer-controller"
+  }
+  set {
+    name  = "serviceAccount.create"
+    value = "false"
+  }
+
+  set {
+    name  = "clusterName"
+    value = module.eks[each.key].cluster_name
+  }
+}
+
+resource "kubernetes_role_binding" "this" {
+  for_each = local.eks_map_role_binding
+  # En realidad solo puede haber un cluster de EKS pero se prepara para posible futuro
+  metadata {
+    name      = "${each.value.namespace}-${each.value.clusterrole}-${each.value.username}"
+    namespace = each.value.namespace
+  }
+
+  role_ref {
+    api_group = "rbac.authorization.k8s.io"
+    kind      = "ClusterRole"
+    name      = each.value.clusterrole
+  }
+
+  subject {
+    api_group = "rbac.authorization.k8s.io"
+    kind      = "User"
+    name      = each.value.username
+  }
+}
+
+resource "kubernetes_cluster_role_binding" "this" {
+  for_each = local.eks_map_cluster_role_binding
+  metadata {
+    name = "${each.value.clusterrole}-${each.value.username}"
+  }
+
+  role_ref {
+    api_group = "rbac.authorization.k8s.io"
+    kind      = "ClusterRole"
+    name      = each.value.clusterrole
+  }
+
+  subject {
+    api_group = "rbac.authorization.k8s.io"
+    kind      = "User"
+    name      = each.value.username
+  }
+}
+
+
+module "eks_blueprints_addons" {
+  source   = "aws-ia/eks-blueprints-addons/aws"
+  version  = "~> 1.0"
+  for_each = var.aws.resources.eks
+
+  cluster_name      = module.eks[each.key].cluster_name
+  cluster_endpoint  = module.eks[each.key].cluster_endpoint
+  cluster_version   = module.eks[each.key].cluster_version
+  oidc_provider_arn = module.eks[each.key].oidc_provider_arn
+
+  # This is required to expose Istio Ingress Gateway
+  enable_aws_cloudwatch_metrics = true
+  enable_aws_for_fluentbit      = true
+
   tags = merge(local.common_tags, each.value.tags)
 }

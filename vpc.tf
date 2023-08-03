@@ -1,5 +1,6 @@
 module "vpc" {
   source                = "terraform-aws-modules/vpc/aws"
+  version               = "5.1.1"
   for_each              = var.aws.resources.vpc
   name                  = "${var.aws.region}-${var.aws.profile}-vpc-${each.key}"
   azs                   = each.value.azs
