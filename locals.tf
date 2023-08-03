@@ -7,6 +7,19 @@ locals {
     Terraform   = "true"
   }
 
+  eks_list_namespaces = flatten([
+    for key, value in var.aws.resources.eks : [
+      for namespace in value.namespaces : {
+        namespace = namespace
+        eks  = key
+      }
+    ]
+  ])
+
+  eks_map_namespaces = {
+    for namespace in local.eks_list_namespaces : "${namespace.eks}_${namespace.namespace}" => namespace
+  }
+
   eks_list_role_binding = flatten([
     for key, value in var.aws.resources.eks : [
       for role in value.role_binding : {

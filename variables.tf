@@ -114,6 +114,7 @@ variable "aws" {
           username    = string
           clusterrole = string
         }))
+        namespaces = list(string)
       }))
       rds = map(object({
         tags                   = map(any)

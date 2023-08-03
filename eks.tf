@@ -1,7 +1,7 @@
 # The module of the EKS cluster does not support to define dynamic providers
 module "eks" {
   source   = "terraform-aws-modules/eks/aws"
-  version  = "19.7.0"
+  version  = "19.15.4"
   for_each = var.aws.resources.eks
 
   cluster_name    = "${var.aws.region}-${var.aws.profile}-eks-${each.key}"
@@ -67,6 +67,7 @@ module "eks" {
     subnets                    = data.aws_subnets.eks_network[each.key].ids
     tags                       = merge(local.common_tags, each.value.tags)
     instance_type              = "t3.medium"
+    vpc_security_group_ids     = [module.sg[each.value.sg].security_group_id]
   }
 
   eks_managed_node_groups = {
@@ -79,7 +80,6 @@ module "eks" {
       max_size           = value.max_size
       desired_capacity   = value.desired_capacity
       disk_size          = value.disk_size
-      additional_sg_ids  = concat([module.sg[each.value.sg].security_group_id], value.additional_sg_ids)
       kubelet_extra_args = value.kubelet_extra_args
     }
   }
@@ -152,7 +152,18 @@ resource "helm_release" "aws_load_balancer_controller" {
   }
 }
 
+
+resource "kubernetes_namespace" "this" {
+  for_each = local.eks_map_namespaces
+  metadata {
+    name = each.value.namespace
+  }
+
+}
+
+
 resource "kubernetes_role_binding" "this" {
+  depends_on = [kubernetes_namespace.this]
   for_each = local.eks_map_role_binding
   # En realidad solo puede haber un cluster de EKS pero se prepara para posible futuro
   metadata {
@@ -174,6 +185,7 @@ resource "kubernetes_role_binding" "this" {
 }
 
 resource "kubernetes_cluster_role_binding" "this" {
+  depends_on = [kubernetes_namespace.this]
   for_each = local.eks_map_cluster_role_binding
   metadata {
     name = "${each.value.clusterrole}-${each.value.username}"
