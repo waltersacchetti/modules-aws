@@ -106,12 +106,12 @@ variable "aws" {
           kubelet_extra_args = string
         }))
         role_binding = list(object({
-            username  = string
-            clusterrole = string
-            namespace = string
-          }))
+          username    = string
+          clusterrole = string
+          namespace   = string
+        }))
         cluster_role_binding = list(object({
-          username  = string
+          username    = string
           clusterrole = string
         }))
       }))
