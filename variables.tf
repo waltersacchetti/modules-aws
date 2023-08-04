@@ -6,7 +6,6 @@ variable "aws" {
     owner   = string
     resources = object({
       elasticache-redis = map(object({
-        cluster_id           = string
         engine               = string
         engine_version       = string
         node_type            = string
@@ -14,7 +13,6 @@ variable "aws" {
         parameter_group_name = string
         port                 = number
         security_group       = string
-        vpc_zone_identifier  = list(string)
         vpc                  = string
         tags                 = map(any)
       }))

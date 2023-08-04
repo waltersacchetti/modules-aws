@@ -1,6 +1,6 @@
 resource "aws_elasticache_cluster" "elastic-cache-for-redis"{
   for_each             = var.aws.resources.elasticache-redis
-  cluster_id           = each.value.cluster_id
+  cluster_id           = "${var.aws.region}-${var.aws.profile}-elc-${each.key}"
   engine               = each.value.engine
   engine_version       = each.value.engine_version
   node_type            = each.value.node_type
