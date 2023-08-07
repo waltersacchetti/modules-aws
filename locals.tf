@@ -85,6 +85,14 @@ for key, value in module.rds : (
 ])}
 EOT
 
+output_mq = length(aws_mq_broker.this) == 0 ? "No MQ clusters deployed\n" : <<EOT
+MQ Information:
+${join("\n", [
+for key, value in aws_mq_broker.this :
+(
+  "→ (${key})${value.broker_name}:\n\t╠ Console: ${value.instances[0].console_url}\n\t╠ Endpoints:\n\t║\t→ ${join("\n\t║\t→ ", value.instances[0].endpoints)}\n\t╠ Engine: ${value.engine_type}\n\t╠ Version: ${value.engine_version}\n\t╠ Username: ${var.aws.resources.mq[key].username}\n\t╚ Password: ${var.aws.resources.mq[key].password == null || var.aws.resources.mq[key].password == "" ? random_password.mq[key].result : var.aws.resources.mq[key].password}"
+)
+])}
+EOT
 }
-
 
