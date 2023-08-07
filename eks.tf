@@ -19,7 +19,7 @@ module "eks" {
   cluster_endpoint_public_access  = each.value.public
   cluster_endpoint_private_access = true
 
-  create_aws_auth_configmap = each.key == "main" ? length(each.value.eks_managed_node_groups) == 0 ? true: false : false
+  create_aws_auth_configmap = each.key == "main" ? length(each.value.eks_managed_node_groups) == 0 ? true : false : false
   manage_aws_auth_configmap = each.key == "main" ? true : false
   aws_auth_roles = [
     for role in each.value.aws_auth_roles : {
@@ -163,7 +163,7 @@ resource "kubernetes_namespace" "this" {
 
 resource "kubernetes_role_binding" "this" {
   depends_on = [kubernetes_namespace.this]
-  for_each = local.eks_map_role_binding
+  for_each   = local.eks_map_role_binding
   # En realidad solo puede haber un cluster de EKS pero se prepara para posible futuro
   metadata {
     name      = "${each.value.namespace}-${each.value.clusterrole}-${each.value.username}"
@@ -185,7 +185,7 @@ resource "kubernetes_role_binding" "this" {
 
 resource "kubernetes_cluster_role_binding" "this" {
   depends_on = [kubernetes_namespace.this]
-  for_each = local.eks_map_cluster_role_binding
+  for_each   = local.eks_map_cluster_role_binding
   metadata {
     name = "${each.value.clusterrole}-${each.value.username}"
   }

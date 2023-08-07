@@ -22,6 +22,18 @@ data "aws_subnets" "asg_network" {
   }
 }
 
+data "aws_subnets" "mq_network" {
+  for_each = var.aws.resources.mq
+  filter {
+    name   = "vpc-id"
+    values = [module.vpc[each.value.vpc].vpc_id]
+  }
+  filter {
+    name   = "tag:Name"
+    values = [for key in each.value.subnets : join(",", ["${var.aws.region}-${var.aws.profile}-vpc-${each.value.vpc}-${key}"])]
+  }
+}
+
 # data "aws_vpc" "sg_vpc" {
 #   for_each = var.aws.resources.sg
 #   filter {

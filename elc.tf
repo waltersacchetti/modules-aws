@@ -1,4 +1,4 @@
-resource "aws_elasticache_cluster" "this"{
+resource "aws_elasticache_cluster" "this" {
   for_each             = var.aws.resources.elc
   cluster_id           = "${var.aws.region}-${var.aws.profile}-elc-${each.key}"
   engine               = each.value.engine

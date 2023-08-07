@@ -11,7 +11,7 @@ locals {
     for key, value in var.aws.resources.eks : [
       for namespace in value.namespaces : {
         namespace = namespace
-        eks  = key
+        eks       = key
       }
     ]
   ])

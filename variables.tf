@@ -182,6 +182,24 @@ variable "aws" {
         create_elasticache_subnet_route_table = bool
         elasticache_subnets                   = map(string)
       }))
+      mq = map(object({
+        tags               = map(any)
+        vpc                = string
+        subnets            = list(string)
+        engine_type        = string
+        engine_version     = string
+        deployment_mode    = string
+        host_instance_type = string
+        sg                 = string
+        username           = string
+        password           = string
+        configuration      = string
+      }))
+      kinesis = map(object({
+        data_retention_in_hours = number
+        media_type              = string
+        tags                    = map(any)
+      }))
     })
   })
 }
