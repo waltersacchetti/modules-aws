@@ -1,6 +1,6 @@
 output "output" {
   # value = "${local.output_aws}\n${local.output_vpc}\n${local.output_rds}\n${local.output_mq}\n${local.output_eks}"
-  value = aws_elasticache_cluster.this
+  value = local.output_elc_redis
 }
 
 

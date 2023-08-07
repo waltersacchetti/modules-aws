@@ -30,7 +30,7 @@ resource "aws_elasticache_replication_group" "this" {
   node_type          = each.value.node_type
   subnet_group_name  = module.vpc[each.value.vpc].elasticache_subnet_group
   security_group_ids = [module.sg[each.value.sg].security_group_id]
-  multi_az_enabled = each.value.num_cache_clusters > 1 ? true : each.value.num_node_groups > 1 ? true : false
+  multi_az_enabled   = each.value.num_cache_clusters > 1 ? true : each.value.num_node_groups > 1 ? true : false
 
   automatic_failover_enabled = each.value.num_cache_clusters > 1 ? true : each.value.num_node_groups > 1 ? true : false
 

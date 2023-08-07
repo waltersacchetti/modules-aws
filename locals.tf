@@ -76,6 +76,9 @@ for eks_key, eks_value in module.eks : (
 EOT
 # output_eks = ""
 
+
+
+
 output_rds = length(module.rds) == 0 ? "No RDS clusters deployed\n" : <<EOT
 RDS Information:
 ${join("\n", [
@@ -84,6 +87,9 @@ for key, value in module.rds : (
 )
 ])}
 EOT
+
+
+
 
 output_mq = length(aws_mq_broker.this) == 0 ? "No MQ clusters deployed\n" : <<EOT
 MQ Information:
@@ -94,5 +100,35 @@ for key, value in aws_mq_broker.this :
 )
 ])}
 EOT
+
+
+output_elc_memcache_endpoints = length(aws_elasticache_cluster.this) == 0 ? {} : {
+  for key, value in aws_elasticache_cluster.this :
+  key => [
+    for node in value.cache_nodes :
+    "${node.id} -- ${node.address}:${node.port}"
+  ]
 }
 
+output_elc_memcache = length(aws_elasticache_cluster.this) == 0 ? "No ELC Memcache clusters deployed\n" : <<EOT
+ElastiCache Memcache Information:
+${join("\n", [
+for key, value in aws_elasticache_cluster.this :
+(
+  "→ (${key})${value.cluster_id}:\n\t╠ Address: ${value.cluster_address}\n\t╠ Nodes:\n\t║\t→ ${join("\n\t║\t→ ", local.output_elc_memcache_endpoints[key])}\n\t╠ Engine: ${value.engine}\n\t╚ Version: ${value.engine_version}"
+)
+])}
+EOT
+
+output_elc_redis = length(aws_elasticache_replication_group.this) == 0 ? "No ELC Redis clusters deployed\n" : <<EOT
+ElastiCache Redis Information:
+${join("\n", [
+for key, value in aws_elasticache_replication_group.this :
+(
+  "→ (${key})${value.id}:\n\t╠ Members: \n\t║\t→ ${join("\n\t║\t→ ", value.member_clusters)}\n\t╠ Endpoints:\n\t║\t→ Primary: ${value.primary_endpoint_address}:${value.port}\n\t║\t→ Reader: ${value.reader_endpoint_address}:${value.port}\n\t╠ Replicas: ${value.replicas_per_node_group}\n\t╠ Engine: ${value.engine}\n\t╚ Version: ${value.engine_version_actual}"
+)
+])}
+EOT
+
+
+}
