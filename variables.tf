@@ -5,16 +5,25 @@ variable "aws" {
     profile = string
     owner   = string
     resources = object({
-      elc = map(object({
-        engine               = string
+      elc-memcached = map(object({
         engine_version       = string
         node_type            = string
         num_cache_nodes      = number
         parameter_group_name = string
-        port                 = number
-        security_group       = string
+        sg                   = string
         vpc                  = string
         tags                 = map(any)
+      }))
+      elc-redis = map(object({
+        engine_version          = string
+        node_type               = string
+        num_cache_clusters      = number
+        num_node_groups         = number
+        replicas_per_node_group = number
+        parameter_group_name    = string
+        sg                      = string
+        vpc                     = string
+        tags                    = map(any)
       }))
       asg = map(object({
         min_size                  = number
