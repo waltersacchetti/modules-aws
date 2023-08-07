@@ -5,7 +5,7 @@ variable "aws" {
     profile = string
     owner   = string
     resources = object({
-      elasticache-redis = map(object({
+      elc = map(object({
         engine               = string
         engine_version       = string
         node_type            = string
