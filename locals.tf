@@ -91,7 +91,7 @@ EOT
 ${join("\n", [
   for vpc_key, vpc_value in module.vpc : (
   join("\n\t", [
-    "→ (${vpc_key})${vpc_value.name}:",
+    "(${vpc_key})${vpc_value.name}:",
     "╠ ID: ${vpc_value.vpc_id}",
     "╠ Public Subnets:\n\t║\t→  ${join("\n\t║\t→  ", try(vpc_value.public_subnets, []))}",
     "╠ Private Subnets:\n\t║\t→ ${join("\n\t║\t→  ", try(vpc_value.private_subnets, []))}",
@@ -110,7 +110,7 @@ EOT
 ${join("\n", [
 for eks_key, eks_value in module.eks : (
   join("\n\t", [
-    "→ (${eks_key})${eks_value.cluster_name}:",
+    "(${eks_key})${eks_value.cluster_name}:",
     "╚ oidc_provider_arn: None"
   ])
 )
@@ -126,7 +126,7 @@ ${join("\n", [
 for key, value in module.rds :
 (
   join("\n\t", [
-    "→ (${key})${value.db_instance_identifier}:",
+    "(${key})${value.db_instance_identifier}:",
     "╠ Endpoint: ${value.db_instance_endpoint}",
     "╠ Port: ${value.db_instance_port}",
     "╠ Engine: ${value.db_instance_engine}",
@@ -147,7 +147,7 @@ ${join("\n", [
 for key, value in aws_mq_broker.this :
 (
   join("\n\t", [
-    "→ (${key})${value.broker_name}:",
+    "(${key})${value.broker_name}:",
     "╠ Console: ${value.instances[0].console_url}",
     "╠ Endpoints:",
     "║\t→ ${join("\n\t║\t→ ", value.instances[0].endpoints)}",
@@ -169,7 +169,7 @@ ${join("\n", [
 for key, value in aws_elasticache_cluster.this :
 (
   join("\n\t", [
-    "→ (${key})${value.cluster_id}:",
+    "(${key})${value.cluster_id}:",
     "╠ Address: ${value.cluster_address}",
     local.output_elc_memcache_endpoints[key],
     "╠ Engine: ${value.engine}",
