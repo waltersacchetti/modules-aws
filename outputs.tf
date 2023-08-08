@@ -1,6 +1,5 @@
 output "output" {
-  # value = "${local.output_aws}\n${local.output_vpc}\n${local.output_rds}\n${local.output_mq}\n${local.output_eks}"
-  value = local.output_elc_redis
+  value = local.merge_ouput
 }
 
 
