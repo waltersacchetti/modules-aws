@@ -93,10 +93,15 @@ ${join("\n", [
   join("\n\t", [
     "(${vpc_key})${vpc_value.name}:",
     "╠ ID: ${vpc_value.vpc_id}",
-    "╠ Public Subnets:\n\t║\t→  ${join("\n\t║\t→  ", try(vpc_value.public_subnets, []))}",
-    "╠ Private Subnets:\n\t║\t→ ${join("\n\t║\t→  ", try(vpc_value.private_subnets, []))}",
-    "╠ Database Subnets:\n\t║\t→ ${join("\n\t║\t→  ", try(vpc_value.database_subnets, []))}",
-    "╚ Elasticache Subnets:\n\t\t→  ${join("\n\t\t→  ", try(vpc_value.elasticache_subnets, []))}"
+    "╚ Subnets",
+    "  ╠ Database",
+    "  ║\t→ ${join("\n\t  ║\t→ ", try(vpc_value.database_subnets, []))}",
+    "  ╠ Elasticache",
+    "  ║\t→ ${join("\n\t  ║\t→ ", try(vpc_value.elasticache_subnets, []))}",
+    "  ╠ Public",
+    "  ║\t→ ${join("\n\t  ║\t→ ", try(vpc_value.public_subnets, []))}",
+    "  ╚ Private",
+    "  \t→ ${join("\n\t  \t→ ", try(vpc_value.private_subnets, []))}"
   ])
   )
 ])}
