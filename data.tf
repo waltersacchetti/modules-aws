@@ -45,3 +45,21 @@ data "aws_subnets" "mq_network" {
 # data "aws_eks_cluster_auth" "cluster_auth" {
 #   name = lookup(var.aws.resources.eks, "main", null) == null ? "" : "${var.aws.region}-${var.aws.profile}-eks-main"
 # }
+
+data "aws_iam_policy_document" "s3" {
+  for_each           = local.s3_map_policy
+  statement {
+    principals {
+      type        = "AWS"
+      identifiers = [aws_iam_role.this[each.value].arn]
+    }
+
+    actions = [
+      "s3:ListBucket",
+    ]
+
+    resources = [
+      "arn:aws:s3:::${var.aws.region}-${var.aws.profile}-bucket-${each.key}",
+    ]
+  }
+}

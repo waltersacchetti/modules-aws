@@ -69,6 +69,19 @@ locals {
         ])
   }
 
+  s3_list_policy = flatten([
+    for key, value in var.aws.resources.s3 : [
+      value.policy != "" ? {
+        bucket = key
+        policy = value.policy
+      } : null
+    ]
+  ])
+  
+  s3_map_policy = {
+    for policy in local.s3_list_policy : policy.bucket => policy.policy
+  }
+
   output = {
 
     aws = <<EOT

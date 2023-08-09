@@ -5,6 +5,21 @@ variable "aws" {
     profile = string
     owner   = string
     resources = object({
+      iam = map(object({
+        policy  = string
+        tags    = map(any)
+      }))
+      s3 = map(object({
+        force_destroy             = bool
+        object_lock_configuration = object({
+          rule = object({
+            default_retention = map(string)
+            })
+        })
+        versioning   = map(bool)
+        policy       = string
+        tags         = map(any)
+      }))
       elc-memcached = map(object({
         engine_version       = string
         node_type            = string
