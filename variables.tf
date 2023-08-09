@@ -64,8 +64,6 @@ variable "aws" {
         iam_role_description        = string
         iam_role_tags               = map(string)
         iam_role_policies           = map(string)
-        iam_role_tags               = map(string)
-        iam_role_policies           = map(string)
         block_device_mappings = list(object({
           device_name = string
           no_device   = number
