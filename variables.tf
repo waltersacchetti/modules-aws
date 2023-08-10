@@ -5,11 +5,11 @@ variable "aws" {
     profile = string
     owner   = string
     resources = object({
-      iam = map(object({
+      iam = optional(map(object({
         policy  = string
         tags    = map(any)
-      }))
-      s3 = map(object({
+      })))
+      s3 = optional(map(object({
         force_destroy             = bool
         object_lock_configuration = object({
           rule = object({
@@ -19,8 +19,8 @@ variable "aws" {
         versioning   = map(bool)
         policy       = string
         tags         = map(any)
-      }))
-      elc-memcached = map(object({
+      })))
+      elc-memcached = optional(map(object({
         engine_version       = string
         node_type            = string
         num_cache_nodes      = number
@@ -28,8 +28,8 @@ variable "aws" {
         sg                   = string
         vpc                  = string
         tags                 = map(any)
-      }))
-      elc-redis = map(object({
+      })))
+      elc-redis = optional(map(object({
         engine_version          = string
         node_type               = string
         num_cache_clusters      = number
@@ -39,8 +39,8 @@ variable "aws" {
         sg                      = string
         vpc                     = string
         tags                    = map(any)
-      }))
-      asg = map(object({
+      })))
+      asg = optional(map(object({
         min_size                  = number
         max_size                  = number
         desired_capacity          = number
@@ -111,9 +111,9 @@ variable "aws" {
           tags          = map(string)
         }))
         tags = map(any)
-      }))
+      })))
       # The eks module can't define multiple cluster, force to only one called main
-      eks = map(object({
+      eks = optional(map(object({
         tags            = map(any)
         cluster_version = string
 
@@ -147,8 +147,8 @@ variable "aws" {
           clusterrole = string
         }))
         namespaces = list(string)
-      }))
-      rds = map(object({
+      })))
+      rds = optional(map(object({
         tags                   = map(any)
         vpc                    = string
         sg                     = string
@@ -169,8 +169,8 @@ variable "aws" {
         major_engine_version   = string
         deletion_protection    = bool
         multi_az               = bool
-      }))
-      sg = map(object({
+      })))
+      sg = optional(map(object({
         tags              = map(any)
         vpc               = string
         egress_restricted = bool
@@ -179,7 +179,7 @@ variable "aws" {
           protocol              = string
           source_security_group = string
         }))
-      }))
+      })))
       vpc = map(object({
         tags                  = map(any)
         cidr                  = string
@@ -204,7 +204,7 @@ variable "aws" {
         create_elasticache_subnet_route_table = bool
         elasticache_subnets                   = map(string)
       }))
-      mq = map(object({
+      mq = optional(map(object({
         tags               = map(any)
         vpc                = string
         subnets            = list(string)
@@ -216,12 +216,12 @@ variable "aws" {
         username           = string
         password           = string
         configuration      = string
-      }))
-      kinesis = map(object({
+      })))
+      kinesis = optional(map(object({
         data_retention_in_hours = number
         media_type              = string
         tags                    = map(any)
-      }))
+      })))
     })
   })
 }
