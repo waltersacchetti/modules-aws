@@ -71,9 +71,9 @@ locals {
 
   s3_list_policy = flatten([
     for key, value in var.aws.resources.s3 : [
-      value.policy != "" ? {
+      value.iam != "" ? {
         bucket = key
-        policy = value.policy
+        policy = value.iam
       } : null
     ]
   ])
@@ -218,6 +218,57 @@ for key, value in aws_elasticache_replication_group.this :
 ])}
 
 EOT
+
+    s3 = length(module.s3) == 0 ? "" : <<EOT
+╔═════════════════════╗
+║S3 Bucket Information║
+╚═════════════════════╝
+${join("\n", [
+for key, value in module.s3 : (
+  join("\n\t", [
+    "(${key})${value.s3_bucket_id}",
+    "╠ Bucket URL: ${value.s3_bucket_bucket_domain_name}",
+    "╚ Bucket Region: ${value.s3_bucket_region}"
+  ])
+)
+])}
+
+EOT
+
+
+    kinesis = length(aws_kinesis_video_stream.this) == 0 ? "" : <<EOT
+╔════════════════════════════════╗
+║Kinesis Video Stream Information║
+╚════════════════════════════════╝
+${join("\n", [
+for key, value in aws_kinesis_video_stream.this : (
+  join("\n\t", [
+    "(${key})${value.device_name}",
+    "╠ Name: ${value.name}",
+    "╠ Data Retention: ${value.data_retention_in_hours} hour(s)",
+    "╠ Media Type: ${value.media_type}",
+    "╚ Version: ${value.version}"
+  ])
+)
+])}
+
+EOT
+
+    kinesis = length(aws_iam_role.this) == 0 ? "" : <<EOT
+╔═════════════════════╗
+║IAM Roles Information║
+╚═════════════════════╝
+${join("\n", [
+for key, value in aws_iam_role.this : (
+  join("\n\t", [
+    "(${key})${value.id}",
+    "╚ Description: ${value.description}"
+  ])
+)
+])}
+
+EOT
+
   }
 
   merge_ouput = join("", [ for key, value in local.output: (value) ])

@@ -7,6 +7,7 @@ variable "aws" {
     resources = object({
       iam = optional(map(object({
         policy  = string
+        public  = bool
         tags    = map(any)
       })), {})
       s3 = optional(map(object({
@@ -17,7 +18,8 @@ variable "aws" {
             })
         })
         versioning   = map(bool)
-        policy       = string
+        iam          = string
+        public       = bool
         tags         = map(any)
       })), {})
       elc-memcached = optional(map(object({
