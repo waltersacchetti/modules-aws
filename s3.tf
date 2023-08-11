@@ -10,11 +10,11 @@ module "s3" {
   versioning                = each.value.versioning
   attach_policy             = each.value.iam == "" ? false : true
   policy                    = data.aws_iam_policy_document.s3[each.key].json
-  acl                       = each.value.public == false ? "private" : "public-read" 
-  block_public_acls         = each.value.public == false ?  true : false 
-  ignore_public_acls        = each.value.public == false ?  true : false 
-  block_public_policy       = each.value.public == false ?  true : false 
-  restrict_public_buckets   = each.value.public == false ?  true : false 
+  acl                       = each.value.public == false ? "private" : "public-read"
+  block_public_acls         = each.value.public == false ? true : false
+  ignore_public_acls        = each.value.public == false ? true : false
+  block_public_policy       = each.value.public == false ? true : false
+  restrict_public_buckets   = each.value.public == false ? true : false
   control_object_ownership  = true
   object_ownership          = "BucketOwnerPreferred"
 }

@@ -47,7 +47,7 @@ data "aws_subnets" "mq_network" {
 # }
 
 data "aws_iam_policy_document" "s3" {
-  for_each           = local.s3_map_policy
+  for_each = local.s3_map_policy
   statement {
     principals {
       type        = "AWS"

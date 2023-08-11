@@ -1,5 +1,5 @@
 provider "aws" {
-  region  = var.translation_regions[var.aws.region]
+  region  = local.translation_regions[var.aws.region]
   profile = var.aws.profile
 }
 
@@ -14,7 +14,7 @@ provider "kubernetes" {
     api_version = "client.authentication.k8s.io/v1beta1"
     command     = "aws"
     # This requires the awscli to be installed locally where Terraform is executed
-    args = ["eks", "get-token", "--cluster-name", lookup(var.aws.resources.eks, "main", null) == null ? "" : module.eks["main"].cluster_name, "--region", var.translation_regions[var.aws.region], "--profile", var.aws.profile]
+    args = ["eks", "get-token", "--cluster-name", lookup(var.aws.resources.eks, "main", null) == null ? "" : module.eks["main"].cluster_name, "--region", local.translation_regions[var.aws.region], "--profile", var.aws.profile]
   }
   # config_path    = "/tmp/test"
 }
@@ -27,7 +27,7 @@ provider "helm" {
       api_version = "client.authentication.k8s.io/v1beta1"
       command     = "aws"
       # This requires the awscli to be installed locally where Terraform is executed
-      args = ["eks", "get-token", "--cluster-name", lookup(var.aws.resources.eks, "main", null) == null ? "" : module.eks["main"].cluster_name, "--region", var.translation_regions[var.aws.region], "--profile", var.aws.profile]
+      args = ["eks", "get-token", "--cluster-name", lookup(var.aws.resources.eks, "main", null) == null ? "" : module.eks["main"].cluster_name, "--region", local.translation_regions[var.aws.region], "--profile", var.aws.profile]
     }
   }
 }

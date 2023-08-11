@@ -1,8 +1,20 @@
 locals {
+  translation_regions = {
+    euw1 = "eu-west-1"
+  }
+
+  translation_environments = {
+    dev  = "development"
+    prod = "production"
+    tst  = "test"
+    pre  = "preproduction"
+    qa   = "qualityassurance"
+  }
+
   common_tags = {
-    Environment = var.translation_environments[element(split("-", var.aws.profile), 1)]
+    Environment = local.translation_environments[element(split("-", var.aws.profile), 1)]
     ProjectKey  = element(split("-", var.aws.profile), 0)
-    Region      = var.translation_regions[var.aws.region]
+    Region      = local.translation_regions[var.aws.region]
     Owner       = var.aws.owner
     Terraform   = "true"
   }
@@ -50,23 +62,23 @@ locals {
   }
 
   output_elc_memcache_endpoints = length(aws_elasticache_cluster.this) == 0 ? {} : {
-  for key, value in aws_elasticache_cluster.this :
-  key =>
+    for key, value in aws_elasticache_cluster.this :
+    key =>
     "╠ Nodes:\n\t║\t→ ${join("\n\t║\t→", [
-          for node in value.cache_nodes :
-            "${node.id} -- ${node.address}:${node.port}"
+      for node in value.cache_nodes :
+      "${node.id} -- ${node.address}:${node.port}"
     ])}"
   }
   output_elc_redis_endpoints = length(aws_elasticache_replication_group.this) == 0 ? {} : {
-  for key, value in aws_elasticache_replication_group.this :
-  key =>  lookup(value, "primary_endpoint_address", null) == null ? join("\n\t", [
-        "╠ Configuration endpoints: ${value.configuration_endpoint_address}",
-        "╠ Number cluster cache: ${value.num_cache_clusters}",
-        "╠ Number node groups: ${value.num_node_groups}"]) : join("\n\t", [
-        "╠ Endpoints:",
-        "║\t→ Primary: ${value.primary_endpoint_address}:${value.port}",
-        "║\t→ Reader: ${value.reader_endpoint_address}:${value.port}"
-        ])
+    for key, value in aws_elasticache_replication_group.this :
+    key => lookup(value, "primary_endpoint_address", null) == null ? join("\n\t", [
+      "╠ Configuration endpoints: ${value.configuration_endpoint_address}",
+      "╠ Number cluster cache: ${value.num_cache_clusters}",
+      "╠ Number node groups: ${value.num_node_groups}"]) : join("\n\t", [
+      "╠ Endpoints:",
+      "║\t→ Primary: ${value.primary_endpoint_address}:${value.port}",
+      "║\t→ Reader: ${value.reader_endpoint_address}:${value.port}"
+    ])
   }
 
   s3_list_policy = flatten([
@@ -77,7 +89,7 @@ locals {
       } : null
     ]
   ])
-  
+
   s3_map_policy = {
     for policy in local.s3_list_policy : policy.bucket => policy.policy
   }
@@ -89,20 +101,20 @@ locals {
 ║AWS Information║
 ╚═══════════════╝
 ${join("\n\t", [
-  "\t╠ Profile: ${var.aws.profile}",
-  "╠ Region: ${var.translation_regions[var.aws.region]}",
-  "╠ Environment: ${var.translation_environments[element(split("-", var.aws.profile), 1)]}",
-  "╚ Owner: ${var.aws.owner}"
+    "\t╠ Profile: ${var.aws.profile}",
+    "╠ Region: ${local.translation_regions[var.aws.region]}",
+    "╠ Environment: ${local.translation_environments[element(split("-", var.aws.profile), 1)]}",
+    "╚ Owner: ${var.aws.owner}"
 ])}
 
 EOT
 
-    vpc = length(module.vpc) == 0 ? "" : <<EOT
+vpc = length(module.vpc) == 0 ? "" : <<EOT
 ╔═══════════════╗
 ║VPC Information║
 ╚═══════════════╝
 ${join("\n", [
-  for vpc_key, vpc_value in module.vpc : (
+for vpc_key, vpc_value in module.vpc : (
   join("\n\t", [
     "(${vpc_key})${vpc_value.name}:",
     "╠ ID: ${vpc_value.vpc_id}",
@@ -116,12 +128,12 @@ ${join("\n", [
     "  ╚ Private",
     "  \t→ ${join("\n\t  \t→ ", try(vpc_value.private_subnets, []))}"
   ])
-  )
+)
 ])}
 
 EOT
 
-    eks = length(module.eks) == 0 ? "" : <<EOT
+eks = length(module.eks) == 0 ? "" : <<EOT
 ╔═══════════════╗
 ║EKS Information║
 ╚═══════════════╝
@@ -136,7 +148,7 @@ for eks_key, eks_value in module.eks : (
 
 EOT
 
-    rds = length(module.rds) == 0 ? "" : <<EOT
+rds = length(module.rds) == 0 ? "" : <<EOT
 ╔═══════════════╗
 ║RDS Information║
 ╚═══════════════╝
@@ -157,7 +169,7 @@ for key, value in module.rds :
 
 EOT
 
-    mq = length(aws_mq_broker.this) == 0 ? "" : <<EOT
+mq = length(aws_mq_broker.this) == 0 ? "" : <<EOT
 ╔══════════════╗
 ║MQ Information║
 ╚══════════════╝
@@ -179,7 +191,7 @@ for key, value in aws_mq_broker.this :
 
 EOT
 
-    elc_memcache = length(aws_elasticache_cluster.this) == 0 ? "" : <<EOT
+elc_memcache = length(aws_elasticache_cluster.this) == 0 ? "" : <<EOT
 ╔════════════════════════════════╗
 ║ElastiCache Memcache Information║
 ╚════════════════════════════════╝
@@ -198,7 +210,7 @@ for key, value in aws_elasticache_cluster.this :
 
 EOT
 
-    elc_redis = length(aws_elasticache_replication_group.this) == 0 ? "" : <<EOT
+elc_redis = length(aws_elasticache_replication_group.this) == 0 ? "" : <<EOT
 ╔═════════════════════════════╗
 ║ElastiCache Redis Information║
 ╚═════════════════════════════╝
@@ -219,7 +231,7 @@ for key, value in aws_elasticache_replication_group.this :
 
 EOT
 
-    s3 = length(module.s3) == 0 ? "" : <<EOT
+s3 = length(module.s3) == 0 ? "" : <<EOT
 ╔═════════════════════╗
 ║S3 Bucket Information║
 ╚═════════════════════╝
@@ -236,7 +248,7 @@ for key, value in module.s3 : (
 EOT
 
 
-    kinesis = length(aws_kinesis_video_stream.this) == 0 ? "" : <<EOT
+kinesis = length(aws_kinesis_video_stream.this) == 0 ? "" : <<EOT
 ╔════════════════════════════════╗
 ║Kinesis Video Stream Information║
 ╚════════════════════════════════╝
@@ -254,7 +266,7 @@ for key, value in aws_kinesis_video_stream.this : (
 
 EOT
 
-    kinesis = length(aws_iam_role.this) == 0 ? "" : <<EOT
+kinesis = length(aws_iam_role.this) == 0 ? "" : <<EOT
 ╔═════════════════════╗
 ║IAM Roles Information║
 ╚═════════════════════╝
@@ -269,8 +281,8 @@ for key, value in aws_iam_role.this : (
 
 EOT
 
-  }
+}
 
-  merge_ouput = join("", [ for key, value in local.output: (value) ])
+merge_ouput = join("", [for key, value in local.output : (value)])
 
 }

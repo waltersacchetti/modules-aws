@@ -6,21 +6,21 @@ variable "aws" {
     owner   = string
     resources = object({
       iam = optional(map(object({
-        policy  = string
-        public  = bool
-        tags    = map(any)
+        policy = string
+        public = bool
+        tags   = map(any)
       })), {})
       s3 = optional(map(object({
-        force_destroy             = bool
+        force_destroy = bool
         object_lock_configuration = object({
           rule = object({
             default_retention = map(string)
-            })
+          })
         })
-        versioning   = map(bool)
-        iam          = string
-        public       = bool
-        tags         = map(any)
+        versioning = map(bool)
+        iam        = string
+        public     = bool
+        tags       = map(any)
       })), {})
       elc-memcached = optional(map(object({
         engine_version       = string
@@ -226,23 +226,4 @@ variable "aws" {
       })), {})
     })
   })
-}
-variable "translation_regions" {
-  type        = map(string)
-  description = "Map of region names to their corresponding names in the AWS account"
-  default = {
-    "euw1" = "eu-west-1"
-  }
-}
-
-variable "translation_environments" {
-  type        = map(string)
-  description = "Map of environment names to their corresponding names in the AWS account"
-  default = {
-    "tst"  = "test"
-    "dev"  = "development"
-    "prod" = "production"
-    "pre"  = "preproduction"
-    "qa"   = "qualityassurance"
-  }
 }
