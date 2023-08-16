@@ -281,6 +281,21 @@ for key, value in aws_iam_role.this : (
 
 EOT
 
+waf = length(aws_wafv2_web_acl.this) == 0 ? "" : <<EOT
+╔═══════════════╗
+║WAF Information║
+╚═══════════════╝
+${join("\n", [
+for key, value in aws_wafv2_web_acl.this : (
+  join("\n\t", [
+    "(${key})${value.name}",
+    "╚ Scope: ${value.scope}"
+  ])
+)
+])}
+
+EOT
+
 }
 
 merge_ouput = join("", [for key, value in local.output : (value)])
