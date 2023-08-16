@@ -46,6 +46,7 @@ data "aws_subnets" "mq_network" {
 #   name = lookup(var.aws.resources.eks, "main", null) == null ? "" : "${var.aws.region}-${var.aws.profile}-eks-main"
 # }
 
+# Configure with the necessary bucket policy
 data "aws_iam_policy_document" "s3" {
   for_each = local.s3_map_policy
   statement {
@@ -53,11 +54,9 @@ data "aws_iam_policy_document" "s3" {
       type        = "AWS"
       identifiers = [aws_iam_role.this[each.value].arn]
     }
-
     actions = [
       "s3:ListBucket",
     ]
-
     resources = [
       "arn:aws:s3:::${var.aws.region}-${var.aws.profile}-bucket-${each.key}",
     ]

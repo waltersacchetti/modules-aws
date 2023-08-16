@@ -7,19 +7,17 @@ variable "aws" {
     resources = object({
       iam = optional(map(object({
         policy = string
-        public = bool
         tags   = map(any)
       })), {})
       s3 = optional(map(object({
         force_destroy = bool
-        object_lock_configuration = object({
-          rule = object({
-            default_retention = map(string)
-          })
-        })
+        # object_lock_configuration = object({
+        #   rule = object({
+        #     default_retention = map(string)
+        #   })
+        # })
         versioning = map(bool)
         iam        = string
-        public     = bool
         tags       = map(any)
       })), {})
       elc-memcached = optional(map(object({

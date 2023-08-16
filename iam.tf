@@ -1,3 +1,4 @@
+# IAM role for s3 bucket policy
 resource "aws_iam_role" "this" {
   for_each           = var.aws.resources.iam
   name               = "${var.aws.region}-${var.aws.profile}-iamrole-${each.key}"
