@@ -225,27 +225,23 @@ variable "aws" {
         tags                    = map(any)
       })), {})
       waf = optional(map(object({
-        tags  = map(any)
-        name  = string
-        scope = string
+        scope             = string
         visibility_config = object({
           cloudwatch_metrics_enabled = bool
-          metric_name                = string
           sampled_requests_enabled   = bool
         })
         rules = map(object({
-          name     = string
-          priority = number
+          priority  = number
           statement = object({
             name        = string
             vendor_name = string
           })
           visibility_config = object({
             cloudwatch_metrics_enabled = bool
-            metric_name                = string
             sampled_requests_enabled   = bool
           })
         }))
+        tags  = map(any)
       })),{})
     })
   })

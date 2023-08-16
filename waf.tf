@@ -1,10 +1,9 @@
-resource "aws_wafv2_web_acl" "waf" {
-  for_each = var.aws.waf
-
-  name        = each.value.name
-  description = "Web ACL for ${each.value.name}"
+resource "aws_wafv2_web_acl" "this" {
+  for_each    = var.aws.resources.waf
+  name        = "${var.aws.region}-${var.aws.profile}-waf-${each.key}"
+  description = "Web ACL for ${var.aws.region}-${var.aws.profile}-waf-${each.key}"
   scope       = each.value.scope
-  tags        = each.value.tags #merge(local.common_tags, each.value.tags)
+  tags        = merge(local.common_tags, each.value.tags)
 
   default_action {
     allow {}
@@ -12,14 +11,14 @@ resource "aws_wafv2_web_acl" "waf" {
 
   visibility_config {
     cloudwatch_metrics_enabled = each.value.visibility_config.cloudwatch_metrics_enabled
-    metric_name                = each.value.visibility_config.metric_name
+    metric_name                = "WAF-Metrics-${each.key}"
     sampled_requests_enabled   = each.value.visibility_config.sampled_requests_enabled
   }
 
   dynamic "rule" {
     for_each = each.value.rules
     content {
-      name     = rule.value.name
+      name     = "${rule.key}"
       priority = rule.value.priority
 
       # Add other attributes from the map if needed
@@ -32,7 +31,7 @@ resource "aws_wafv2_web_acl" "waf" {
 
       visibility_config {
         cloudwatch_metrics_enabled = rule.value.visibility_config.cloudwatch_metrics_enabled
-        metric_name                = rule.value.visibility_config.metric_name
+        metric_name                = "${rule.key}-Metrics"
         sampled_requests_enabled   = rule.value.visibility_config.sampled_requests_enabled
       }
 
