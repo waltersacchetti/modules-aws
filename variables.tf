@@ -41,77 +41,32 @@ variable "aws" {
         tags                    = map(any)
       })), {})
       asg = optional(map(object({
-        min_size                  = number
-        max_size                  = number
-        desired_capacity          = number
-        wait_for_capacity_timeout = string
-        health_check_type         = string
-        vpc_zone_identifier       = list(string)
-        vpc                       = string
-        initial_lifecycle_hooks = list(object({
-          name                  = string
-          default_result        = string
-          heartbeat_timeout     = string
-          lifecycle_transition  = string
-          notification_metadata = map(string)
-        }))
-        instance_refresh = object({
-          strategy = string
-          preferences = object({
-            checkpoint_delay       = number
-            checkpoint_percentages = list(number)
-            instance_warmup        = number
-            min_healthy_percentage = number
-          })
-          triggers = list(string)
+        identifier            = string
+        tags                  = map(string)
+        ec2_config = object({
+          instance_type         = string
+          image_id              = string
+          ec2_subnet_ids        = list(string)
+          root_volume_size      = number
+          ebs_optimized        = bool
+          enable_monitoring    = bool
+          sgs                   = list(string)
+          user_data_script            = string
+          application_port      = number
+          application_protocol  = string
+          health_check_type    = string
+          iam_role_policies     = map(string)
         })
-        launch_template_name        = string
-        launch_template_description = string
-        update_default_version      = string
-        image_id                    = string
-        instance_type               = string
-        ebs_optimized               = bool
-        enable_monitoring           = bool
-        # IAM role & instance profile
-        create_iam_instance_profile = bool
-        iam_role_name               = string
-        iam_role_path               = string
-        iam_role_description        = string
-        iam_role_tags               = map(string)
-        iam_role_policies           = map(string)
-        block_device_mappings = list(object({
-          device_name = string
-          no_device   = number
-          ebs = list(object({
-            delete_on_termination = bool
-            encrypted             = bool
-            volume_size           = number
-            volume_type           = string
-          }))
-        }))
-        capacity_reservation_specification = map(string)
-        cpu_options                        = map(string)
-        credit_specification               = map(string)
-        instance_market_options = list(object({
-          market_type = string
-          spot_options = list(object({
-            block_duration_minutes = number
-          }))
-        }))
-        metadata_options = map(string)
-        network_interfaces = list(object({
-          delete_on_termination = bool
-          description           = string
-          device_index          = number
-          security_groups       = string
-        }))
-        placement = map(string)
-        tag_specifications = list(object({
-          resource_type = string
-          tags          = map(string)
-        }))
-        tags = map(any)
-      })), {})
+        load_balancer_config = object({
+          lb_subnet_ids         = list(string)
+          vpc_id                = string
+          private_lb            = bool
+          lb_port               = number
+          lb_protocol           = string
+          ssl_policy            = string
+          certificate_arn       = string
+        })  
+      })),{})
       # The eks module can't define multiple cluster, force to only one called main
       eks = optional(map(object({
         tags            = map(any)
