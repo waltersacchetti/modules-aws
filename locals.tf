@@ -296,6 +296,40 @@ for key, value in aws_wafv2_web_acl.this : (
 
 EOT
 
+asg = length(module.asg) == 0 ? "" : <<EOT
+╔═════════════════════════════╗
+║Autoscaling Group Information║
+╚═════════════════════════════╝
+${join("\n", [
+for key, value in module.asg : (
+  join("\n\t", [
+    "(${key})${value.autoscaling_group_id}",
+    "╠ Min size: ${value.autoscaling_group_min_size}",
+    "╠ Max size: ${value.autoscaling_group_max_size}",
+    "╠ Desired Capacity: ${value.autoscaling_group_desired_capacity}",
+    "╚ Launch template: ${value.launch_template_name}"
+  ])
+)
+])}
+
+EOT
+
+lb = length(aws_lb.this) == 0 ? "" : <<EOT
+╔═════════════════════════╗
+║Load Balancer Information║
+╚═════════════════════════╝
+${join("\n", [
+for key, value in aws_lb.this : (
+  join("\n\t", [
+    "(${key})${value.name}",
+    "╠ Type: ${value.load_balancer_type}",
+    "╚ Scheme: ${value.internal == false ? "Internet-facing" : "internal"}"
+  ])
+)
+])}
+
+EOT
+
 }
 
 merge_ouput = join("", [for key, value in local.output : (value)])

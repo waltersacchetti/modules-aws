@@ -41,31 +41,34 @@ variable "aws" {
         tags                    = map(any)
       })), {})
       asg = optional(map(object({
-        identifier            = string
-        tags                  = map(string)
-        ec2_config = object({
-          instance_type         = string
-          image_id              = string
-          ec2_subnet_ids        = list(string)
-          root_volume_size      = number
-          ebs_optimized        = bool
-          enable_monitoring    = bool
-          sgs                   = list(string)
-          user_data_script            = string
-          application_port      = number
-          application_protocol  = string
-          health_check_type    = string
-          iam_role_policies     = map(string)
-        })
-        load_balancer_config = object({
-          lb_subnet_ids         = list(string)
-          vpc_id                = string
-          private_lb            = bool
-          lb_port               = number
-          lb_protocol           = string
-          ssl_policy            = string
-          certificate_arn       = string
-        })  
+        min_size             = number
+        max_size             = number
+        desired_capacity     = number
+        health_check_type    = string
+        vpc_zone_identifier  = list(string)
+        vpc                  = string
+        image_id             = string
+        instance_type        = string
+        ebs_optimized        = bool
+        enable_monitoring    = bool
+        user_data_script     = string #
+        root_volume_size     = number #
+        sg                   = string #
+        iam_role_policies    = map(string)
+        tags                 = map(any)
+        lb-tg                = string
+      })), {})
+      lb = optional(map(object({
+        vpc                   = string
+        vpc_zone_identifier   = list(string)
+        application_port      = number
+        application_protocol  = string
+        private_lb            = bool
+        lb_port               = number
+        lb_protocol           = string
+        ssl_policy            = string
+        certificate_arn       = string
+        tags                  = map(any)
       })),{})
       # The eks module can't define multiple cluster, force to only one called main
       eks = optional(map(object({

@@ -1,27 +1,22 @@
 module "asg" {
-  source = "terraform-aws-modules/autoscaling/aws"
-  for_each = var.aws.asg
-
-  name = "${each.value.identifier}"
-
-  vpc_zone_identifier = each.value.ec2_config.ec2_subnet_ids
-  min_size            = 1
-  max_size            = 1
-  desired_capacity    = 1
-
-  health_check_type = each.value.ec2_config.health_check_type
-  ebs_optimized     = each.value.ec2_config.ebs_optimized
-  enable_monitoring = each.value.ec2_config.enable_monitoring
-
-  image_id      = each.value.ec2_config.image_id
-  instance_type = each.value.ec2_config.instance_type
-
+  source                      = "terraform-aws-modules/autoscaling/aws"
+  version                     = "6.10.0"
+  for_each                    = var.aws.resources.asg
+  name                        = "${var.aws.region}-${var.aws.profile}-asg-${each.key}"
+  min_size                    = each.value.min_size
+  max_size                    = each.value.max_size
+  desired_capacity            = each.value.desired_capacity
+  health_check_type           = each.value.health_check_type
+  vpc_zone_identifier         = data.aws_subnets.asg_network[each.key].ids
+  image_id                    = each.value.image_id
+  instance_type               = each.value.instance_type
+  ebs_optimized               = each.value.ebs_optimized
+  enable_monitoring           = each.value.enable_monitoring
   create_iam_instance_profile = true
-  iam_role_policies = each.value.ec2_config.iam_role_policies
-  iam_role_name = "iam-role-${each.value.identifier}"
-  iam_role_use_name_prefix = true
-
-  block_device_mappings = [
+  iam_role_policies           = each.value.iam_role_policies
+  iam_role_name               = "iam-role-${var.aws.region}-${var.aws.profile}-asg-${each.key}"
+  iam_role_use_name_prefix    = true
+  block_device_mappings       = [
     {
       # Root volume
       device_name = "/dev/xvda"
@@ -29,79 +24,27 @@ module "asg" {
       ebs = {
         delete_on_termination = true
         encrypted             = true
-        volume_size           = each.value.ec2_config.root_volume_size
+        volume_size           = each.value.root_volume_size
         volume_type           = "gp3"
       }
     },
   ]
-
-  metadata_options = {
-    http_endpoint               = "enabled"
-    http_tokens                 = "required"
+  metadata_options            = {
+    http_endpoint = "enabled"
+    http_tokens   = "required"
   }
-  network_interfaces = [
+  network_interfaces          = [
     {
       delete_on_termination = true
       description           = "eth0"
       device_index          = 0
-      security_groups       = each.value.ec2_config.sgs
+      security_groups       = [module.sg[each.value.sg].security_group_id]
     }
   ]
-  user_data = base64encode(file("${path.module}/${each.value.ec2_config.user_data_script}"))
+  user_data                   = base64encode(file("${path.module}/${each.value.user_data_script}"))
+  tags                        = merge(local.common_tags, each.value.tags)
 
-
-  tags = each.value.tags
-}
-
-
-resource "aws_lb_target_group" "tg" {
-  for_each = var.aws.asg
-  name     = "tg-${each.value.identifier}"
-  port     = each.value.ec2_config.application_port
-  protocol = each.value.ec2_config.application_protocol
-  vpc_id   = each.value.load_balancer_config.vpc_id
-  
-  health_check  { #TODO: DEFINE IT
-    interval            = 5
-    path                = "/"
-    protocol = "HTTP"
-    timeout             = 3
-    healthy_threshold   = 3
-    unhealthy_threshold = 3
-    matcher             = "200-301"
-  }
-  tags = each.value.tags
-  
-}
-
-resource "aws_lb" "nlb" {
-  for_each = var.aws.asg
-  name     = "lb-${each.value.identifier}"
-  load_balancer_type = "network"
-  internal           = each.value.load_balancer_config.private_lb
-  enable_cross_zone_load_balancing = true 
-  enable_deletion_protection = true
-  subnets            = each.value.load_balancer_config.lb_subnet_ids
-  tags = each.value.tags
-}
-
-resource "aws_lb_listener" "listener" {
-  for_each = var.aws.asg
-  load_balancer_arn = aws_lb.nlb[each.key].arn
-  port              = each.value.load_balancer_config.lb_port
-  protocol          = each.value.load_balancer_config.lb_protocol
-  ssl_policy        = each.value.load_balancer_config.ssl_policy == "" ? null : each.value.load_balancer_config.ssl_policy
-  certificate_arn   = each.value.load_balancer_config.certificate_arn == "" ? null : each.value.load_balancer_config.certificate_arn
-
-  default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.tg[each.key].arn
-  }
-  tags = each.value.tags
-}
-
-resource "aws_autoscaling_attachment" "asg_association" {
-  for_each = var.aws.asg
-  autoscaling_group_name = module.asg[each.key].autoscaling_group_id
-  lb_target_group_arn   = aws_lb_target_group.tg[each.key].arn
+  # Indicamos el ARN del LB directamente sin levantar aws_autoscaling_attachment ya que este cambia el estado del modulo
+  target_group_arns           = [aws_lb_target_group.this[each.value.lb-tg].arn]
+  depends_on                  = [aws_lb.this]
 }
