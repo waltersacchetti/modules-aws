@@ -44,7 +44,7 @@ module "asg" {
   user_data                   = base64encode(file("${path.module}/${each.value.user_data_script}"))
   tags                        = merge(local.common_tags, each.value.tags)
 
-  # Indicamos el ARN del LB directamente sin levantar aws_autoscaling_attachment ya que este cambia el estado del modulo
+  # The LB ARN is directly assigned without deploying an aws_autoscaling_attachment resource since this would change the state of the ASG module
   target_group_arns           = [aws_lb_target_group.this[each.value.lb-tg].arn]
   depends_on                  = [aws_lb.this]
 }
