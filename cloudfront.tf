@@ -68,23 +68,31 @@ resource "aws_cloudfront_cache_policy" "this" {
     enable_accept_encoding_gzip   = each.value.parameters_in_cache_key_and_forwarded_to_origin.enable_accept_encoding_gzip
     cookies_config {
       cookie_behavior = each.value.parameters_in_cache_key_and_forwarded_to_origin.cookies_config.cookie_behavior
-      cookies {
-        items = each.value.parameters_in_cache_key_and_forwarded_to_origin.cookies_config.cookies
-      }
+
+      # Commented, setting this property is not necessary
+      # cookies {
+      #   items = each.value.parameters_in_cache_key_and_forwarded_to_origin.cookies_config.cookies
+      # }
     }
     headers_config {
       header_behavior = each.value.parameters_in_cache_key_and_forwarded_to_origin.headers_config.header_behavior
-      headers {
-        items = each.value.parameters_in_cache_key_and_forwarded_to_origin.headers_config.headers
-      }
+
+      # Commented, setting this property is not necessary
+      # headers {
+      #   items = each.value.parameters_in_cache_key_and_forwarded_to_origin.headers_config.headers
+      # }
     }
     query_strings_config {
       query_string_behavior = each.value.parameters_in_cache_key_and_forwarded_to_origin.query_strings_config.query_string_behavior
-      query_strings {
-        items = each.value.parameters_in_cache_key_and_forwarded_to_origin.query_strings_config.query_strings
+
+      # dynamic, since setting the query_strings with no values with the previus format change the state of the resource in each plan/apply
+      dynamic "query_strings" {
+        for_each = each.value.parameters_in_cache_key_and_forwarded_to_origin.query_strings_config.enable_query_strings ? [each.value.parameters_in_cache_key_and_forwarded_to_origin.query_strings_config] : []
+
+        content {
+          items = query_strings.value.query_strings
+        }
       }
     }
   }
-
 }
-

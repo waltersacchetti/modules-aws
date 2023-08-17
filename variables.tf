@@ -200,73 +200,74 @@ variable "aws" {
         tags  = map(any)
       })),{})
       cloudfront_distributions = optional(map(object({
-          tags  = map(any)
-          enabled  = bool
-          http_version = string
-          #web_acl_id = string
-          origin = object({
-            domain_name = string
-            origin_id = string
-            custom_origin_config = object({
-                http_port                = number
-                https_port               = number
-                origin_protocol_policy   = string
-                origin_ssl_protocols     = list(string)
-            })
+        tags         = map(any)
+        enabled      = bool
+        http_version = string
+        #web_acl_id = string
+        origin = object({
+          domain_name = string
+          origin_id = string
+          custom_origin_config = object({
+              http_port                = number
+              https_port               = number
+              origin_protocol_policy   = string
+              origin_ssl_protocols     = list(string)
           })
-          default_cache_behavior = object({
-            allowed_methods              = list(string) 
-            cached_methods               = list(string) 
-            target_origin_id             = string 
-            viewer_protocol_policy       = string
-            compress                     = bool
+        })
+        default_cache_behavior = object({
+          allowed_methods              = list(string) 
+          cached_methods               = list(string) 
+          target_origin_id             = string 
+          viewer_protocol_policy       = string
+          compress                     = bool
+        })
+        restrictions = object({
+          locations        = list(string)
+          restriction_type = string
+        })
+        viewer_certificate = object({
+          #Currently hardcored cloudfront_default_certificate, other values can be  acm_certificate_arn, iam_certificate_id, minimum_protocol_version, ssl_support_method
+          cloudfront_default_certificate = string
+          minimum_protocol_version       = string
+        })
+        # Not configured by default
+        #logging_config = object({
+        #  bucket = string
+        #  include_cookies = bool
+        #})
+        ordered_cache_behavior = map(object({
+          allowed_methods            = list(string)
+          cache_policy_id            = string
+          cached_methods             = list(string)
+          compress                   = bool
+          path_pattern               = string
+          target_origin_id           = string
+          viewer_protocol_policy     = string
+        }))
+      })),{})
+      cloudfront_cache_policies = optional(map(object({
+        name        = string
+        min_ttl     = number
+        max_ttl     = number
+        default_ttl = number
+        parameters_in_cache_key_and_forwarded_to_origin = object({
+          enable_accept_encoding_brotli = bool
+          enable_accept_encoding_gzip   = bool
+          cookies_config = object({
+            cookie_behavior = string #none, whitelist, allEscept, all
+            #cookies = list(string)
           })
-          restrictions = object({
-            locations = list(string)
-            restriction_type = string
+          headers_config = object({
+            header_behavior = string #none, whitelist
+            #headers = list(string)
           })
-          viewer_certificate = object({
-            #Currently hardcored cloudfront_default_certificate, other values can be  acm_certificate_arn, iam_certificate_id, minimum_protocol_version, ssl_support_method
-            cloudfront_default_certificate = string
-            minimum_protocol_version = string
+          query_strings_config = object({
+            query_string_behavior = string #none,whitelist, allExcept, all
+            enable_query_strings  = bool
+            query_strings         = optional(list(string))
           })
-          # Not configured by default
-          #logging_config = object({
-          #  bucket = string
-          #  include_cookies = bool
-          #})
-          ordered_cache_behavior = map(object({
-            allowed_methods            = list(string)
-            cache_policy_id            = string
-            cached_methods             = list(string)
-            compress                   = bool
-            path_pattern               = string
-            target_origin_id           = string
-            viewer_protocol_policy     = string
-          }))
-        })),{})
-        cloudfront_cache_policies = optional(map(object({
-          name        = string
-          min_ttl     = number
-          max_ttl     = number
-          default_ttl = number
-          parameters_in_cache_key_and_forwarded_to_origin = object({
-            enable_accept_encoding_brotli = bool
-            enable_accept_encoding_gzip   = bool
-            cookies_config = object({
-              cookie_behavior = string #none, whitelist, allEscept, all
-              cookies = list(string)
-            })
-            headers_config = object({
-              header_behavior = string #none, whitelist
-              headers = list(string)
-            })
-            query_strings_config = object({
-              query_string_behavior = string #none,whitelist, allExcept, all
-              query_strings = list(string)
-            })
-          })
-        })),{})
+        })
+      })),{})
     })
   })
 }
