@@ -219,17 +219,14 @@ variable "aws" {
             cached_methods               = list(string) 
             target_origin_id             = string 
             viewer_protocol_policy       = string
-            cache_policy_id              = string
             compress                     = bool
-            origin_request_policy_id     = string
-            response_headers_policy_id   = string
           })
           restrictions = object({
             locations = list(string)
             restriction_type = string
           })
           viewer_certificate = object({
-          #Currently hardcored cloudfront_default_certificate, other values can be  acm_certificate_arn, iam_certificate_id, minimum_protocol_version, ssl_support_method
+            #Currently hardcored cloudfront_default_certificate, other values can be  acm_certificate_arn, iam_certificate_id, minimum_protocol_version, ssl_support_method
             cloudfront_default_certificate = string
             minimum_protocol_version = string
           })
@@ -244,16 +241,14 @@ variable "aws" {
             cached_methods             = list(string)
             compress                   = bool
             path_pattern               = string
-            response_headers_policy_id = string
             target_origin_id           = string
             viewer_protocol_policy     = string
           }))
         })),{})
         cloudfront_cache_policies = optional(map(object({
-          tags  = map(any)
-          name = string
-          min_ttl = number
-          max_ttl = number
+          name        = string
+          min_ttl     = number
+          max_ttl     = number
           default_ttl = number
           parameters_in_cache_key_and_forwarded_to_origin = object({
             enable_accept_encoding_brotli = bool

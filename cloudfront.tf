@@ -1,15 +1,16 @@
-resource "aws_cloudfront_distribution" "cloudfront_distributions" {
-  for_each = var.aws.cloudfront_distributions
-
-  enabled             = each.value.enabled
-  http_version        = each.value.http_version
-  #web_acl_id          = each.value.web_acl_id #Or reference to another resource creat
+resource "aws_cloudfront_distribution" "this" {
+  for_each       = var.aws.resources.cloudfront_distributions
+  enabled        = each.value.enabled
+  http_version   = each.value.http_version
+  tags           = merge(local.common_tags, each.value.tags)
+  #web_acl_id     = each.value.web_acl_id #Or reference to another resource creat
   default_cache_behavior {
     allowed_methods            = each.value.default_cache_behavior.allowed_methods
-    cache_policy_id            = each.value.default_cache_behavior.cache_policy_id
+    cache_policy_id            = data.aws_cloudfront_cache_policy.managed-cachingdisabled.id
     cached_methods             = each.value.default_cache_behavior.cached_methods 
     compress                   = each.value.default_cache_behavior.compress   
-    response_headers_policy_id = each.value.default_cache_behavior.response_headers_policy_id
+    origin_request_policy_id   = data.aws_cloudfront_origin_request_policy.managed-allviewer.id
+    response_headers_policy_id = data.aws_cloudfront_response_headers_policy.managed-cors-with-preflight.id
     target_origin_id           = each.value.default_cache_behavior.target_origin_id
     viewer_protocol_policy     = each.value.default_cache_behavior.viewer_protocol_policy
   }
@@ -38,24 +39,26 @@ resource "aws_cloudfront_distribution" "cloudfront_distributions" {
   #  bucket         =  each.value.logging_config.bucket        
   #  include_cookies = each.value.logging_config.include_cookies
   #}
+
   dynamic "ordered_cache_behavior" {
     for_each = each.value.ordered_cache_behavior
-
     content {
       allowed_methods            = ordered_cache_behavior.value.allowed_methods           
-      cache_policy_id            = ordered_cache_behavior.value.cache_policy_id           
+      cache_policy_id            = aws_cloudfront_cache_policy.this[ordered_cache_behavior.value.cache_policy_id].id #data.aws_cloudfront_cache_policy.custom_cache_policy[ordered_cache_behavior.value.cache_policy_id].id
       cached_methods             = ordered_cache_behavior.value.cached_methods            
       compress                   = ordered_cache_behavior.value.compress                  
       path_pattern               = ordered_cache_behavior.value.path_pattern              
-      response_headers_policy_id = ordered_cache_behavior.value.response_headers_policy_id
+      response_headers_policy_id = data.aws_cloudfront_response_headers_policy.managed-cors-with-preflight.id #ordered_cache_behavior.value.response_headers_policy_id
       target_origin_id           = ordered_cache_behavior.value.target_origin_id          
       viewer_protocol_policy     = ordered_cache_behavior.value.viewer_protocol_policy 
     } 
   }
+  depends_on = [aws_cloudfront_cache_policy.this]
 }
 
-resource "aws_cloudfront_cache_policy" "cache_policies" {
-  for_each = var.aws.cloudfront_cache_policies
+
+resource "aws_cloudfront_cache_policy" "this" {
+  for_each    = var.aws.resources.cloudfront_cache_policies
   default_ttl = each.value.default_ttl
   max_ttl     = each.value.max_ttl
   min_ttl     = each.value.min_ttl
@@ -84,5 +87,4 @@ resource "aws_cloudfront_cache_policy" "cache_policies" {
   }
 
 }
-
 
