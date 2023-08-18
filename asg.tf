@@ -46,5 +46,11 @@ module "asg" {
 
   # The LB ARN is directly assigned without deploying an aws_autoscaling_attachment resource since this would change the state of the ASG module
   target_group_arns           = [aws_lb_target_group.this[each.value.lb-tg].arn]
-  depends_on                  = [aws_lb.this]
+
+  # Making it dependient of all the resources of LB otherwise it would change the state of the ASG module in every plan/apply
+  depends_on                  = [
+    aws_lb.this,
+    aws_lb_target_group.this,
+    aws_lb_listener.this
+  ]
 }
