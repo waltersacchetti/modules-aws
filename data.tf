@@ -46,6 +46,19 @@ data "aws_subnets" "mq_network" {
 #   name = lookup(var.aws.resources.eks, "main", null) == null ? "" : "${var.aws.region}-${var.aws.profile}-eks-main"
 # }
 
+data "aws_subnets" "lb_network" {
+  for_each = var.aws.resources.lb
+  filter {
+    name   = "vpc-id"
+    values = [module.vpc[each.value.vpc].vpc_id]
+  }
+  filter {
+    name   = "tag:Name"
+    values = [for key in each.value.vpc_zone_identifier : join(",", ["${var.aws.region}-${var.aws.profile}-vpc-${each.value.vpc}-${key}"])]
+  }
+}
+
+
 # Configure with the necessary bucket policy
 data "aws_iam_policy_document" "s3" {
   for_each = local.s3_map_policy
