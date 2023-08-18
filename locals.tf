@@ -94,6 +94,24 @@ locals {
     for policy in local.s3_list_policy : policy.bucket => policy.policy
   }
 
+  output_cloudfront_origin = length(aws_cloudfront_distribution.this) == 0 ? {} : {
+    for key, value in aws_cloudfront_distribution.this :
+    key =>
+    "╠ Cloudfront origin \n\t║\t║ ${join("\n\t║\t→", [
+      for origin in value.origin :
+      "Domain Name: ${origin.domain_name}\n\t║\t╚ Id: ${origin.origin_id} "
+    ])}"
+  }
+
+  output_cloudfront_policy = length(aws_cloudfront_cache_policy.this) == 0 ? {} : {
+    for key, value in aws_cloudfront_cache_policy.this :
+    key =>
+    "╚ Cloudfront Custom Cache Policies \n\t\t║ ${join("\n\t\t║", [
+    for policy in aws_cloudfront_cache_policy.this :
+    " Id: ${policy.id}\n\t\t╚ Name: ${policy.name}"
+    ])}"
+  }
+
   output = {
 
     aws = <<EOT
@@ -324,6 +342,23 @@ for key, value in aws_lb.this : (
     "(${key})${value.name}",
     "╠ Type: ${value.load_balancer_type}",
     "╚ Scheme: ${value.internal == false ? "Internet-facing" : "internal"}"
+  ])
+)
+])}
+
+EOT
+
+cloudfront = length(aws_cloudfront_distribution.this) == 0 ? "" : <<EOT
+╔══════════════════════╗
+║Cloudfront Information║
+╚══════════════════════╝
+${join("\n", [
+for key, value in aws_cloudfront_distribution.this : (
+  join("\n\t", [
+    "(${key})${value.id}",
+    "╠ Cloudfront domain name: ${value.domain_name}",
+     local.output_cloudfront_origin[key],
+     local.output_cloudfront_policy[key]
   ])
 )
 ])}

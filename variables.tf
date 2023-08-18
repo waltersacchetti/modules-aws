@@ -205,8 +205,7 @@ variable "aws" {
         http_version = string
         #web_acl_id = string
         origin = object({
-          domain_name = string
-          origin_id = string
+          domain_name = optional(string)
           custom_origin_config = object({
               http_port                = number
               https_port               = number
@@ -217,7 +216,6 @@ variable "aws" {
         default_cache_behavior = object({
           allowed_methods              = list(string) 
           cached_methods               = list(string) 
-          target_origin_id             = string 
           viewer_protocol_policy       = string
           compress                     = bool
         })
@@ -241,7 +239,6 @@ variable "aws" {
           cached_methods             = list(string)
           compress                   = bool
           path_pattern               = string
-          target_origin_id           = string
           viewer_protocol_policy     = string
         }))
       })),{})

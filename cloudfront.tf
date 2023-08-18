@@ -11,12 +11,12 @@ resource "aws_cloudfront_distribution" "this" {
     compress                   = each.value.default_cache_behavior.compress   
     origin_request_policy_id   = data.aws_cloudfront_origin_request_policy.managed-allviewer.id
     response_headers_policy_id = data.aws_cloudfront_response_headers_policy.managed-cors-with-preflight.id
-    target_origin_id           = each.value.default_cache_behavior.target_origin_id
+    target_origin_id           = "KVS-${var.aws.region}-${each.key}"
     viewer_protocol_policy     = each.value.default_cache_behavior.viewer_protocol_policy
   }
   origin {
-    domain_name              = each.value.origin.domain_name
-    origin_id                = each.value.origin.origin_id
+    domain_name              = each.value.origin.domain_name == null ? "b-d00b5c86.kinesisvideo.eu-west-1.amazonaws.com" : each.value.origin.domain_name
+    origin_id                = "KVS-${var.aws.region}-${each.key}" 
     custom_origin_config {
       http_port                = each.value.origin.custom_origin_config.http_port                
       https_port               = each.value.origin.custom_origin_config.https_port               
@@ -49,7 +49,7 @@ resource "aws_cloudfront_distribution" "this" {
       compress                   = ordered_cache_behavior.value.compress                  
       path_pattern               = ordered_cache_behavior.value.path_pattern              
       response_headers_policy_id = data.aws_cloudfront_response_headers_policy.managed-cors-with-preflight.id #ordered_cache_behavior.value.response_headers_policy_id
-      target_origin_id           = ordered_cache_behavior.value.target_origin_id          
+      target_origin_id           = "KVS-${var.aws.region}-${each.key}"           
       viewer_protocol_policy     = ordered_cache_behavior.value.viewer_protocol_policy 
     } 
   }
@@ -69,7 +69,7 @@ resource "aws_cloudfront_cache_policy" "this" {
     cookies_config {
       cookie_behavior = each.value.parameters_in_cache_key_and_forwarded_to_origin.cookies_config.cookie_behavior
 
-      # Commented, setting this property is not necessary
+      # Commented setting this property is not necessary
       # cookies {
       #   items = each.value.parameters_in_cache_key_and_forwarded_to_origin.cookies_config.cookies
       # }
@@ -77,7 +77,7 @@ resource "aws_cloudfront_cache_policy" "this" {
     headers_config {
       header_behavior = each.value.parameters_in_cache_key_and_forwarded_to_origin.headers_config.header_behavior
 
-      # Commented, setting this property is not necessary
+      # Commented setting this property is not necessary
       # headers {
       #   items = each.value.parameters_in_cache_key_and_forwarded_to_origin.headers_config.headers
       # }
@@ -85,7 +85,7 @@ resource "aws_cloudfront_cache_policy" "this" {
     query_strings_config {
       query_string_behavior = each.value.parameters_in_cache_key_and_forwarded_to_origin.query_strings_config.query_string_behavior
 
-      # dynamic, since setting the query_strings with no values with the previus format change the state of the resource in each plan/apply
+      # dynamic, since setting the query_strings with no values change the state of the resource in each plan/apply
       dynamic "query_strings" {
         for_each = each.value.parameters_in_cache_key_and_forwarded_to_origin.query_strings_config.enable_query_strings ? [each.value.parameters_in_cache_key_and_forwarded_to_origin.query_strings_config] : []
 
