@@ -307,6 +307,8 @@ ${join("\n", [
 for key, value in aws_wafv2_web_acl.this : (
   join("\n\t", [
     "(${key})${value.name}",
+    "╠ WebACL Id: ${value.id}",
+    "╠ WebACL Capacity: ${value.capacity}",
     "╚ Scope: ${value.scope}"
   ])
 )
