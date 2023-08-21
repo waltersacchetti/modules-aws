@@ -61,6 +61,24 @@ locals {
     for role in local.eks_list_cluster_role_binding : "${role.eks}_${role.clusterrole}_${role.username}" => role
   }
 
+  # output_eks_cluster_addons = length(module.eks) == 0 ? {} : {
+  #   for key, value in module.eks :
+  #   key =>
+  #   "╠ Cluster Addons \n\t║ ${join("\n\t║", [
+  #   for addon in value.cluster_addons :
+  #   " \t→ ${addon.addon_name}"
+  #   ])}"
+  # }
+
+  output_eks_nodegroups = length(module.eks) == 0 ? {} : {
+    for key, value in module.eks :
+    key =>
+    "╠ Node groups: \n\t║ ${join("\n\t║", [
+    for nodeg in value.eks_managed_node_groups :
+    " \t→ ${nodeg.node_group_id}"
+    ])}"
+  }
+
   output_elc_memcache_endpoints = length(aws_elasticache_cluster.this) == 0 ? {} : {
     for key, value in aws_elasticache_cluster.this :
     key =>
@@ -159,7 +177,12 @@ ${join("\n", [
 for eks_key, eks_value in module.eks : (
   join("\n\t", [
     "(${eks_key})${eks_value.cluster_name}:",
-    "╚ oidc_provider_arn: None"
+    "╠ Cluster version: ${eks_value.cluster_version}",
+    "╠ API server endpoint: ${eks_value.cluster_endpoint}",
+    "╠ Cloudwatch log group: ${eks_value.cloudwatch_log_group_name}",
+    #local.output_eks_cluster_addons[eks_key],
+    local.output_eks_nodegroups[eks_key],
+    "╚ oidc_provider_arn: ${eks_value.oidc_provider_arn}"
   ])
 )
 ])}
