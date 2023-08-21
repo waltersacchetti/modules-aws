@@ -14,7 +14,7 @@ resource "random_password" "mq" {
   upper            = true
   lower            = true
   number           = true
-  override_special = "!@#$%^&*()-_=+[]{}|:;<>?,./"
+  override_special = "!@#$%^&*()-_+[]{}|;<>?./"
 }
 
 resource "aws_mq_broker" "this" {
