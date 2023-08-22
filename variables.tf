@@ -132,11 +132,12 @@ variable "aws" {
         tags              = map(any)
         vpc               = string
         egress_restricted = bool
-        ingress = list(object({
+        ingress_open      = optional(bool, false)
+        ingress = optional(list(object({
           port                  = number
           protocol              = string
           source_security_group = string
-        }))
+        })), [])
       })), {})
       vpc = optional(map(object({
         tags                  = optional(map(string), {})

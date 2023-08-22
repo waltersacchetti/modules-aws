@@ -17,6 +17,9 @@ module "sg" {
       cidr_blocks = "0.0.0.0/0"
     }
   ]
+
+  ingress_cidr_blocks      = each.value.ingress_open == true ? ["0.0.0.0/0"] : []
+  ingress_rules            = each.value.ingress_open == true ? ["all-all"] : []
 }
 
 module "sg_ingress_rules" {

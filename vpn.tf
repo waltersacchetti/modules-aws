@@ -28,15 +28,9 @@ resource "aws_acm_certificate" "vpn_server" {
   certificate_body = tls_self_signed_cert.vpn_server[each.key].cert_pem
 }
 
-resource "tls_private_key" "vpn_client" {
-  for_each = { for k, v in var.aws.resources.vpn : k => v if v.type == "certificate" }
-  algorithm = "RSA"
-  rsa_bits  = 2048
-}
-
 resource "tls_self_signed_cert" "vpn_client" {
   for_each = { for k, v in var.aws.resources.vpn : k => v if v.type == "certificate" }
-  private_key_pem = tls_private_key.vpn_client[each.key].private_key_pem
+  private_key_pem = tls_private_key.vpn_server[each.key].private_key_pem
 
   subject {
     common_name  = "client.${local.translation_regions[var.aws.region]}-${var.aws.profile}.${each.key}"
@@ -54,7 +48,7 @@ resource "tls_self_signed_cert" "vpn_client" {
 
 resource "aws_acm_certificate" "vpn_client" {
   for_each = { for k, v in var.aws.resources.vpn : k => v if v.type == "certificate" }
-  private_key = tls_private_key.vpn_client[each.key].private_key_pem
+  private_key = tls_private_key.vpn_server[each.key].private_key_pem
   certificate_body = tls_self_signed_cert.vpn_client[each.key].cert_pem
 }
 
@@ -86,7 +80,6 @@ resource "aws_ec2_client_vpn_endpoint" "this" {
   vpc_id                = module.vpc[each.value.vpc].vpc_id
   vpn_port              = each.value.vpn_port
 }
-
 
 resource "aws_ec2_client_vpn_network_association" "this" {
   for_each = var.aws.resources.vpn
