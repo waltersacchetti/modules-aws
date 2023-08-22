@@ -1,6 +1,8 @@
 locals {
   translation_regions = {
     euw1 = "eu-west-1"
+    euw2 = "eu-west-2"
+    euw3 = "eu-west-3"
   }
 
   translation_environments = {
@@ -132,12 +134,17 @@ locals {
 
   output = {
     # Let AWS the first output
-    a_ws = templatefile("${path.module}/info/aws.tftpl",
+    a_aws = templatefile("${path.module}/info/aws.tftpl",
         {
             profile = var.aws.profile,
             region = local.translation_regions[var.aws.region],
             environment = local.translation_environments[element(split("-", var.aws.profile), 1)],
             owner = var.aws.owner
+        })
+
+    a_vpc = length(module.vpc) == 0 ? "" : templatefile("${path.module}/info/vpc.tftpl",
+        {
+            resource_map = module.vpc
         })
 
     asg = length(module.asg) == 0 ? "" : templatefile("${path.module}/info/asg.tftpl",
@@ -203,11 +210,6 @@ locals {
     s3 = length(module.s3) == 0 ? "" : templatefile("${path.module}/info/s3.tftpl",
         {
             resource_map = module.s3
-        })
-
-    vpc = length(module.vpc) == 0 ? "" : templatefile("${path.module}/info/vpc.tftpl",
-        {
-            resource_map = module.vpc
         })
 
     waf = length(aws_wafv2_web_acl.this) == 0 ? "" : templatefile("${path.module}/info/waf.tftpl",

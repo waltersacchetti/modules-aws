@@ -138,7 +138,7 @@ variable "aws" {
           source_security_group = string
         }))
       })), {})
-      vpc = map(object({
+      vpc = optional(map(object({
         tags                  = map(any)
         cidr                  = string
         secondary_cidr_blocks = list(string)
@@ -161,7 +161,7 @@ variable "aws" {
         create_elasticache_subnet_group       = bool
         create_elasticache_subnet_route_table = bool
         elasticache_subnets                   = map(string)
-      }))
+      })), {})
       mq = optional(map(object({
         tags               = map(any)
         vpc                = string
@@ -214,8 +214,8 @@ variable "aws" {
           })
         })
         default_cache_behavior = object({
-          allowed_methods              = list(string) 
-          cached_methods               = list(string) 
+          allowed_methods              = list(string)
+          cached_methods               = list(string)
           viewer_protocol_policy       = string
           compress                     = bool
         })
