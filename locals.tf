@@ -135,7 +135,7 @@ locals {
 
   output = {
     # Let AWS the first output
-    a_aws = templatefile("${path.module}/info/aws.tftpl",
+    a_aws = templatefile("${path.module}/templates/aws.tftpl",
       {
         profile     = var.aws.profile,
         region      = var.aws.region,
@@ -143,77 +143,77 @@ locals {
         owner       = var.aws.owner
     })
 
-    a_vpc = length(module.vpc) == 0 ? "" : templatefile("${path.module}/info/vpc.tftpl",
+    a_vpc = length(module.vpc) == 0 ? "" : templatefile("${path.module}/templates/vpc.tftpl",
       {
         resource_map = module.vpc
     })
 
-    asg = length(module.asg) == 0 ? "" : templatefile("${path.module}/info/asg.tftpl",
+    asg = length(module.asg) == 0 ? "" : templatefile("${path.module}/templates/asg.tftpl",
       {
         resource_map = module.asg
     })
 
-    cloudfront = length(aws_cloudfront_distribution.this) == 0 ? "" : templatefile("${path.module}/info/cloudfront.tftpl",
+    cloudfront = length(aws_cloudfront_distribution.this) == 0 ? "" : templatefile("${path.module}/templates/cloudfront.tftpl",
       {
         resource_map    = aws_cloudfront_distribution.this,
         resource_origin = local.output_cloudfront_origin,
         resource_policy = local.output_cloudfront_policy
     })
 
-    eks = length(module.eks) == 0 ? "" : templatefile("${path.module}/info/eks.tftpl",
+    eks = length(module.eks) == 0 ? "" : templatefile("${path.module}/templates/eks.tftpl",
       {
         resource_map        = module.eks,
         resource_node_group = local.output_eks_nodegroups
     })
 
-    elc_memcache = length(aws_elasticache_cluster.this) == 0 ? "" : templatefile("${path.module}/info/elc_memcache.tftpl",
+    elc_memcache = length(aws_elasticache_cluster.this) == 0 ? "" : templatefile("${path.module}/templates/elc_memcache.tftpl",
       {
         resource_map       = aws_elasticache_cluster.this,
         resource_endpoints = local.output_elc_memcache_endpoints
     })
 
-    elc_redis = length(aws_elasticache_replication_group.this) == 0 ? "" : templatefile("${path.module}/info/elc_redis.tftpl",
+    elc_redis = length(aws_elasticache_replication_group.this) == 0 ? "" : templatefile("${path.module}/templates/elc_redis.tftpl",
       {
         resource_map       = aws_elasticache_replication_group.this,
         resource_endpoints = local.output_elc_redis_endpoints
     })
 
-    iam = length(aws_iam_role.this) == 0 ? "" : templatefile("${path.module}/info/iam.tftpl",
+    iam = length(aws_iam_role.this) == 0 ? "" : templatefile("${path.module}/templates/iam.tftpl",
       {
         resource_map = aws_iam_role.this
     })
 
-    kinesis = length(aws_kinesis_video_stream.this) == 0 ? "" : templatefile("${path.module}/info/kinesis.tftpl",
+    kinesis = length(aws_kinesis_video_stream.this) == 0 ? "" : templatefile("${path.module}/templates/kinesis.tftpl",
       {
         resource_map = aws_kinesis_video_stream.this
     })
 
-    lb = length(aws_lb.this) == 0 ? "" : templatefile("${path.module}/info/lb.tftpl",
+    lb = length(aws_lb.this) == 0 ? "" : templatefile("${path.module}/templates/lb.tftpl",
       {
         resource_map    = aws_lb.this,
         resource_config = var.aws.resources.lb,
     })
 
-    mq = length(aws_mq_broker.this) == 0 ? "" : templatefile("${path.module}/info/mq.tftpl",
+    mq = length(aws_mq_broker.this) == 0 ? "" : templatefile("${path.module}/templates/mq.tftpl",
       {
         resource_map    = aws_mq_broker.this,
         resource_config = var.aws.resources.mq,
         password        = random_password.mq
     })
 
-    rds = length(module.rds) == 0 ? "" : templatefile("${path.module}/info/rds.tftpl",
+    rds = length(module.rds) == 0 ? "" : templatefile("${path.module}/templates/rds.tftpl",
       {
         resource_map    = module.rds,
         resource_config = var.aws.resources.rds,
         password        = random_password.rds
     })
 
-    s3 = length(module.s3) == 0 ? "" : templatefile("${path.module}/info/s3.tftpl",
+    s3 = length(module.s3) == 0 ? "" : templatefile("${path.module}/templates/s3.tftpl",
       {
         resource_map = module.s3
     })
 
-    waf = length(aws_wafv2_web_acl.this) == 0 ? "" : templatefile("${path.module}/info/waf.tftpl",
+    waf = length(aws_wafv2_web_acl.this) == 0 ? "" : templatefile("${path.module}/templates/waf.tftpl",
       {
         resource_map = aws_wafv2_web_acl.this
     })

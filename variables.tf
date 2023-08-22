@@ -191,8 +191,7 @@ variable "aws" {
         transport_protocol = optional(string, "udp")
         split_tunnel = optional(bool, true)
         vpn_port = optional(number, 443)
-        session_timeout_hours = optional(number, 10)
-        server_certificate_arn = optional(string, "pepe")
+        session_timeout_hours = optional(number, 8)
 
         saml_provider_arn = optional(string, null)
         root_certificate_chain_arn = optional(string, null)
