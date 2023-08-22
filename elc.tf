@@ -1,6 +1,6 @@
 resource "aws_elasticache_cluster" "this" {
   for_each   = var.aws.resources.elc-memcached
-  cluster_id = "${var.aws.region}-${var.aws.profile}-elc-${each.key}"
+  cluster_id = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-elc-${each.key}"
 
   engine               = "memcached"
   engine_version       = each.value.engine_version
@@ -19,7 +19,7 @@ resource "aws_elasticache_cluster" "this" {
 
 resource "aws_elasticache_replication_group" "this" {
   for_each             = var.aws.resources.elc-redis
-  replication_group_id = "${var.aws.region}-${var.aws.profile}-elc-${each.key}"
+  replication_group_id = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-elc-${each.key}"
   description          = "Redis Replication Group for ${each.key}"
 
   engine               = "redis"

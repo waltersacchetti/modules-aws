@@ -1,6 +1,6 @@
 resource "aws_mq_configuration" "this" {
   for_each       = var.aws.resources.mq
-  name           = "${var.aws.region}-${var.aws.profile}-mq-config-${each.key}"
+  name           = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-mq-config-${each.key}"
   engine_type    = each.value.engine_type
   engine_version = each.value.engine_version
   tags           = merge(local.common_tags, each.value.tags)
@@ -20,7 +20,7 @@ resource "random_password" "mq" {
 resource "aws_mq_broker" "this" {
   for_each    = var.aws.resources.mq
   tags        = merge(local.common_tags, each.value.tags)
-  broker_name = "${var.aws.region}-${var.aws.profile}-mq-${each.key}"
+  broker_name = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-mq-${each.key}"
   configuration {
     id       = aws_mq_configuration.this[each.key].id
     revision = aws_mq_configuration.this[each.key].latest_revision

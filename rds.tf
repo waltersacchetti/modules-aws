@@ -13,7 +13,7 @@ module "rds" {
   version    = "6.1.0"
   for_each   = var.aws.resources.rds
   tags       = merge(local.common_tags, each.value.tags)
-  identifier = "${var.aws.region}-${var.aws.profile}-rds-${each.key}"
+  identifier = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-rds-${each.key}"
 
   db_subnet_group_name   = module.vpc[each.value.vpc].database_subnet_group
   create_db_subnet_group = each.value.create_db_subnet_group

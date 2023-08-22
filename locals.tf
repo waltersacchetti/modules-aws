@@ -1,8 +1,8 @@
 locals {
   translation_regions = {
-    euw1 = "eu-west-1"
-    euw2 = "eu-west-2"
-    euw3 = "eu-west-3"
+    eu-west-1 = "euw1"
+    eu-west-2 = "euw2"
+    eu-west-3 = "euw3"
   }
 
   translation_environments = {
@@ -16,7 +16,7 @@ locals {
   common_tags = {
     Environment = local.translation_environments[element(split("-", var.aws.profile), 1)]
     ProjectKey  = element(split("-", var.aws.profile), 0)
-    Region      = local.translation_regions[var.aws.region]
+    Region      = var.aws.region
     Owner       = var.aws.owner
     Terraform   = "true"
   }
@@ -76,8 +76,8 @@ locals {
     for key, value in module.eks :
     key =>
     "╠ Node groups: \n\t║ ${join("\n\t║", [
-    for nodeg in value.eks_managed_node_groups :
-    " \t→ ${nodeg.node_group_id}"
+      for nodeg in value.eks_managed_node_groups :
+      " \t→ ${nodeg.node_group_id}"
     ])}"
   }
 
@@ -127,95 +127,95 @@ locals {
     for key, value in aws_cloudfront_cache_policy.this :
     key =>
     "╚ Cloudfront Custom Cache Policies \n\t\t║ ${join("\n\t\t║", [
-    for policy in aws_cloudfront_cache_policy.this :
-    " Id: ${policy.id}\n\t\t╚ Name: ${policy.name}"
+      for policy in aws_cloudfront_cache_policy.this :
+      " Id: ${policy.id}\n\t\t╚ Name: ${policy.name}"
     ])}"
   }
 
   output = {
     # Let AWS the first output
     a_aws = templatefile("${path.module}/info/aws.tftpl",
-        {
-            profile = var.aws.profile,
-            region = local.translation_regions[var.aws.region],
-            environment = local.translation_environments[element(split("-", var.aws.profile), 1)],
-            owner = var.aws.owner
-        })
+      {
+        profile     = var.aws.profile,
+        region      = var.aws.region,
+        environment = local.translation_environments[element(split("-", var.aws.profile), 1)],
+        owner       = var.aws.owner
+    })
 
     a_vpc = length(module.vpc) == 0 ? "" : templatefile("${path.module}/info/vpc.tftpl",
-        {
-            resource_map = module.vpc
-        })
+      {
+        resource_map = module.vpc
+    })
 
     asg = length(module.asg) == 0 ? "" : templatefile("${path.module}/info/asg.tftpl",
       {
-          resource_map = module.asg
-      })
+        resource_map = module.asg
+    })
 
     cloudfront = length(aws_cloudfront_distribution.this) == 0 ? "" : templatefile("${path.module}/info/cloudfront.tftpl",
-        {
-            resource_map    = aws_cloudfront_distribution.this,
-            resource_origin = local.output_cloudfront_origin,
-            resource_policy = local.output_cloudfront_policy
-        })
+      {
+        resource_map    = aws_cloudfront_distribution.this,
+        resource_origin = local.output_cloudfront_origin,
+        resource_policy = local.output_cloudfront_policy
+    })
 
     eks = length(module.eks) == 0 ? "" : templatefile("${path.module}/info/eks.tftpl",
-        {
-            resource_map = module.eks,
-            resource_node_group = local.output_eks_nodegroups
-        })
+      {
+        resource_map        = module.eks,
+        resource_node_group = local.output_eks_nodegroups
+    })
 
     elc_memcache = length(aws_elasticache_cluster.this) == 0 ? "" : templatefile("${path.module}/info/elc_memcache.tftpl",
-        {
-            resource_map = aws_elasticache_cluster.this,
-            resource_endpoints = local.output_elc_memcache_endpoints
-        })
+      {
+        resource_map       = aws_elasticache_cluster.this,
+        resource_endpoints = local.output_elc_memcache_endpoints
+    })
 
     elc_redis = length(aws_elasticache_replication_group.this) == 0 ? "" : templatefile("${path.module}/info/elc_redis.tftpl",
-        {
-            resource_map = aws_elasticache_replication_group.this,
-            resource_endpoints = local.output_elc_redis_endpoints
-        })
+      {
+        resource_map       = aws_elasticache_replication_group.this,
+        resource_endpoints = local.output_elc_redis_endpoints
+    })
 
     iam = length(aws_iam_role.this) == 0 ? "" : templatefile("${path.module}/info/iam.tftpl",
-        {
-            resource_map = aws_iam_role.this
-        })
+      {
+        resource_map = aws_iam_role.this
+    })
 
     kinesis = length(aws_kinesis_video_stream.this) == 0 ? "" : templatefile("${path.module}/info/kinesis.tftpl",
-        {
-            resource_map = aws_kinesis_video_stream.this
-        })
+      {
+        resource_map = aws_kinesis_video_stream.this
+    })
 
     lb = length(aws_lb.this) == 0 ? "" : templatefile("${path.module}/info/lb.tftpl",
-        {
-            resource_map    = aws_lb.this,
-            resource_config = var.aws.resources.lb,
-        })
+      {
+        resource_map    = aws_lb.this,
+        resource_config = var.aws.resources.lb,
+    })
 
     mq = length(aws_mq_broker.this) == 0 ? "" : templatefile("${path.module}/info/mq.tftpl",
-        {
-            resource_map = aws_mq_broker.this,
-            resource_config = var.aws.resources.mq,
-            password = random_password.mq
-        })
+      {
+        resource_map    = aws_mq_broker.this,
+        resource_config = var.aws.resources.mq,
+        password        = random_password.mq
+    })
 
     rds = length(module.rds) == 0 ? "" : templatefile("${path.module}/info/rds.tftpl",
-        {
-            resource_map = module.rds,
-            resource_config = var.aws.resources.rds,
-            password = random_password.rds
-        })
+      {
+        resource_map    = module.rds,
+        resource_config = var.aws.resources.rds,
+        password        = random_password.rds
+    })
 
     s3 = length(module.s3) == 0 ? "" : templatefile("${path.module}/info/s3.tftpl",
-        {
-            resource_map = module.s3
-        })
+      {
+        resource_map = module.s3
+    })
 
     waf = length(aws_wafv2_web_acl.this) == 0 ? "" : templatefile("${path.module}/info/waf.tftpl",
-        {
-            resource_map = aws_wafv2_web_acl.this
-        })
+      {
+        resource_map = aws_wafv2_web_acl.this
+    })
   }
 
   merge_ouput = join("", [for key, value in local.output : (value)])

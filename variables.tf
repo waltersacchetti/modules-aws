@@ -41,35 +41,35 @@ variable "aws" {
         tags                    = map(any)
       })), {})
       asg = optional(map(object({
-        min_size             = number
-        max_size             = number
-        desired_capacity     = number
-        health_check_type    = string
-        subnets              = list(string)
-        vpc                  = string
-        image_id             = string
-        instance_type        = string
-        ebs_optimized        = bool
-        enable_monitoring    = bool
-        user_data_script     = string
-        root_volume_size     = number
-        sg                   = string
-        iam_role_policies    = map(string)
-        tags                 = map(any)
-        lb-tg                = string
+        min_size          = number
+        max_size          = number
+        desired_capacity  = number
+        health_check_type = string
+        subnets           = list(string)
+        vpc               = string
+        image_id          = string
+        instance_type     = string
+        ebs_optimized     = bool
+        enable_monitoring = bool
+        user_data_script  = string
+        root_volume_size  = number
+        sg                = string
+        iam_role_policies = map(string)
+        tags              = map(any)
+        lb-tg             = string
       })), {})
       lb = optional(map(object({
-        vpc                   = string
-        subnets               = list(string)
-        application_port      = number
-        application_protocol  = string
-        private_lb            = bool
-        lb_port               = number
-        lb_protocol           = string
-        ssl_policy            = string
-        certificate_arn       = string
-        tags                  = map(any)
-      })),{})
+        vpc                  = string
+        subnets              = list(string)
+        application_port     = number
+        application_protocol = string
+        private_lb           = bool
+        lb_port              = number
+        lb_protocol          = string
+        ssl_policy           = string
+        certificate_arn      = string
+        tags                 = map(any)
+      })), {})
       # The eks module can't define multiple cluster, force to only one called main
       eks = optional(map(object({
         tags            = map(any)
@@ -179,15 +179,16 @@ variable "aws" {
         data_retention_in_hours = number
         media_type              = string
         tags                    = map(any)
+        region                  = optional(string, null)
       })), {})
       waf = optional(map(object({
-        scope             = string
+        scope = string
         visibility_config = object({
           cloudwatch_metrics_enabled = bool
           sampled_requests_enabled   = bool
         })
         rules = map(object({
-          priority  = number
+          priority = number
           statement = object({
             name        = string
             vendor_name = string
@@ -197,8 +198,8 @@ variable "aws" {
             sampled_requests_enabled   = bool
           })
         }))
-        tags  = map(any)
-      })),{})
+        tags = map(any)
+      })), {})
       cloudfront_distributions = optional(map(object({
         tags         = map(any)
         enabled      = bool
@@ -207,17 +208,17 @@ variable "aws" {
         origin = object({
           domain_name = optional(string)
           custom_origin_config = object({
-              http_port                = number
-              https_port               = number
-              origin_protocol_policy   = string
-              origin_ssl_protocols     = list(string)
+            http_port              = number
+            https_port             = number
+            origin_protocol_policy = string
+            origin_ssl_protocols   = list(string)
           })
         })
         default_cache_behavior = object({
-          allowed_methods              = list(string)
-          cached_methods               = list(string)
-          viewer_protocol_policy       = string
-          compress                     = bool
+          allowed_methods        = list(string)
+          cached_methods         = list(string)
+          viewer_protocol_policy = string
+          compress               = bool
         })
         restrictions = object({
           locations        = list(string)
@@ -234,14 +235,14 @@ variable "aws" {
         #  include_cookies = bool
         #})
         ordered_cache_behavior = map(object({
-          allowed_methods            = list(string)
-          cache_policy_id            = string
-          cached_methods             = list(string)
-          compress                   = bool
-          path_pattern               = string
-          viewer_protocol_policy     = string
+          allowed_methods        = list(string)
+          cache_policy_id        = string
+          cached_methods         = list(string)
+          compress               = bool
+          path_pattern           = string
+          viewer_protocol_policy = string
         }))
-      })),{})
+      })), {})
       cloudfront_cache_policies = optional(map(object({
         name        = string
         min_ttl     = number
@@ -264,7 +265,7 @@ variable "aws" {
             query_strings         = optional(list(string))
           })
         })
-      })),{})
+      })), {})
     })
   })
 }

@@ -1,7 +1,7 @@
 resource "aws_wafv2_web_acl" "this" {
   for_each    = var.aws.resources.waf
-  name        = "${var.aws.region}-${var.aws.profile}-waf-${each.key}"
-  description = "Web ACL for ${var.aws.region}-${var.aws.profile}-waf-${each.key}"
+  name        = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-waf-${each.key}"
+  description = "Web ACL for ${local.translation_regions[var.aws.region]}-${var.aws.profile}-waf-${each.key}"
   scope       = each.value.scope
   tags        = merge(local.common_tags, each.value.tags)
 
@@ -18,7 +18,7 @@ resource "aws_wafv2_web_acl" "this" {
   dynamic "rule" {
     for_each = each.value.rules
     content {
-      name     = "${rule.key}"
+      name     = rule.key
       priority = rule.value.priority
 
       # Add other attributes from the map if needed

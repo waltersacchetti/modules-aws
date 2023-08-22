@@ -6,7 +6,7 @@ data "aws_subnets" "eks_network" {
   }
   filter {
     name   = "tag:Name"
-    values = [for key in each.value.subnets : join(",", ["${var.aws.region}-${var.aws.profile}-vpc-${each.value.vpc}-${key}"])]
+    values = [for key in each.value.subnets : join(",", ["${local.translation_regions[var.aws.region]}-${var.aws.profile}-vpc-${each.value.vpc}-${key}"])]
   }
 }
 
@@ -18,7 +18,7 @@ data "aws_subnets" "asg_network" {
   }
   filter {
     name   = "tag:Name"
-    values = [for key in each.value.subnets : join(",", ["${var.aws.region}-${var.aws.profile}-vpc-${each.value.vpc}-${key}"])]
+    values = [for key in each.value.subnets : join(",", ["${local.translation_regions[var.aws.region]}-${var.aws.profile}-vpc-${each.value.vpc}-${key}"])]
   }
 }
 
@@ -30,7 +30,7 @@ data "aws_subnets" "mq_network" {
   }
   filter {
     name   = "tag:Name"
-    values = [for key in each.value.subnets : join(",", ["${var.aws.region}-${var.aws.profile}-vpc-${each.value.vpc}-${key}"])]
+    values = [for key in each.value.subnets : join(",", ["${local.translation_regions[var.aws.region]}-${var.aws.profile}-vpc-${each.value.vpc}-${key}"])]
   }
 }
 
@@ -43,7 +43,7 @@ data "aws_subnets" "mq_network" {
 # }
 
 # data "aws_eks_cluster_auth" "cluster_auth" {
-#   name = lookup(var.aws.resources.eks, "main", null) == null ? "" : "${var.aws.region}-${var.aws.profile}-eks-main"
+#   name = lookup(var.aws.resources.eks, "main", null) == null ? "" : "${local.translation_regions[var.aws.region]}-${var.aws.profile}-eks-main"
 # }
 
 data "aws_subnets" "lb_network" {
@@ -54,7 +54,7 @@ data "aws_subnets" "lb_network" {
   }
   filter {
     name   = "tag:Name"
-    values = [for key in each.value.subnets : join(",", ["${var.aws.region}-${var.aws.profile}-vpc-${each.value.vpc}-${key}"])]
+    values = [for key in each.value.subnets : join(",", ["${local.translation_regions[var.aws.region]}-${var.aws.profile}-vpc-${each.value.vpc}-${key}"])]
   }
 }
 
@@ -71,7 +71,7 @@ data "aws_iam_policy_document" "s3" {
       "s3:ListBucket",
     ]
     resources = [
-      "arn:aws:s3:::${var.aws.region}-${var.aws.profile}-bucket-${each.key}",
+      "arn:aws:s3:::${local.translation_regions[var.aws.region]}-${var.aws.profile}-bucket-${each.key}",
     ]
   }
 }

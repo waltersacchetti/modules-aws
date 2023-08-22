@@ -1,57 +1,57 @@
 resource "aws_cloudfront_distribution" "this" {
-  for_each       = var.aws.resources.cloudfront_distributions
-  enabled        = each.value.enabled
-  http_version   = each.value.http_version
-  tags           = merge(local.common_tags, each.value.tags)
+  for_each     = var.aws.resources.cloudfront_distributions
+  enabled      = each.value.enabled
+  http_version = each.value.http_version
+  tags         = merge(local.common_tags, each.value.tags)
   #web_acl_id     = each.value.web_acl_id #Or reference to another resource creat
   default_cache_behavior {
     allowed_methods            = each.value.default_cache_behavior.allowed_methods
     cache_policy_id            = data.aws_cloudfront_cache_policy.managed-cachingdisabled.id
-    cached_methods             = each.value.default_cache_behavior.cached_methods 
-    compress                   = each.value.default_cache_behavior.compress   
+    cached_methods             = each.value.default_cache_behavior.cached_methods
+    compress                   = each.value.default_cache_behavior.compress
     origin_request_policy_id   = data.aws_cloudfront_origin_request_policy.managed-allviewer.id
     response_headers_policy_id = data.aws_cloudfront_response_headers_policy.managed-cors-with-preflight.id
-    target_origin_id           = "KVS-${var.aws.region}-${each.key}"
+    target_origin_id           = "KVS-${local.translation_regions[var.aws.region]}-${each.key}"
     viewer_protocol_policy     = each.value.default_cache_behavior.viewer_protocol_policy
   }
   origin {
-    domain_name              = each.value.origin.domain_name == null ? "b-d00b5c86.kinesisvideo.eu-west-1.amazonaws.com" : each.value.origin.domain_name
-    origin_id                = "KVS-${var.aws.region}-${each.key}" 
+    domain_name = each.value.origin.domain_name == null ? "b-d00b5c86.kinesisvideo.eu-west-1.amazonaws.com" : each.value.origin.domain_name
+    origin_id   = "KVS-${local.translation_regions[var.aws.region]}-${each.key}"
     custom_origin_config {
-      http_port                = each.value.origin.custom_origin_config.http_port                
-      https_port               = each.value.origin.custom_origin_config.https_port               
-      origin_protocol_policy   = each.value.origin.custom_origin_config.origin_protocol_policy   
-      origin_ssl_protocols     = each.value.origin.custom_origin_config.origin_ssl_protocols     
+      http_port              = each.value.origin.custom_origin_config.http_port
+      https_port             = each.value.origin.custom_origin_config.https_port
+      origin_protocol_policy = each.value.origin.custom_origin_config.origin_protocol_policy
+      origin_ssl_protocols   = each.value.origin.custom_origin_config.origin_ssl_protocols
     }
   }
   restrictions {
     geo_restriction {
       restriction_type = each.value.restrictions.restriction_type
-      locations        = each.value.restrictions.locations       
+      locations        = each.value.restrictions.locations
     }
   }
   viewer_certificate {
     cloudfront_default_certificate = each.value.viewer_certificate.cloudfront_default_certificate #acm_certificate_arn, cloudfront_default_certificate, iam_certificate_id, minimum_protocol_version, ssl_support_method
-    minimum_protocol_version = each.value.viewer_certificate.minimum_protocol_version
+    minimum_protocol_version       = each.value.viewer_certificate.minimum_protocol_version
   }
 
   #logging_config {
-  #  bucket         =  each.value.logging_config.bucket        
+  #  bucket         =  each.value.logging_config.bucket
   #  include_cookies = each.value.logging_config.include_cookies
   #}
 
   dynamic "ordered_cache_behavior" {
     for_each = each.value.ordered_cache_behavior
     content {
-      allowed_methods            = ordered_cache_behavior.value.allowed_methods           
+      allowed_methods            = ordered_cache_behavior.value.allowed_methods
       cache_policy_id            = aws_cloudfront_cache_policy.this[ordered_cache_behavior.value.cache_policy_id].id #data.aws_cloudfront_cache_policy.custom_cache_policy[ordered_cache_behavior.value.cache_policy_id].id
-      cached_methods             = ordered_cache_behavior.value.cached_methods            
-      compress                   = ordered_cache_behavior.value.compress                  
-      path_pattern               = ordered_cache_behavior.value.path_pattern              
+      cached_methods             = ordered_cache_behavior.value.cached_methods
+      compress                   = ordered_cache_behavior.value.compress
+      path_pattern               = ordered_cache_behavior.value.path_pattern
       response_headers_policy_id = data.aws_cloudfront_response_headers_policy.managed-cors-with-preflight.id #ordered_cache_behavior.value.response_headers_policy_id
-      target_origin_id           = "KVS-${var.aws.region}-${each.key}"           
-      viewer_protocol_policy     = ordered_cache_behavior.value.viewer_protocol_policy 
-    } 
+      target_origin_id           = "KVS-${local.translation_regions[var.aws.region]}-${each.key}"
+      viewer_protocol_policy     = ordered_cache_behavior.value.viewer_protocol_policy
+    }
   }
   depends_on = [aws_cloudfront_cache_policy.this]
 }

@@ -2,7 +2,7 @@ module "sg" {
   source   = "terraform-aws-modules/security-group/aws"
   version  = "5.1.0"
   for_each = var.aws.resources.sg
-  name     = "${var.aws.region}-${var.aws.profile}-sg-${each.key}"
+  name     = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-sg-${each.key}"
   vpc_id   = module.vpc[each.value.vpc].vpc_id
   tags     = merge(local.common_tags, each.value.tags)
 

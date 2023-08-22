@@ -4,17 +4,17 @@ module "eks" {
   version  = "19.15.4"
   for_each = var.aws.resources.eks
 
-  cluster_name    = "${var.aws.region}-${var.aws.profile}-eks-${each.key}"
+  cluster_name    = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-eks-${each.key}"
   cluster_version = each.value.cluster_version
 
   vpc_id     = module.vpc[each.value.vpc].vpc_id
   subnet_ids = data.aws_subnets.eks_network[each.key].ids
 
-  node_security_group_name              = "${var.aws.region}-${var.aws.profile}-sg-eks-node-${each.key}"
-  iam_role_name                         = "${var.aws.region}-${var.aws.profile}-iam-role-eks-${each.key}"
-  cluster_security_group_name           = "${var.aws.region}-${var.aws.profile}-sg-eks-cluster-${each.key}"
+  node_security_group_name              = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-sg-eks-node-${each.key}"
+  iam_role_name                         = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-iam-role-eks-${each.key}"
+  cluster_security_group_name           = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-sg-eks-cluster-${each.key}"
   cluster_additional_security_group_ids = [module.sg[each.value.sg].security_group_id]
-  cluster_encryption_policy_name        = "${var.aws.region}-${var.aws.profile}-eks-encryption-policy-${each.key}"
+  cluster_encryption_policy_name        = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-eks-encryption-policy-${each.key}"
 
   cluster_endpoint_public_access  = each.value.public
   cluster_endpoint_private_access = true
@@ -72,7 +72,7 @@ module "eks" {
 
   eks_managed_node_groups = {
     for name, value in each.value.eks_managed_node_groups : name => {
-      name               = "${var.aws.region}-emng-${each.key}-${name}"
+      name               = "${local.translation_regions[var.aws.region]}-emng-${each.key}-${name}"
       ami_type           = value.ami_type
       desired_capacity   = value.desired_capacity
       instance_type      = value.instance_type
@@ -90,7 +90,7 @@ module "eks_iam_role_alb" {
   version  = "5.28.0"
   for_each = var.aws.resources.eks
 
-  role_name                              = "${var.aws.region}-${var.aws.profile}-eks-iam-${each.key}"
+  role_name                              = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-eks-iam-${each.key}"
   attach_load_balancer_controller_policy = true
 
   oidc_providers = {
@@ -128,7 +128,7 @@ resource "helm_release" "aws_load_balancer_controller" {
   depends_on = [kubernetes_service_account.aws_load_balancer_controller]
   set {
     name  = "region"
-    value = var.aws.region
+    value = local.translation_regions[var.aws.region]
   }
 
   set {
