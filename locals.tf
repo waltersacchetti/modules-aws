@@ -131,267 +131,91 @@ locals {
   }
 
   output = {
+    # Let AWS the first output
+    a_ws = templatefile("${path.module}/info/aws.tftpl",
+        {
+            profile = var.aws.profile,
+            region = local.translation_regions[var.aws.region],
+            environment = local.translation_environments[element(split("-", var.aws.profile), 1)],
+            owner = var.aws.owner
+        })
 
-    aws = <<EOT
-╔═══════════════╗
-║AWS Information║
-╚═══════════════╝
-${join("\n\t", [
-    "\t╠ Profile: ${var.aws.profile}",
-    "╠ Region: ${local.translation_regions[var.aws.region]}",
-    "╠ Environment: ${local.translation_environments[element(split("-", var.aws.profile), 1)]}",
-    "╚ Owner: ${var.aws.owner}"
-])}
+    asg = length(module.asg) == 0 ? "" : templatefile("${path.module}/info/asg.tftpl",
+      {
+          resource_map = module.asg
+      })
 
-EOT
+    cloudfront = length(aws_cloudfront_distribution.this) == 0 ? "" : templatefile("${path.module}/info/cloudfront.tftpl",
+        {
+            resource_map    = aws_cloudfront_distribution.this,
+            resource_origin = local.output_cloudfront_origin,
+            resource_policy = local.output_cloudfront_policy
+        })
 
-vpc = length(module.vpc) == 0 ? "" : <<EOT
-╔═══════════════╗
-║VPC Information║
-╚═══════════════╝
-${join("\n", [
-for vpc_key, vpc_value in module.vpc : (
-  join("\n\t", [
-    "(${vpc_key})${vpc_value.name}:",
-    "╠ ID: ${vpc_value.vpc_id}",
-    "╚ Subnets",
-    "  ╠ Database",
-    "  ║\t→ ${join("\n\t  ║\t→ ", try(vpc_value.database_subnets, []))}",
-    "  ╠ Elasticache",
-    "  ║\t→ ${join("\n\t  ║\t→ ", try(vpc_value.elasticache_subnets, []))}",
-    "  ╠ Public",
-    "  ║\t→ ${join("\n\t  ║\t→ ", try(vpc_value.public_subnets, []))}",
-    "  ╚ Private",
-    "  \t→ ${join("\n\t  \t→ ", try(vpc_value.private_subnets, []))}"
-  ])
-)
-])}
+    eks = length(module.eks) == 0 ? "" : templatefile("${path.module}/info/eks.tftpl",
+        {
+            resource_map = module.eks,
+            resource_node_group = local.output_eks_nodegroups
+        })
 
-EOT
+    elc_memcache = length(aws_elasticache_cluster.this) == 0 ? "" : templatefile("${path.module}/info/elc_memcache.tftpl",
+        {
+            resource_map = aws_elasticache_cluster.this,
+            resource_endpoints = local.output_elc_memcache_endpoints
+        })
 
-eks = length(module.eks) == 0 ? "" : <<EOT
-╔═══════════════╗
-║EKS Information║
-╚═══════════════╝
-${join("\n", [
-for eks_key, eks_value in module.eks : (
-  join("\n\t", [
-    "(${eks_key})${eks_value.cluster_name}:",
-    "╠ Cluster version: ${eks_value.cluster_version}",
-    "╠ API server endpoint: ${eks_value.cluster_endpoint}",
-    "╠ Cloudwatch log group: ${eks_value.cloudwatch_log_group_name}",
-    #local.output_eks_cluster_addons[eks_key],
-    local.output_eks_nodegroups[eks_key],
-    "╚ oidc_provider_arn: ${eks_value.oidc_provider_arn}"
-  ])
-)
-])}
+    elc_redis = length(aws_elasticache_replication_group.this) == 0 ? "" : templatefile("${path.module}/info/elc_redis.tftpl",
+        {
+            resource_map = aws_elasticache_replication_group.this,
+            resource_endpoints = local.output_elc_redis_endpoints
+        })
 
-EOT
+    iam = length(aws_iam_role.this) == 0 ? "" : templatefile("${path.module}/info/iam.tftpl",
+        {
+            resource_map = aws_iam_role.this
+        })
 
-rds = length(module.rds) == 0 ? "" : <<EOT
-╔═══════════════╗
-║RDS Information║
-╚═══════════════╝
-${join("\n", [
-for key, value in module.rds :
-(
-  join("\n\t", [
-    "(${key})${value.db_instance_identifier}:",
-    "╠ Endpoint: ${value.db_instance_endpoint}",
-    "╠ Port: ${value.db_instance_port}",
-    "╠ Engine: ${value.db_instance_engine}",
-    "╠ Version: ${value.db_instance_engine_version_actual}",
-    "╠ Username: ${value.db_instance_username}",
-    "╚ Password: ${var.aws.resources.rds[key].password == null || var.aws.resources.rds[key].password == "" ? random_password.rds[key].result : var.aws.resources.rds[key].password}"
-  ])
-)
-])}
+    kinesis = length(aws_kinesis_video_stream.this) == 0 ? "" : templatefile("${path.module}/info/kinesis.tftpl",
+        {
+            resource_map = aws_kinesis_video_stream.this
+        })
 
-EOT
+    lb = length(aws_lb.this) == 0 ? "" : templatefile("${path.module}/info/lb.tftpl",
+        {
+            resource_map    = aws_lb.this,
+            resource_config = var.aws.resources.lb,
+        })
 
-mq = length(aws_mq_broker.this) == 0 ? "" : <<EOT
-╔══════════════╗
-║MQ Information║
-╚══════════════╝
-${join("\n", [
-for key, value in aws_mq_broker.this :
-(
-  join("\n\t", [
-    "(${key})${value.broker_name}:",
-    "╠ Console: ${value.instances[0].console_url}",
-    "╠ Endpoints:",
-    "║\t→ ${join("\n\t║\t→ ", value.instances[0].endpoints)}",
-    "╠ Engine: ${value.engine_type}",
-    "╠ Version: ${value.engine_version}",
-    "╠ Username: ${var.aws.resources.mq[key].username}",
-    "╚ Password: ${var.aws.resources.mq[key].password == null || var.aws.resources.mq[key].password == "" ? random_password.mq[key].result : var.aws.resources.mq[key].password}"
-  ])
-)
-])}
+    mq = length(aws_mq_broker.this) == 0 ? "" : templatefile("${path.module}/info/mq.tftpl",
+        {
+            resource_map = aws_mq_broker.this,
+            resource_config = var.aws.resources.mq,
+            password = random_password.mq
+        })
 
-EOT
+    rds = length(module.rds) == 0 ? "" : templatefile("${path.module}/info/rds.tftpl",
+        {
+            resource_map = module.rds,
+            resource_config = var.aws.resources.rds,
+            password = random_password.rds
+        })
 
-elc_memcache = length(aws_elasticache_cluster.this) == 0 ? "" : <<EOT
-╔════════════════════════════════╗
-║ElastiCache Memcache Information║
-╚════════════════════════════════╝
-${join("\n", [
-for key, value in aws_elasticache_cluster.this :
-(
-  join("\n\t", [
-    "(${key})${value.cluster_id}:",
-    "╠ Address: ${value.cluster_address}",
-    local.output_elc_memcache_endpoints[key],
-    "╠ Engine: ${value.engine}",
-    "╚ Version: ${value.engine_version}"
-  ])
-)
-])}
+    s3 = length(module.s3) == 0 ? "" : templatefile("${path.module}/info/s3.tftpl",
+        {
+            resource_map = module.s3
+        })
 
-EOT
+    vpc = length(module.vpc) == 0 ? "" : templatefile("${path.module}/info/vpc.tftpl",
+        {
+            resource_map = module.vpc
+        })
 
-elc_redis = length(aws_elasticache_replication_group.this) == 0 ? "" : <<EOT
-╔═════════════════════════════╗
-║ElastiCache Redis Information║
-╚═════════════════════════════╝
-${join("\n", [
-for key, value in aws_elasticache_replication_group.this :
-(
-  join("\n\t", [
-    "(${key})${value.id}",
-    "╠ Clusters members:",
-    "║\t→ ${join("\n\t║\t→ ", value.member_clusters)}",
-    local.output_elc_redis_endpoints[key],
-    "╠ Number replicas per node: ${value.replicas_per_node_group}",
-    "╠ Engine: ${value.engine}",
-    "╚ Version: ${value.engine_version_actual}"
-  ])
-)
-])}
+    waf = length(aws_wafv2_web_acl.this) == 0 ? "" : templatefile("${path.module}/info/waf.tftpl",
+        {
+            resource_map = aws_wafv2_web_acl.this
+        })
+  }
 
-EOT
-
-s3 = length(module.s3) == 0 ? "" : <<EOT
-╔═════════════════════╗
-║S3 Bucket Information║
-╚═════════════════════╝
-${join("\n", [
-for key, value in module.s3 : (
-  join("\n\t", [
-    "(${key})${value.s3_bucket_id}",
-    "╠ Bucket URL: ${value.s3_bucket_bucket_domain_name}",
-    "╚ Bucket Region: ${value.s3_bucket_region}"
-  ])
-)
-])}
-
-EOT
-
-
-kinesis = length(aws_kinesis_video_stream.this) == 0 ? "" : <<EOT
-╔════════════════════════════════╗
-║Kinesis Video Stream Information║
-╚════════════════════════════════╝
-${join("\n", [
-for key, value in aws_kinesis_video_stream.this : (
-  join("\n\t", [
-    "(${key})${value.device_name}",
-    "╠ Name: ${value.name}",
-    "╠ Data Retention: ${value.data_retention_in_hours} hour(s)",
-    "╠ Media Type: ${value.media_type}",
-    "╚ Version: ${value.version}"
-  ])
-)
-])}
-
-EOT
-
-kinesis = length(aws_iam_role.this) == 0 ? "" : <<EOT
-╔═════════════════════╗
-║IAM Roles Information║
-╚═════════════════════╝
-${join("\n", [
-for key, value in aws_iam_role.this : (
-  join("\n\t", [
-    "(${key})${value.id}",
-    "╚ Description: ${value.description}"
-  ])
-)
-])}
-
-EOT
-
-waf = length(aws_wafv2_web_acl.this) == 0 ? "" : <<EOT
-╔═══════════════╗
-║WAF Information║
-╚═══════════════╝
-${join("\n", [
-for key, value in aws_wafv2_web_acl.this : (
-  join("\n\t", [
-    "(${key})${value.name}",
-    "╠ WebACL Id: ${value.id}",
-    "╠ WebACL Capacity: ${value.capacity}",
-    "╚ Scope: ${value.scope}"
-  ])
-)
-])}
-
-EOT
-
-asg = length(module.asg) == 0 ? "" : <<EOT
-╔═════════════════════════════╗
-║Autoscaling Group Information║
-╚═════════════════════════════╝
-${join("\n", [
-for key, value in module.asg : (
-  join("\n\t", [
-    "(${key})${value.autoscaling_group_id}",
-    "╠ Min size: ${value.autoscaling_group_min_size}",
-    "╠ Max size: ${value.autoscaling_group_max_size}",
-    "╠ Desired Capacity: ${value.autoscaling_group_desired_capacity}",
-    "╚ Launch template: ${value.launch_template_name}"
-  ])
-)
-])}
-
-EOT
-
-lb = length(aws_lb.this) == 0 ? "" : <<EOT
-╔═════════════════════════╗
-║Load Balancer Information║
-╚═════════════════════════╝
-${join("\n", [
-for key, value in aws_lb.this : (
-  join("\n\t", [
-    "(${key})${value.name}",
-    "╠ Type: ${value.load_balancer_type}",
-    "╚ Scheme: ${value.internal == false ? "Internet-facing" : "internal"}"
-  ])
-)
-])}
-
-EOT
-
-cloudfront = length(aws_cloudfront_distribution.this) == 0 ? "" : <<EOT
-╔══════════════════════╗
-║Cloudfront Information║
-╚══════════════════════╝
-${join("\n", [
-for key, value in aws_cloudfront_distribution.this : (
-  join("\n\t", [
-    "(${key})${value.id}",
-    "╠ Cloudfront domain name: ${value.domain_name}",
-     local.output_cloudfront_origin[key],
-     local.output_cloudfront_policy[key]
-  ])
-)
-])}
-
-EOT
-
-}
-
-merge_ouput = join("", [for key, value in local.output : (value)])
+  merge_ouput = join("", [for key, value in local.output : (value)])
 
 }

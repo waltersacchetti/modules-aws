@@ -1,0 +1,12 @@
+╔═════════════════════════╗
+║Load Balancer Information║
+╚═════════════════════════╝
+${join("\n", [
+for key, value in resource_map : (
+  join("\n\t", [
+    "(${key})${value.name}",
+    "╠ Type: ${value.load_balancer_type}",
+    "╚ Scheme: ${value.internal == false ? "Internet-facing" : "internal"}"
+  ])
+)
+])}
