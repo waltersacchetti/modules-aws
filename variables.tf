@@ -45,22 +45,22 @@ variable "aws" {
         max_size             = number
         desired_capacity     = number
         health_check_type    = string
-        vpc_zone_identifier  = list(string)
+        subnets              = list(string)
         vpc                  = string
         image_id             = string
         instance_type        = string
         ebs_optimized        = bool
         enable_monitoring    = bool
-        user_data_script     = string #
-        root_volume_size     = number #
-        sg                   = string #
+        user_data_script     = string
+        root_volume_size     = number
+        sg                   = string
         iam_role_policies    = map(string)
         tags                 = map(any)
         lb-tg                = string
       })), {})
       lb = optional(map(object({
         vpc                   = string
-        vpc_zone_identifier   = list(string)
+        subnets               = list(string)
         application_port      = number
         application_protocol  = string
         private_lb            = bool

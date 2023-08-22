@@ -18,7 +18,7 @@ data "aws_subnets" "asg_network" {
   }
   filter {
     name   = "tag:Name"
-    values = [for key in each.value.vpc_zone_identifier : join(",", ["${var.aws.region}-${var.aws.profile}-vpc-${each.value.vpc}-${key}"])]
+    values = [for key in each.value.subnets : join(",", ["${var.aws.region}-${var.aws.profile}-vpc-${each.value.vpc}-${key}"])]
   }
 }
 
@@ -54,7 +54,7 @@ data "aws_subnets" "lb_network" {
   }
   filter {
     name   = "tag:Name"
-    values = [for key in each.value.vpc_zone_identifier : join(",", ["${var.aws.region}-${var.aws.profile}-vpc-${each.value.vpc}-${key}"])]
+    values = [for key in each.value.subnets : join(",", ["${var.aws.region}-${var.aws.profile}-vpc-${each.value.vpc}-${key}"])]
   }
 }
 

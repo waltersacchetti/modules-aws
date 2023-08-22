@@ -41,7 +41,7 @@ module "asg" {
       security_groups       = [module.sg[each.value.sg].security_group_id]
     }
   ]
-  user_data                   = base64encode(file("${path.module}/${each.value.user_data_script}"))
+  user_data                   = base64encode(each.value.user_data_script)
   tags                        = merge(local.common_tags, each.value.tags)
 
   # The LB ARN is directly assigned without deploying an aws_autoscaling_attachment resource since this would change the state of the ASG module
