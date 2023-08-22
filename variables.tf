@@ -139,7 +139,7 @@ variable "aws" {
         }))
       })), {})
       vpc = optional(map(object({
-        tags                  = map(any)
+        tags                  = optional(map(string), {})
         cidr                  = string
         secondary_cidr_blocks = list(string)
         azs                   = list(string)
@@ -181,6 +181,26 @@ variable "aws" {
         tags                    = map(any)
         region                  = optional(string, null)
       })), {})
+      vpn = optional(map(object({
+        sg      = string
+        vpc     = string
+        type = optional(string, "certificate")
+
+        tags = optional(map(string), {})
+        client_cidr_block = optional(string, "192.168.100.0/22")
+        transport_protocol = optional(string, "udp")
+        split_tunnel = optional(bool, true)
+        vpn_port = optional(number, 443)
+        session_timeout_hours = optional(number, 10)
+        server_certificate_arn = optional(string, "pepe")
+
+        saml_provider_arn = optional(string, null)
+        root_certificate_chain_arn = optional(string, null)
+
+        subnets = optional(list(string), ["app-a"])
+        target_network_cidr = optional(string, "0.0.0.0/0")
+
+      })),{})
       waf = optional(map(object({
         scope = string
         visibility_config = object({

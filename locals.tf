@@ -3,6 +3,7 @@ locals {
     eu-west-1 = "euw1"
     eu-west-2 = "euw2"
     eu-west-3 = "euw3"
+    us-east-1 = "use1"
   }
 
   translation_environments = {
