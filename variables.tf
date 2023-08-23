@@ -129,14 +129,15 @@ variable "aws" {
         multi_az               = bool
       })), {})
       sg = optional(map(object({
-        tags              = map(any)
+        tags              = optional(map(string), {})
         vpc               = string
-        egress_restricted = bool
+        egress_restricted = optional(bool, true)
         ingress_open      = optional(bool, false)
         ingress = optional(list(object({
-          port                  = number
-          protocol              = string
-          source_security_group = string
+          from_port              = number
+          to_port                = optional(number, null)
+          protocol               = optional(string, "tcp")
+          source_security_groups = list(string)
         })), [])
       })), {})
       vpc = optional(map(object({
@@ -183,24 +184,24 @@ variable "aws" {
         region                  = optional(string, null)
       })), {})
       vpn = optional(map(object({
-        sg      = string
-        vpc     = string
+        sg   = string
+        vpc  = string
         type = optional(string, "certificate")
 
-        tags = optional(map(string), {})
-        client_cidr_block = optional(string, "192.168.100.0/22")
-        transport_protocol = optional(string, "udp")
-        split_tunnel = optional(bool, true)
-        vpn_port = optional(number, 443)
+        tags                  = optional(map(string), {})
+        client_cidr_block     = optional(string, "192.168.100.0/22")
+        transport_protocol    = optional(string, "udp")
+        split_tunnel          = optional(bool, true)
+        vpn_port              = optional(number, 443)
         session_timeout_hours = optional(number, 8)
 
-        saml_provider_arn = optional(string, null)
+        saml_provider_arn          = optional(string, null)
         root_certificate_chain_arn = optional(string, null)
 
-        subnets = optional(list(string), ["app-a"])
+        subnets             = optional(list(string), ["app-a"])
         target_network_cidr = optional(string, "0.0.0.0/0")
 
-      })),{})
+      })), {})
       waf = optional(map(object({
         scope = string
         visibility_config = object({

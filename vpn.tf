@@ -1,17 +1,17 @@
 resource "tls_private_key" "vpn_server" {
-  for_each = var.aws.resources.vpn
+  for_each  = var.aws.resources.vpn
   algorithm = "RSA"
   rsa_bits  = 2048
 }
 
 resource "tls_self_signed_cert" "vpn_server" {
-  for_each = var.aws.resources.vpn
+  for_each        = var.aws.resources.vpn
   private_key_pem = tls_private_key.vpn_server[each.key].private_key_pem
 
   subject {
     common_name  = "vpn.${local.translation_regions[var.aws.region]}-${var.aws.profile}.${each.key}"
     organization = "Indra Transportes"
-    country = "ES"
+    country      = "ES"
   }
 
   validity_period_hours = 43800
@@ -23,19 +23,19 @@ resource "tls_self_signed_cert" "vpn_server" {
 }
 
 resource "aws_acm_certificate" "vpn_server" {
-  for_each = var.aws.resources.vpn
-  private_key = tls_private_key.vpn_server[each.key].private_key_pem
+  for_each         = var.aws.resources.vpn
+  private_key      = tls_private_key.vpn_server[each.key].private_key_pem
   certificate_body = tls_self_signed_cert.vpn_server[each.key].cert_pem
 }
 
 resource "tls_self_signed_cert" "vpn_client" {
-  for_each = { for k, v in var.aws.resources.vpn : k => v if v.type == "certificate" }
+  for_each        = { for k, v in var.aws.resources.vpn : k => v if v.type == "certificate" }
   private_key_pem = tls_private_key.vpn_server[each.key].private_key_pem
 
   subject {
     common_name  = "client.${local.translation_regions[var.aws.region]}-${var.aws.profile}.${each.key}"
     organization = "Indra Transportes"
-    country = "ES"
+    country      = "ES"
   }
 
   validity_period_hours = 8760
@@ -47,29 +47,47 @@ resource "tls_self_signed_cert" "vpn_client" {
 }
 
 resource "aws_acm_certificate" "vpn_client" {
-  for_each = { for k, v in var.aws.resources.vpn : k => v if v.type == "certificate" }
-  private_key = tls_private_key.vpn_server[each.key].private_key_pem
+  for_each         = { for k, v in var.aws.resources.vpn : k => v if v.type == "certificate" }
+  private_key      = tls_private_key.vpn_server[each.key].private_key_pem
   certificate_body = tls_self_signed_cert.vpn_client[each.key].cert_pem
 }
 
+module "vpn_sg_ingress" {
+  source            = "terraform-aws-modules/security-group/aws"
+  version           = "5.1.0"
+  for_each          = var.aws.resources.vpn
+  create_sg         = false
+  security_group_id = module.sg[each.value.sg].security_group_id
+  ingress_with_cidr_blocks = [
+    {
+      from_port   = each.value.vpn_port
+      to_port     = each.value.vpn_port
+      protocol    = each.value.transport_protocol
+      description = "Vpn access from ${each.value.transport_protocol} ${each.value.client_cidr_block} port ${each.value.vpn_port}"
+      cidr_blocks = each.value.client_cidr_block
+    }
+  ]
+}
+
 resource "aws_ec2_client_vpn_endpoint" "this" {
-  for_each = var.aws.resources.vpn
+  depends_on = [module.vpc, module.sg, module.vpn_sg_ingress]
+  for_each   = var.aws.resources.vpn
   tags = merge(
-                local.common_tags,
-                each.value.tags,
-                {
-                  Name = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-vpn-${each.key}"
-                }
-            )
-  description            = "${each.key} - VPN for ${each.value.type} in VPC ${each.value.vpc}"
+    local.common_tags,
+    each.value.tags,
+    {
+      Name = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-vpn-${each.key}"
+    }
+  )
+  description = "${each.key} - VPN for ${each.value.type} in VPC ${each.value.vpc}"
 
   server_certificate_arn = aws_acm_certificate.vpn_server[each.key].arn
   client_cidr_block      = each.value.client_cidr_block
   transport_protocol     = each.value.transport_protocol
   authentication_options {
-    type              = "${each.value.type}-authentication"
+    type                       = "${each.value.type}-authentication"
     root_certificate_chain_arn = each.value.type == "certificate" ? aws_acm_certificate.vpn_client[each.key].arn : null
-    saml_provider_arn = each.value.type == "federated" ? "prueba" : null
+    saml_provider_arn          = each.value.type == "federated" ? "prueba" : null
   }
   connection_log_options {
     enabled = false
@@ -82,13 +100,13 @@ resource "aws_ec2_client_vpn_endpoint" "this" {
 }
 
 resource "aws_ec2_client_vpn_network_association" "this" {
-  for_each = var.aws.resources.vpn
+  for_each               = var.aws.resources.vpn
   client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.this[each.key].id
   subnet_id              = element(data.aws_subnets.vpn_network[each.key].ids, 0)
 }
 
 resource "aws_ec2_client_vpn_authorization_rule" "this" {
-  for_each = var.aws.resources.vpn
+  for_each               = var.aws.resources.vpn
   client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.this[each.key].id
   target_network_cidr    = each.value.target_network_cidr
   authorize_all_groups   = true

@@ -18,8 +18,8 @@ module "sg" {
     }
   ]
 
-  ingress_cidr_blocks      = each.value.ingress_open == true ? ["0.0.0.0/0"] : []
-  ingress_rules            = each.value.ingress_open == true ? ["all-all"] : []
+  ingress_cidr_blocks = each.value.ingress_open == true ? ["0.0.0.0/0"] : []
+  ingress_rules       = each.value.ingress_open == true ? ["all-all"] : []
 }
 
 module "sg_ingress_rules" {
@@ -28,13 +28,15 @@ module "sg_ingress_rules" {
   for_each          = var.aws.resources.sg
   create_sg         = false
   security_group_id = module.sg[each.key].security_group_id
-  ingress_with_source_security_group_id = [
-    for value in each.value.ingress : {
-      from_port                = value.port
-      to_port                  = value.port
-      protocol                 = value.protocol
-      source_security_group_id = module.sg[value.source_security_group].security_group_id
-      description              = "${value.protocol}/${value.port} - Access from ${value.source_security_group} to ${each.key}"
-    }
-  ]
+  ingress_with_source_security_group_id = flatten([
+    for value in each.value.ingress : [
+      for sg in value.source_security_groups : {
+        from_port                = value.from_port
+        to_port                  = value.to_port != null ? value.to_port : value.from_port
+        protocol                 = value.protocol
+        source_security_group_id = module.sg[sg].security_group_id
+        description              = "${value.protocol}/${value.from_port} - Access from ${sg} to ${each.key}"
+      }
+    ]
+  ])
 }
