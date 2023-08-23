@@ -1,6 +1,5 @@
 output "output" {
-  # value = local.merge_ouput
-  value = aws_ec2_client_vpn_endpoint.this
+  value = local.merge_ouput
 }
 
 
