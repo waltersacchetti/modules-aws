@@ -143,26 +143,26 @@ variable "aws" {
       vpc = optional(map(object({
         tags                  = optional(map(string), {})
         cidr                  = string
-        secondary_cidr_blocks = list(string)
+        secondary_cidr_blocks = optional(list(string), [])
         azs                   = list(string)
 
-        enable_nat_gateway   = bool
-        single_nat_gateway   = bool
-        enable_vpn_gateway   = bool
-        enable_dns_hostnames = bool
-        enable_dns_support   = bool
+        enable_nat_gateway   = optional(bool, true)
+        single_nat_gateway   = optional(bool, true)
+        enable_vpn_gateway   = optional(bool, true)
+        enable_dns_hostnames = optional(bool, true)
+        enable_dns_support   = optional(bool, true)
 
-        public_subnets  = map(string)
-        private_subnets = map(string),
+        public_subnets  = optional(map(string), {})
+        private_subnets = optional(map(string), {})
 
-        create_database_subnet_group           = bool
-        create_database_subnet_route_table     = bool
-        create_database_internet_gateway_route = bool
-        database_subnets                       = map(string)
+        create_database_subnet_group           = optional(bool, false)
+        create_database_subnet_route_table     = optional(bool, null)
+        create_database_internet_gateway_route = optional(bool, false)
+        database_subnets                       = optional(map(string), {})
 
-        create_elasticache_subnet_group       = bool
-        create_elasticache_subnet_route_table = bool
-        elasticache_subnets                   = map(string)
+        create_elasticache_subnet_group       = optional(bool, false)
+        create_elasticache_subnet_route_table = optional(bool, null)
+        elasticache_subnets                   = optional(map(string), {})
       })), {})
       mq = optional(map(object({
         tags               = map(any)
