@@ -1,3 +1,7 @@
+# ╔═════════════════════════════╗
+# ║ Create VPN CA               ║
+# ╚═════════════════════════════╝
+
 resource "tls_private_key" "vpn_ca" {
   algorithm = "RSA"
   rsa_bits  = 4096
@@ -24,8 +28,12 @@ resource "tls_self_signed_cert" "vpn_ca" {
 
 # resource "local_file" "vpn_ca" {
 #   content  = tls_self_signed_cert.vpn_ca.cert_pem
-#   filename = "${path.root}/data/certs/CA.${local.translation_regions[var.aws.region]}.vpn_ca-${var.aws.profile}.vpn.cert"
+#   filename = "${path.root}/data/${terraform.workspace}/certs/CA.${local.translation_regions[var.aws.region]}.vpn_ca-${var.aws.profile}.vpn.cert"
 # }
+
+# ╔═════════════════════════════╗
+# ║ Create VPN Server Certs     ║
+# ╚═════════════════════════════╝
 
 resource "tls_private_key" "vpn_server" {
   for_each  = var.aws.resources.vpn
@@ -61,30 +69,35 @@ resource "tls_locally_signed_cert" "vpn_server" {
   ]
 }
 
-# resource "local_file" "vpn_server_key" {
-#   for_each = var.aws.resources.vpn
-#   content  = tls_private_key.vpn_server[each.key].private_key_pem
-#   filename = "${path.root}/data/certs/${each.key}.${local.translation_regions[var.aws.region]}.vpn_ca-${var.aws.profile}.vpn.key"
-# }
-
-# resource "local_file" "vpn_server_crt" {
-#   for_each = var.aws.resources.vpn
-#   content  = tls_locally_signed_cert.vpn_server[each.key].cert_pem
-#   filename = "${path.root}/data/certs/${each.key}.${local.translation_regions[var.aws.region]}.vpn_ca-${var.aws.profile}.vpn.crt"
-# }
-
-# resource "local_file" "vpn_server_csr" {
-#   for_each = var.aws.resources.vpn
-#   content  = tls_cert_request.vpn_server[each.key].cert_request_pem
-#   filename = "${path.root}/data/certs/${each.key}.${local.translation_regions[var.aws.region]}.vpn_ca-${var.aws.profile}.vpn.csr"
-# }
-
 resource "aws_acm_certificate" "vpn_server" {
   for_each          = var.aws.resources.vpn
   private_key       = tls_private_key.vpn_server[each.key].private_key_pem
   certificate_body  = tls_locally_signed_cert.vpn_server[each.key].cert_pem
   certificate_chain = tls_self_signed_cert.vpn_ca.cert_pem
 }
+
+# resource "local_file" "vpn_server_key" {
+#   for_each = var.aws.resources.vpn
+#   content  = tls_private_key.vpn_server[each.key].private_key_pem
+#   filename = "${path.root}/data/${terraform.workspace}/certs/${each.key}.${local.translation_regions[var.aws.region]}.vpn_ca-${var.aws.profile}.vpn.key"
+# }
+
+# resource "local_file" "vpn_server_crt" {
+#   for_each = var.aws.resources.vpn
+#   content  = tls_locally_signed_cert.vpn_server[each.key].cert_pem
+#   filename = "${path.root}/data/${terraform.workspace}/certs/${each.key}.${local.translation_regions[var.aws.region]}.vpn_ca-${var.aws.profile}.vpn.crt"
+# }
+
+# resource "local_file" "vpn_server_csr" {
+#   for_each = var.aws.resources.vpn
+#   content  = tls_cert_request.vpn_server[each.key].cert_request_pem
+#   filename = "${path.root}/data/${terraform.workspace}/certs/${each.key}.${local.translation_regions[var.aws.region]}.vpn_ca-${var.aws.profile}.vpn.csr"
+# }
+
+# ╔═════════════════════════════╗
+# ║ Create VPN Client Certs     ║
+# ╚═════════════════════════════╝
+
 
 resource "tls_private_key" "vpn_client" {
   for_each  = { for k, v in var.aws.resources.vpn : k => v if v.type == "certificate" }
@@ -120,24 +133,6 @@ resource "tls_locally_signed_cert" "vpn_client" {
   ]
 }
 
-# resource "local_file" "vpn_client_key" {
-#   for_each = { for k, v in var.aws.resources.vpn : k => v if v.type == "certificate" }
-#   content  = tls_private_key.vpn_client[each.key].private_key_pem
-#   filename = "${path.root}/data/certs/${each.key}-client.${local.translation_regions[var.aws.region]}.vpn_ca-${var.aws.profile}.vpn.key"
-# }
-
-# resource "local_file" "vpn_client_crt" {
-#   for_each = { for k, v in var.aws.resources.vpn : k => v if v.type == "certificate" }
-#   content  = tls_locally_signed_cert.vpn_client[each.key].cert_pem
-#   filename = "${path.root}/data/certs/${each.key}-client.${local.translation_regions[var.aws.region]}.vpn_ca-${var.aws.profile}.vpn.crt"
-# }
-
-# resource "local_file" "vpn_client_csr" {
-#   for_each = { for k, v in var.aws.resources.vpn : k => v if v.type == "certificate" }
-#   content  = tls_cert_request.vpn_client[each.key].cert_request_pem
-#   filename = "${path.root}/data/certs/${each.key}-client.${local.translation_regions[var.aws.region]}.vpn_ca-${var.aws.profile}.vpn.csr"
-# }
-
 resource "aws_acm_certificate" "vpn_client" {
   for_each          = { for k, v in var.aws.resources.vpn : k => v if v.type == "certificate" }
   private_key       = tls_private_key.vpn_client[each.key].private_key_pem
@@ -145,12 +140,38 @@ resource "aws_acm_certificate" "vpn_client" {
   certificate_chain = tls_self_signed_cert.vpn_ca.cert_pem
 }
 
+# resource "local_file" "vpn_client_key" {
+#   for_each = { for k, v in var.aws.resources.vpn : k => v if v.type == "certificate" }
+#   content  = tls_private_key.vpn_client[each.key].private_key_pem
+#   filename = "${path.root}/data/${terraform.workspace}/certs/${each.key}-client.${local.translation_regions[var.aws.region]}.vpn_ca-${var.aws.profile}.vpn.key"
+# }
+
+# resource "local_file" "vpn_client_crt" {
+#   for_each = { for k, v in var.aws.resources.vpn : k => v if v.type == "certificate" }
+#   content  = tls_locally_signed_cert.vpn_client[each.key].cert_pem
+#   filename = "${path.root}/data/${terraform.workspace}/certs/${each.key}-client.${local.translation_regions[var.aws.region]}.vpn_ca-${var.aws.profile}.vpn.crt"
+# }
+
+# resource "local_file" "vpn_client_csr" {
+#   for_each = { for k, v in var.aws.resources.vpn : k => v if v.type == "certificate" }
+#   content  = tls_cert_request.vpn_client[each.key].cert_request_pem
+#   filename = "${path.root}/data/${terraform.workspace}/certs/${each.key}-client.${local.translation_regions[var.aws.region]}.vpn_ca-${var.aws.profile}.vpn.csr"
+# }
+
+# ╔═════════════════════════════╗
+# ║ Create IAM SAML Provider    ║
+# ╚═════════════════════════════╝
+
 resource "aws_iam_saml_provider" "vpn" {
   for_each               = { for k, v in var.aws.resources.vpn : k => v if v.type == "federated" }
   name                   = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-vpn-${each.key}"
   saml_metadata_document = each.value.saml_file
   tags                   = merge(local.common_tags, each.value.tags)
 }
+
+# ╔═════════════════════════════╗
+# ║ Extend Security Group Rules ║
+# ╚═════════════════════════════╝
 
 module "vpn_sg_ingress" {
   source            = "terraform-aws-modules/security-group/aws"
@@ -168,6 +189,10 @@ module "vpn_sg_ingress" {
     }
   ]
 }
+
+# ╔═════════════════════════════╗
+# ║ Deploy VPN & assoicate nat  ║
+# ╚═════════════════════════════╝
 
 resource "aws_ec2_client_vpn_endpoint" "this" {
   depends_on = [module.vpc, module.sg, module.vpn_sg_ingress]
@@ -212,9 +237,13 @@ resource "aws_ec2_client_vpn_authorization_rule" "this" {
   authorize_all_groups   = true
 }
 
+# ╔═════════════════════════════╗
+# ║ Create OVPN Files           ║
+# ╚═════════════════════════════╝
+
 resource "local_file" "ovpn_config_certificate" {
   for_each = { for k, v in var.aws.resources.vpn : k => v if v.type == "certificate" }
-  filename = "data/vpn/${each.key}/vpn.${local.translation_regions[var.aws.region]}-${var.aws.profile}.${each.key}.ovpn"
+  filename = "data/${terraform.workspace}/vpn/${each.key}/vpn.${local.translation_regions[var.aws.region]}-${var.aws.profile}.${each.key}.ovpn"
   content = templatefile("${path.module}/templates/ovpn-certificate.tftpl", {
     vpn_server    = replace(aws_ec2_client_vpn_endpoint.this[each.key].dns_name, "^\\*\\.", "")
     vpn_port      = each.value.vpn_port
@@ -228,7 +257,7 @@ resource "local_file" "ovpn_config_certificate" {
 
 resource "local_file" "ovpn_config_federeated" {
   for_each = { for k, v in var.aws.resources.vpn : k => v if v.type == "federated" }
-  filename = "data/vpn/${each.key}/vpn.${local.translation_regions[var.aws.region]}-${var.aws.profile}.${each.key}.ovpn"
+  filename = "data/${terraform.workspace}/vpn/${each.key}/vpn.${local.translation_regions[var.aws.region]}-${var.aws.profile}.${each.key}.ovpn"
   content = templatefile("${path.module}/templates/ovpn-federated.tftpl", {
     vpn_server    = aws_ec2_client_vpn_endpoint.this[each.key].dns_name
     vpn_port      = each.value.vpn_port

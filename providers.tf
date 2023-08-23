@@ -7,7 +7,6 @@ terraform {
   }
 }
 
-
 # Terrafom does not support dynamic providers yet,
 # https://github.com/hashicorp/terraform/issues/24476
 provider "kubernetes" {
@@ -34,5 +33,6 @@ provider "helm" {
       # This requires the awscli to be installed locally where Terraform is executed
       args = ["eks", "get-token", "--cluster-name", lookup(var.aws.resources, "eks", null) == null ? "" : lookup(var.aws.resources.eks, "main", null) == null ? "" : module.eks["main"].cluster_name, "--region", var.aws.region, "--profile", var.aws.profile]
     }
+    # config_path    = "/tmp/test"
   }
 }

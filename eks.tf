@@ -1,4 +1,7 @@
 # The module of the EKS cluster does not support to define dynamic providers
+# ╔══════════════════════════════╗
+# ║ Deploy EKS & Create namspaces║
+# ╚══════════════════════════════╝
 module "eks" {
   source   = "terraform-aws-modules/eks/aws"
   version  = "19.15.4"
@@ -86,6 +89,17 @@ module "eks" {
   tags = merge(local.common_tags, each.value.tags)
 }
 
+resource "kubernetes_namespace" "this" {
+  for_each = local.eks_map_namespaces
+  metadata {
+    name = each.value.namespace
+  }
+}
+
+# ╔═════════════════════════════╗
+# ║ Deploy AWS ALB Controller   ║
+# ╚═════════════════════════════╝
+
 module "eks_iam_role_alb" {
   source   = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
   version  = "5.28.0"
@@ -152,16 +166,9 @@ resource "helm_release" "aws_load_balancer_controller" {
   }
 }
 
-
-resource "kubernetes_namespace" "this" {
-  for_each = local.eks_map_namespaces
-  metadata {
-    name = each.value.namespace
-  }
-
-}
-
-
+# ╔═════════════════════════════╗
+# ║ Role Bindings & Cluster     ║
+# ╚═════════════════════════════╝
 resource "kubernetes_role_binding" "this" {
   depends_on = [kubernetes_namespace.this]
   for_each   = local.eks_map_role_binding
@@ -204,7 +211,9 @@ resource "kubernetes_cluster_role_binding" "this" {
   }
 }
 
-
+# ╔═════════════════════════════╗
+# ║ EKS Blueprints for mons     ║
+# ╚═════════════════════════════╝
 module "eks_blueprints_addons" {
   source   = "aws-ia/eks-blueprints-addons/aws"
   version  = "~> 1.0"
@@ -222,9 +231,76 @@ module "eks_blueprints_addons" {
   tags = merge(local.common_tags, each.value.tags)
 }
 
+# ╔═════════════════════════════╗
+# ║ CICD Configuration          ║
+# ╚═════════════════════════════╝
+resource "kubernetes_namespace" "cicd" {
+  for_each = { for k, v in var.aws.resources.eks : k => v if v.cicd }
+  metadata {
+    name = "devops"
+  }
+}
+
+resource "kubernetes_service_account" "cicd" {
+  depends_on = [kubernetes_namespace.cicd]
+  for_each = { for k, v in var.aws.resources.eks : k => v if v.cicd }
+  metadata {
+    name      = "cicd"
+    namespace = "devops"
+  }
+}
+
+resource "kubernetes_secret" "cicd" {
+  depends_on = [kubernetes_namespace.cicd, kubernetes_service_account.cicd]
+  for_each = { for k, v in var.aws.resources.eks : k => v if v.cicd }
+  metadata {
+    name = "cicd-secret"
+    namespace = "devops"
+    annotations = {
+      "kubernetes.io/service-account.name" = "cicd"
+    }
+  }
+
+  type = "kubernetes.io/service-account-token"
+}
+
+resource "kubernetes_cluster_role_binding" "cicd" {
+  depends_on = [kubernetes_namespace.cicd, kubernetes_service_account.cicd]
+  for_each = { for k, v in var.aws.resources.eks : k => v if v.cicd }
+  metadata {
+    name = "devops-cicd-cluster-admin"
+  }
+
+  role_ref {
+    api_group = "rbac.authorization.k8s.io"
+    kind      = "ClusterRole"
+    name      = "cluster-admin"
+  }
+
+  subject {
+    kind      = "ServiceAccount"
+    name      = "cicd"
+    namespace = "devops"
+  }
+}
+
+resource "local_file" "kubeconfig_cicd" {
+  for_each = { for k, v in var.aws.resources.eks : k => v if v.cicd }
+  filename = "data/${terraform.workspace}/eks/${each.key}/cicd.kubeconfig"
+  content = templatefile("${path.module}/templates/eks-cicd.tftpl", {
+    certificate  = module.eks[each.key].cluster_certificate_authority_data
+    host         = module.eks[each.key].cluster_endpoint
+    name         = "eks-${var.aws.profile}-${each.key}-cicd"
+    token        = kubernetes_secret.cicd[each.key].data.token
+  })
+}
+
+# ╔═════════════════════════════╗
+# ║ Export Kubeconfig           ║
+# ╚═════════════════════════════╝
 resource "local_file" "kubeconfig" {
   for_each = var.aws.resources.eks
-  filename = "data/eks/${each.key}/admin.kubeconfig"
+  filename = "data/${terraform.workspace}/eks/${each.key}/admin.kubeconfig"
   content = templatefile("${path.module}/templates/eks-config.tftpl", {
     certificate  = module.eks[each.key].cluster_certificate_authority_data
     host         = module.eks[each.key].cluster_endpoint

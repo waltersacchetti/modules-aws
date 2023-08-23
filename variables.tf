@@ -79,6 +79,7 @@ variable "aws" {
         subnets = list(string)
         sg      = string
         public  = optional(bool, true)
+        cicd    = optional(bool, true)
 
         aws_auth_roles = optional(list(object({
           arn      = string
