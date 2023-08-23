@@ -230,7 +230,7 @@ resource "local_file" "ovpn_config_federeated" {
   for_each = { for k, v in var.aws.resources.vpn : k => v if v.type == "federated" }
   filename = "data/vpn.${local.translation_regions[var.aws.region]}-${var.aws.profile}.${each.key}.ovpn"
   content = templatefile("${path.module}/templates/ovpn-federated.tftpl", {
-    vpn_server    = replace(aws_ec2_client_vpn_endpoint.this[each.key].dns_name, "^\\*\\.", "")
+    vpn_server    = aws_ec2_client_vpn_endpoint.this[each.key].dns_name
     vpn_port      = each.value.vpn_port
     vpn_transport = each.value.transport_protocol
     keystore_cert = tls_self_signed_cert.vpn_ca.cert_pem
