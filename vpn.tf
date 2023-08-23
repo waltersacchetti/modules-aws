@@ -22,10 +22,10 @@ resource "tls_self_signed_cert" "vpn_ca" {
   ]
 }
 
-resource "local_file" "vpn_ca" {
-  content  = tls_self_signed_cert.vpn_ca.cert_pem
-  filename = "${path.root}/data/certs/CA.${local.translation_regions[var.aws.region]}.vpn_ca-${var.aws.profile}.vpn.cert"
-}
+# resource "local_file" "vpn_ca" {
+#   content  = tls_self_signed_cert.vpn_ca.cert_pem
+#   filename = "${path.root}/data/certs/CA.${local.translation_regions[var.aws.region]}.vpn_ca-${var.aws.profile}.vpn.cert"
+# }
 
 resource "tls_private_key" "vpn_server" {
   for_each  = var.aws.resources.vpn
@@ -61,23 +61,23 @@ resource "tls_locally_signed_cert" "vpn_server" {
   ]
 }
 
-resource "local_file" "vpn_server_key" {
-  for_each = var.aws.resources.vpn
-  content  = tls_private_key.vpn_server[each.key].private_key_pem
-  filename = "${path.root}/data/certs/${each.key}.${local.translation_regions[var.aws.region]}.vpn_ca-${var.aws.profile}.vpn.key"
-}
+# resource "local_file" "vpn_server_key" {
+#   for_each = var.aws.resources.vpn
+#   content  = tls_private_key.vpn_server[each.key].private_key_pem
+#   filename = "${path.root}/data/certs/${each.key}.${local.translation_regions[var.aws.region]}.vpn_ca-${var.aws.profile}.vpn.key"
+# }
 
-resource "local_file" "vpn_server_crt" {
-  for_each = var.aws.resources.vpn
-  content  = tls_locally_signed_cert.vpn_server[each.key].cert_pem
-  filename = "${path.root}/data/certs/${each.key}.${local.translation_regions[var.aws.region]}.vpn_ca-${var.aws.profile}.vpn.crt"
-}
+# resource "local_file" "vpn_server_crt" {
+#   for_each = var.aws.resources.vpn
+#   content  = tls_locally_signed_cert.vpn_server[each.key].cert_pem
+#   filename = "${path.root}/data/certs/${each.key}.${local.translation_regions[var.aws.region]}.vpn_ca-${var.aws.profile}.vpn.crt"
+# }
 
-resource "local_file" "vpn_server_csr" {
-  for_each = var.aws.resources.vpn
-  content  = tls_cert_request.vpn_server[each.key].cert_request_pem
-  filename = "${path.root}/data/certs/${each.key}.${local.translation_regions[var.aws.region]}.vpn_ca-${var.aws.profile}.vpn.csr"
-}
+# resource "local_file" "vpn_server_csr" {
+#   for_each = var.aws.resources.vpn
+#   content  = tls_cert_request.vpn_server[each.key].cert_request_pem
+#   filename = "${path.root}/data/certs/${each.key}.${local.translation_regions[var.aws.region]}.vpn_ca-${var.aws.profile}.vpn.csr"
+# }
 
 resource "aws_acm_certificate" "vpn_server" {
   for_each          = var.aws.resources.vpn
@@ -120,23 +120,23 @@ resource "tls_locally_signed_cert" "vpn_client" {
   ]
 }
 
-resource "local_file" "vpn_client_key" {
-  for_each = { for k, v in var.aws.resources.vpn : k => v if v.type == "certificate" }
-  content  = tls_private_key.vpn_client[each.key].private_key_pem
-  filename = "${path.root}/data/certs/${each.key}-client.${local.translation_regions[var.aws.region]}.vpn_ca-${var.aws.profile}.vpn.key"
-}
+# resource "local_file" "vpn_client_key" {
+#   for_each = { for k, v in var.aws.resources.vpn : k => v if v.type == "certificate" }
+#   content  = tls_private_key.vpn_client[each.key].private_key_pem
+#   filename = "${path.root}/data/certs/${each.key}-client.${local.translation_regions[var.aws.region]}.vpn_ca-${var.aws.profile}.vpn.key"
+# }
 
-resource "local_file" "vpn_client_crt" {
-  for_each = { for k, v in var.aws.resources.vpn : k => v if v.type == "certificate" }
-  content  = tls_locally_signed_cert.vpn_client[each.key].cert_pem
-  filename = "${path.root}/data/certs/${each.key}-client.${local.translation_regions[var.aws.region]}.vpn_ca-${var.aws.profile}.vpn.crt"
-}
+# resource "local_file" "vpn_client_crt" {
+#   for_each = { for k, v in var.aws.resources.vpn : k => v if v.type == "certificate" }
+#   content  = tls_locally_signed_cert.vpn_client[each.key].cert_pem
+#   filename = "${path.root}/data/certs/${each.key}-client.${local.translation_regions[var.aws.region]}.vpn_ca-${var.aws.profile}.vpn.crt"
+# }
 
-resource "local_file" "vpn_client_csr" {
-  for_each = { for k, v in var.aws.resources.vpn : k => v if v.type == "certificate" }
-  content  = tls_cert_request.vpn_client[each.key].cert_request_pem
-  filename = "${path.root}/data/certs/${each.key}-client.${local.translation_regions[var.aws.region]}.vpn_ca-${var.aws.profile}.vpn.csr"
-}
+# resource "local_file" "vpn_client_csr" {
+#   for_each = { for k, v in var.aws.resources.vpn : k => v if v.type == "certificate" }
+#   content  = tls_cert_request.vpn_client[each.key].cert_request_pem
+#   filename = "${path.root}/data/certs/${each.key}-client.${local.translation_regions[var.aws.region]}.vpn_ca-${var.aws.profile}.vpn.csr"
+# }
 
 resource "aws_acm_certificate" "vpn_client" {
   for_each          = { for k, v in var.aws.resources.vpn : k => v if v.type == "certificate" }
