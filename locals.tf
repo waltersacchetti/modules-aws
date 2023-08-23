@@ -37,14 +37,13 @@ locals {
 
   eks_list_role_binding = flatten([
     for key, value in var.aws.resources.eks : [
-      for role in value.role_binding : {
-        namespace   = role.namespace
+      for role in value.role_binding : [
+        for namespace in role.namespaces :{
+        namespace   = namespace
         clusterrole = role.clusterrole
         username    = role.username
         eks         = key
-      }
-    ]
-  ])
+      }]]])
 
   eks_map_role_binding = {
     for role in local.eks_list_role_binding : "${role.eks}_${role.namespace}_${role.clusterrole}_${role.username}" => role
@@ -56,9 +55,7 @@ locals {
         clusterrole = role.clusterrole
         username    = role.username
         eks         = key
-      }
-    ]
-  ])
+      }]])
 
   eks_map_cluster_role_binding = {
     for role in local.eks_list_cluster_role_binding : "${role.eks}_${role.clusterrole}_${role.username}" => role

@@ -72,39 +72,39 @@ variable "aws" {
       })), {})
       # The eks module can't define multiple cluster, force to only one called main
       eks = optional(map(object({
-        tags            = map(any)
-        cluster_version = string
+        tags                  = optional(map(string), {})
+        cluster_version = optional(string, "1.26")
 
         vpc     = string
         subnets = list(string)
         sg      = string
-        public  = bool
+        public  = optional(bool, true)
 
-        aws_auth_roles = list(object({
+        aws_auth_roles = optional(list(object({
           arn      = string
           username = string
-          groups   = list(string)
-        }))
+          groups   = optional(list(string), [])
+        })), [])
 
-        eks_managed_node_groups = map(object({
-          ami_type           = string
-          desired_capacity   = number
-          max_size           = number
-          min_size           = number
-          instance_type      = string
-          disk_size          = number
-          kubelet_extra_args = string
-        }))
-        role_binding = list(object({
+        eks_managed_node_groups = optional(map(object({
+          ami_type           = optional(string, "AL2_x86_64")
+          desired_capacity   = optional(number, 1)
+          max_size           = optional(number, 2)
+          min_size           = optional(number, 1)
+          instance_type      = optional(string, "t3.medium")
+          disk_size          = optional(number, "100")
+          kubelet_extra_args = optional(string, "")
+        })), {})
+        role_binding = optional(list(object({
           username    = string
           clusterrole = string
-          namespace   = string
-        }))
-        cluster_role_binding = list(object({
+          namespaces   = list(string)
+        })), [])
+        cluster_role_binding = optional(list(object({
           username    = string
           clusterrole = string
-        }))
-        namespaces = list(string)
+        })), [])
+        namespaces = optional(list(string), [])
       })), {})
       rds = optional(map(object({
         tags                   = map(any)
