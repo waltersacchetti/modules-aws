@@ -21,7 +21,7 @@ locals {
   }
 
   common_tags = {
-    Environment = local.translation_environments[element(split("-", var.aws.profile), 1)]
+    Environment = lookup(local.translation_environments, element(split("-", var.aws.profile), 1), null) == null ? "custom" : local.translation_environments[element(split("-", var.aws.profile), 1)]
     ProjectKey  = element(split("-", var.aws.profile), 0)
     Region      = var.aws.region
     Owner       = var.aws.owner
@@ -142,7 +142,7 @@ locals {
       {
         profile     = var.aws.profile,
         region      = var.aws.region,
-        environment = local.translation_environments[element(split("-", var.aws.profile), 1)],
+        environment = lookup(local.translation_environments, element(split("-", var.aws.profile), 1), null) == null ? "custom" : local.translation_environments[element(split("-", var.aws.profile), 1)],
         owner       = var.aws.owner
     })
 
