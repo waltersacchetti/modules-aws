@@ -72,7 +72,7 @@ variable "aws" {
       })), {})
       # The eks module can't define multiple cluster, force to only one called main
       eks = optional(map(object({
-        tags                  = optional(map(string), {})
+        tags            = optional(map(string), {})
         cluster_version = optional(string, "1.26")
 
         vpc     = string
@@ -98,7 +98,7 @@ variable "aws" {
         role_binding = optional(list(object({
           username    = string
           clusterrole = string
-          namespaces   = list(string)
+          namespaces  = list(string)
         })), [])
         cluster_role_binding = optional(list(object({
           username    = string
@@ -107,26 +107,26 @@ variable "aws" {
         namespaces = optional(list(string), [])
       })), {})
       rds = optional(map(object({
-        tags                   = map(any)
+        tags                   = optional(map(string), {})
         vpc                    = string
         sg                     = string
-        engine                 = string
-        engine_version         = string
-        instance_class         = string
-        allocated_storage      = number
-        db_name                = string
+        engine                 = optional(string, "postgres")
+        engine_version         = optional(string, "12.11")
+        family                 = optional(string, "postgres12")
+        major_engine_version   = optional(string, "12.11")
+        instance_class         = optional(string, "db.r6g.large")
+        allocated_storage      = optional(number, 100)
+        db_name                = optional(string, null)
         username               = string
-        password               = string
-        port                   = string
-        iam_db_auth_enabled    = bool
-        maintenance_window     = string
-        backup_window          = string
-        create_db_subnet_group = bool
-        subnet_ids             = list(string)
-        family                 = string
-        major_engine_version   = string
-        deletion_protection    = bool
-        multi_az               = bool
+        password               = optional(string, null)
+        port                   = optional(number, null)
+        iam_db_auth_enabled    = optional(bool, true)
+        maintenance_window     = optional(string, "Mon:00:00-Mon:03:00")
+        backup_window          = optional(string, "03:00-06:00")
+        create_db_subnet_group = optional(bool, false)
+        subnet_ids             = optional(list(string), [])
+        deletion_protection    = optional(bool, false)
+        multi_az               = optional(bool, false)
       })), {})
       sg = optional(map(object({
         tags              = optional(map(string), {})

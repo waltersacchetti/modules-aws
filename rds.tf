@@ -27,10 +27,10 @@ module "rds" {
   instance_class    = each.value.instance_class
   allocated_storage = each.value.allocated_storage
 
-  db_name                             = each.value.db_name
+  db_name                             = each.value.db_name != null ? each.value.db_name : each.key
   username                            = each.value.username
   password                            = each.value.password == null || each.value.password == "" ? random_password.rds[each.key].result : each.value.password
-  port                                = each.value.port
+  port                                = each.value.port != null ? each.value.port : local.translation_rds_ports[each.value.engine]
   iam_database_authentication_enabled = each.value.iam_db_auth_enabled
 
   #Maintenance
