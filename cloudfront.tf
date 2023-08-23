@@ -15,7 +15,7 @@ resource "aws_cloudfront_distribution" "this" {
     viewer_protocol_policy     = each.value.default_cache_behavior.viewer_protocol_policy
   }
   origin {
-    domain_name = each.value.origin.domain_name == null ? "b-d00b5c86.kinesisvideo.eu-west-1.amazonaws.com" : each.value.origin.domain_name
+    domain_name = each.value.origin.domain_name
     origin_id   = "KVS-${local.translation_regions[var.aws.region]}-${each.key}"
     custom_origin_config {
       http_port              = each.value.origin.custom_origin_config.http_port
