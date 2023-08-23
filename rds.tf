@@ -41,4 +41,6 @@ module "rds" {
   #AZ
   availability_zone = each.value.multi_az == false ? module.vpc[each.value.vpc].azs[0] : null
   multi_az          = each.value.multi_az
+
+  publicly_accessible = each.value.publicly_accessible
 }

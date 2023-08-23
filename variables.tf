@@ -21,9 +21,9 @@ variable "aws" {
         tags       = map(any)
       })), {})
       elc-memcached = optional(map(object({
-        engine_version       = optional(string,"1.6.17")
+        engine_version       = optional(string, "1.6.17")
         node_type            = string
-        num_cache_nodes      = optional(number,1)
+        num_cache_nodes      = optional(number, 1)
         parameter_group_name = string
         sg                   = string
         vpc                  = string
@@ -127,6 +127,7 @@ variable "aws" {
         subnet_ids             = optional(list(string), [])
         deletion_protection    = optional(bool, false)
         multi_az               = optional(bool, false)
+        publicly_accessible    = optional(bool, false)
       })), {})
       sg = optional(map(object({
         tags              = optional(map(string), {})

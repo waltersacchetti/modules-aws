@@ -220,3 +220,16 @@ module "eks_blueprints_addons" {
 
   tags = merge(local.common_tags, each.value.tags)
 }
+
+resource "local_file" "kubeconfig" {
+  for_each = var.aws.resources.eks
+  filename = "data/eks/${each.key}/admin.kubeconfig"
+  content = templatefile("${path.module}/templates/eks-config.tftpl", {
+    certificate  = module.eks[each.key].cluster_certificate_authority_data
+    host         = module.eks[each.key].cluster_endpoint
+    name         = "eks-${var.aws.profile}-${each.key}"
+    cluster-name = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-eks-${each.key}"
+    region       = var.aws.region
+    profile      = var.aws.profile
+  })
+}
