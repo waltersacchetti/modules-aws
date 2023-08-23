@@ -149,7 +149,7 @@ variable "aws" {
 
         enable_nat_gateway   = optional(bool, true)
         single_nat_gateway   = optional(bool, true)
-        enable_vpn_gateway   = optional(bool, true)
+        enable_vpn_gateway   = optional(bool, false)
         enable_dns_hostnames = optional(bool, true)
         enable_dns_support   = optional(bool, true)
 

@@ -12,6 +12,7 @@ module "eks" {
 
   node_security_group_name              = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-sg-eks-node-${each.key}"
   iam_role_name                         = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-iam-role-eks-${each.key}"
+  iam_role_use_name_prefix              = false
   cluster_security_group_name           = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-sg-eks-cluster-${each.key}"
   cluster_additional_security_group_ids = [module.sg[each.value.sg].security_group_id]
   cluster_encryption_policy_name        = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-eks-encryption-policy-${each.key}"
