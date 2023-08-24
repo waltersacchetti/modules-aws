@@ -5,41 +5,6 @@ variable "aws" {
     profile = string
     owner   = string
     resources = object({
-      iam = optional(map(object({
-        policy = string
-        tags   = map(any)
-      })), {})
-      s3 = optional(map(object({
-        force_destroy = bool
-        # object_lock_configuration = object({
-        #   rule = object({
-        #     default_retention = map(string)
-        #   })
-        # })
-        versioning = map(bool)
-        iam        = string
-        tags       = map(any)
-      })), {})
-      elc-memcached = optional(map(object({
-        engine_version       = optional(string, "1.6.17")
-        node_type            = string
-        num_cache_nodes      = optional(number, 1)
-        parameter_group_name = string
-        sg                   = string
-        vpc                  = string
-        tags                 = map(any)
-      })), {})
-      elc-redis = optional(map(object({
-        engine_version          = string
-        node_type               = string
-        num_cache_clusters      = number
-        num_node_groups         = number
-        replicas_per_node_group = number
-        parameter_group_name    = string
-        sg                      = string
-        vpc                     = string
-        tags                    = map(any)
-      })), {})
       asg = optional(map(object({
         min_size          = optional(number, 1)
         max_size          = optional(number, 1)
@@ -58,169 +23,28 @@ variable "aws" {
         tags              = optional(map(string), {})
         lb-tg             = string # Required for this use case
       })), {})
-      lb = optional(map(object({
-        vpc                  = string
-        subnets              = list(string)
-        application_port     = number
-        application_protocol = string
-        private_lb           = optional(bool, false)
-        lb_port              = optional(number, null)
-        lb_protocol          = optional(string, "TCP") # Optional TCP for this use case (NLB)
-        ssl_policy           = optional(string, null)
-        certificate_arn      = optional(string, null)
-        tags                 = optional(map(string), {})
-      })), {})
-      # The eks module can't define multiple cluster, force to only one called main
-      eks = optional(map(object({
-        tags            = optional(map(string), {})
-        cluster_version = optional(string, "1.26")
-
-        vpc     = string
-        subnets = list(string)
-        sg      = string
-        public  = optional(bool, true)
-        cicd    = optional(bool, true)
-
-        aws_auth_roles = optional(list(object({
-          arn      = string
-          username = string
-          groups   = optional(list(string), [])
-        })), [])
-
-        eks_managed_node_groups = optional(map(object({
-          ami_type           = optional(string, "AL2_x86_64")
-          desired_capacity   = optional(number, 1)
-          max_size           = optional(number, 2)
-          min_size           = optional(number, 1)
-          instance_type      = optional(string, "t3.medium")
-          disk_size          = optional(number, "100")
-          kubelet_extra_args = optional(string, "")
-        })), {})
-        role_binding = optional(list(object({
-          username    = string
-          clusterrole = string
-          namespaces  = list(string)
-        })), [])
-        cluster_role_binding = optional(list(object({
-          username    = string
-          clusterrole = string
-        })), [])
-        namespaces = optional(list(string), [])
-      })), {})
-      rds = optional(map(object({
-        tags                   = optional(map(string), {})
-        vpc                    = string
-        sg                     = string
-        engine                 = optional(string, "postgres")
-        engine_version         = optional(string, "12.11")
-        family                 = optional(string, "postgres12")
-        major_engine_version   = optional(string, "12.11")
-        instance_class         = optional(string, "db.r6g.large")
-        allocated_storage      = optional(number, 100)
-        db_name                = optional(string, null)
-        username               = string
-        password               = optional(string, null)
-        port                   = optional(number, null)
-        iam_db_auth_enabled    = optional(bool, true)
-        maintenance_window     = optional(string, "Mon:00:00-Mon:03:00")
-        backup_window          = optional(string, "03:00-06:00")
-        create_db_subnet_group = optional(bool, false)
-        subnet_ids             = optional(list(string), [])
-        deletion_protection    = optional(bool, false)
-        multi_az               = optional(bool, false)
-        publicly_accessible    = optional(bool, false)
-      })), {})
-      sg = optional(map(object({
-        tags              = optional(map(string), {})
-        vpc               = string
-        egress_restricted = optional(bool, true)
-        ingress_open      = optional(bool, false)
-        ingress = optional(list(object({
-          from_port              = number
-          to_port                = optional(number, null)
-          protocol               = optional(string, "tcp")
-          source_security_groups = list(string)
-        })), [])
-      })), {})
-      vpc = optional(map(object({
-        tags                  = optional(map(string), {})
-        cidr                  = string
-        secondary_cidr_blocks = optional(list(string), [])
-        azs                   = list(string)
-
-        enable_nat_gateway   = optional(bool, true)
-        single_nat_gateway   = optional(bool, true)
-        enable_vpn_gateway   = optional(bool, false)
-        enable_dns_hostnames = optional(bool, true)
-        enable_dns_support   = optional(bool, true)
-
-        public_subnets  = optional(map(string), {})
-        private_subnets = optional(map(string), {})
-
-        create_database_subnet_group           = optional(bool, false)
-        create_database_subnet_route_table     = optional(bool, null)
-        create_database_internet_gateway_route = optional(bool, false)
-        database_subnets                       = optional(map(string), {})
-
-        create_elasticache_subnet_group       = optional(bool, false)
-        create_elasticache_subnet_route_table = optional(bool, null)
-        elasticache_subnets                   = optional(map(string), {})
-      })), {})
-      mq = optional(map(object({
-        tags               = optional(map(string), {})
-        vpc                = string
-        subnets            = list(string)
-        engine_type        = string
-        engine_version     = string
-        deployment_mode    = optional(string, "SINGLE_INSTANCE")
-        host_instance_type = string
-        sg                 = string
-        username           = string
-        password           = string
-        configuration      = string
-      })), {})
-      kinesis = optional(map(object({
-        data_retention_in_hours = optional(number, 0)
-        media_type              = optional(string, null)
-        tags                    = optional(map(string), {})
-        region                  = optional(string, null)
-      })), {})
-      vpn = optional(map(object({
-        sg   = string
-        vpc  = string
-        type = optional(string, "certificate")
-
-        tags                  = optional(map(string), {})
-        client_cidr_block     = optional(string, "192.168.100.0/22")
-        transport_protocol    = optional(string, "udp")
-        split_tunnel          = optional(bool, true)
-        vpn_port              = optional(number, 443)
-        session_timeout_hours = optional(number, 8)
-
-        saml_file = optional(string, null)
-
-        subnets             = optional(list(string), ["app-a"])
-        target_network_cidr = optional(string, "0.0.0.0/0")
-
-      })), {})
-      waf = optional(map(object({
-        scope = string
-        visibility_config = object({
-          cloudwatch_metrics_enabled = bool
-          sampled_requests_enabled   = bool
+      cloudfront_cache_policies = optional(map(object({
+        name        = string
+        min_ttl     = number
+        max_ttl     = optional(number, 1)
+        default_ttl = optional(number, 1)
+        parameters_in_cache_key_and_forwarded_to_origin = object({
+          enable_accept_encoding_brotli = optional(bool, false)
+          enable_accept_encoding_gzip   = optional(bool, false)
+          cookies_config = object({
+            cookie_behavior = string #none, whitelist, allEscept, all
+            #cookies = list(string)
+          })
+          headers_config = object({
+            header_behavior = string #none, whitelist
+            #headers = list(string)
+          })
+          query_strings_config = object({
+            query_string_behavior = string                #none,whitelist, allExcept, all
+            enable_query_strings  = optional(bool, false) # Enable "query_strings" block or not
+            query_strings         = optional(list(string), null)
+          })
         })
-        rules = optional(map(object({
-          priority = number
-          statement = object({
-            name        = string
-            vendor_name = string
-          })
-          visibility_config = object({
-            cloudwatch_metrics_enabled = bool
-            sampled_requests_enabled   = bool
-          })
-        })), {})
-        tags = optional(map(string), {})
       })), {})
       cloudfront_distributions = optional(map(object({
         enabled      = bool
@@ -265,28 +89,203 @@ variable "aws" {
         })), {})
         tags = optional(map(string), {})
       })), {})
-      cloudfront_cache_policies = optional(map(object({
-        name        = string
-        min_ttl     = number
-        max_ttl     = optional(number, 1)
-        default_ttl = optional(number, 1)
-        parameters_in_cache_key_and_forwarded_to_origin = object({
-          enable_accept_encoding_brotli = optional(bool, false)
-          enable_accept_encoding_gzip   = optional(bool, false)
-          cookies_config = object({
-            cookie_behavior = string #none, whitelist, allEscept, all
-            #cookies = list(string)
-          })
-          headers_config = object({
-            header_behavior = string #none, whitelist
-            #headers = list(string)
-          })
-          query_strings_config = object({
-            query_string_behavior = string                #none,whitelist, allExcept, all
-            enable_query_strings  = optional(bool, false) # Enable "query_strings" block or not
-            query_strings         = optional(list(string), null)
-          })
+      elc-memcached = optional(map(object({
+        engine_version       = string
+        node_type            = string
+        num_cache_nodes      = optional(number, 1)
+        parameter_group_name = string
+        sg                   = string
+        vpc                  = string
+        tags                 = optional(map(string), {})
+      })), {})
+      elc-redis = optional(map(object({
+        engine_version          = string
+        node_type               = string
+        num_cache_clusters      = optional(number,null)
+        num_node_groups         = optional(number,null)
+        replicas_per_node_group = optional(number,null)
+        parameter_group_name    = string
+        sg                      = string
+        vpc                     = string
+        tags                    = optional(map(string), {})
+      })), {})
+      # The eks module can't define multiple cluster, force to only one called main
+      eks = optional(map(object({
+        tags            = optional(map(string), {})
+        cluster_version = optional(string, "1.26")
+
+        vpc     = string
+        subnets = list(string)
+        sg      = string
+        public  = optional(bool, true)
+        cicd    = optional(bool, true)
+
+        aws_auth_roles = optional(list(object({
+          arn      = string
+          username = string
+          groups   = optional(list(string), [])
+        })), [])
+
+        eks_managed_node_groups = optional(map(object({
+          ami_type           = optional(string, "AL2_x86_64")
+          desired_capacity   = optional(number, 1)
+          max_size           = optional(number, 2)
+          min_size           = optional(number, 1)
+          instance_type      = optional(string, "t3.medium")
+          disk_size          = optional(number, "100")
+          kubelet_extra_args = optional(string, "")
+        })), {})
+        role_binding = optional(list(object({
+          username    = string
+          clusterrole = string
+          namespaces  = list(string)
+        })), [])
+        cluster_role_binding = optional(list(object({
+          username    = string
+          clusterrole = string
+        })), [])
+        namespaces = optional(list(string), [])
+      })), {})
+      iam = optional(map(object({
+        policy = string
+        tags   = optional(map(string), {})
+      })), {})
+      kinesis = optional(map(object({
+        data_retention_in_hours = optional(number, 0)
+        media_type              = optional(string, null)
+        tags                    = optional(map(string), {})
+        region                  = optional(string, null)
+      })), {})
+      lb = optional(map(object({
+        vpc                  = string
+        subnets              = list(string)
+        application_port     = number
+        application_protocol = string
+        private_lb           = optional(bool, false)
+        lb_port              = optional(number, null)
+        lb_protocol          = optional(string, "TCP") # Optional TCP for this use case (NLB)
+        ssl_policy           = optional(string, null)
+        certificate_arn      = optional(string, null)
+        tags                 = optional(map(string), {})
+      })), {})
+      mq = optional(map(object({
+        tags               = optional(map(string), {})
+        vpc                = string
+        subnets            = list(string)
+        engine_type        = string
+        engine_version     = string
+        deployment_mode    = optional(string, "SINGLE_INSTANCE")
+        host_instance_type = string
+        sg                 = string
+        username           = string
+        password           = string
+        configuration      = string
+      })), {})
+      rds = optional(map(object({
+        tags                   = optional(map(string), {})
+        vpc                    = string
+        sg                     = string
+        engine                 = optional(string, "postgres")
+        engine_version         = optional(string, "12.11")
+        family                 = optional(string, "postgres12")
+        major_engine_version   = optional(string, "12.11")
+        instance_class         = optional(string, "db.r6g.large")
+        allocated_storage      = optional(number, 100)
+        db_name                = optional(string, null)
+        username               = string
+        password               = optional(string, null)
+        port                   = optional(number, null)
+        iam_db_auth_enabled    = optional(bool, true)
+        maintenance_window     = optional(string, "Mon:00:00-Mon:03:00")
+        backup_window          = optional(string, "03:00-06:00")
+        create_db_subnet_group = optional(bool, false)
+        subnet_ids             = optional(list(string), [])
+        deletion_protection    = optional(bool, false)
+        multi_az               = optional(bool, false)
+        publicly_accessible    = optional(bool, false)
+      })), {})
+      s3 = optional(map(object({
+        force_destroy = optional(bool, false)
+        # object_lock_configuration = object({
+        #   rule = object({
+        #     default_retention = map(string)
+        #   })
+        # })
+        versioning = map(bool)
+        iam        = string
+        tags       = optional(map(string), {})
+      })), {})
+      sg = optional(map(object({
+        tags              = optional(map(string), {})
+        vpc               = string
+        egress_restricted = optional(bool, true)
+        ingress_open      = optional(bool, false)
+        ingress = optional(list(object({
+          from_port              = number
+          to_port                = optional(number, null)
+          protocol               = optional(string, "tcp")
+          source_security_groups = list(string)
+        })), [])
+      })), {})
+      vpc = optional(map(object({
+        tags                  = optional(map(string), {})
+        cidr                  = string
+        secondary_cidr_blocks = optional(list(string), [])
+        azs                   = list(string)
+
+        enable_nat_gateway   = optional(bool, true)
+        single_nat_gateway   = optional(bool, true)
+        enable_vpn_gateway   = optional(bool, false)
+        enable_dns_hostnames = optional(bool, true)
+        enable_dns_support   = optional(bool, true)
+
+        public_subnets  = optional(map(string), {})
+        private_subnets = optional(map(string), {})
+
+        create_database_subnet_group           = optional(bool, false)
+        create_database_subnet_route_table     = optional(bool, null)
+        create_database_internet_gateway_route = optional(bool, false)
+        database_subnets                       = optional(map(string), {})
+
+        create_elasticache_subnet_group       = optional(bool, false)
+        create_elasticache_subnet_route_table = optional(bool, null)
+        elasticache_subnets                   = optional(map(string), {})
+      })), {})
+      vpn = optional(map(object({
+        sg   = string
+        vpc  = string
+        type = optional(string, "certificate")
+
+        tags                  = optional(map(string), {})
+        client_cidr_block     = optional(string, "192.168.100.0/22")
+        transport_protocol    = optional(string, "udp")
+        split_tunnel          = optional(bool, true)
+        vpn_port              = optional(number, 443)
+        session_timeout_hours = optional(number, 8)
+
+        saml_file = optional(string, null)
+
+        subnets             = optional(list(string), ["app-a"])
+        target_network_cidr = optional(string, "0.0.0.0/0")
+      })), {})
+      waf = optional(map(object({
+        scope = string
+        visibility_config = object({
+          cloudwatch_metrics_enabled = bool
+          sampled_requests_enabled   = bool
         })
+        rules = optional(map(object({
+          priority = number
+          statement = object({
+            name        = string
+            vendor_name = string
+          })
+          visibility_config = object({
+            cloudwatch_metrics_enabled = bool
+            sampled_requests_enabled   = bool
+          })
+        })), {})
+        tags = optional(map(string), {})
       })), {})
     })
   })
