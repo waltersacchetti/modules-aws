@@ -67,6 +67,21 @@ locals {
     for role in local.eks_list_cluster_role_binding : "${role.eks}_${role.clusterrole}_${role.username}" => role
   }
 
+   rds_list_postgres_databases = flatten([
+    for key, value in var.aws.resources.rds : [
+        value.engine == "postgres" && length(value.databases) > 0 ? [
+        for database in value.databases : {
+          rds = key
+          name = database
+        }
+      ] : null
+    ]
+  ])
+
+  rds_map_postgres_databases = {
+    for database in local.rds_list_postgres_databases : "${database.rds}_${database.name}" => database
+  }
+
   # output_eks_cluster_addons = length(module.eks) == 0 ? {} : {
   #   for key, value in module.eks :
   #   key =>

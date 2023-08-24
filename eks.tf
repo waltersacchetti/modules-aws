@@ -90,6 +90,7 @@ module "eks" {
 }
 
 resource "kubernetes_namespace" "this" {
+  depends_on = [ module.eks ]
   for_each = local.eks_map_namespaces
   metadata {
     name = each.value.namespace
@@ -140,7 +141,7 @@ resource "helm_release" "aws_load_balancer_controller" {
   repository = "https://aws.github.io/eks-charts"
   chart      = "aws-load-balancer-controller"
   namespace  = "kube-system"
-  depends_on = [kubernetes_service_account.aws_load_balancer_controller]
+  depends_on = [ kubernetes_service_account.aws_load_balancer_controller ]
   set {
     name  = "region"
     value = local.translation_regions[var.aws.region]
@@ -192,7 +193,7 @@ resource "kubernetes_role_binding" "this" {
 }
 
 resource "kubernetes_cluster_role_binding" "this" {
-  depends_on = [kubernetes_namespace.this]
+  depends_on = [ module.eks ]
   for_each   = local.eks_map_cluster_role_binding
   metadata {
     name = "${each.value.clusterrole}-${each.value.username}"
@@ -235,6 +236,7 @@ module "eks_blueprints_addons" {
 # ║ CICD Configuration          ║
 # ╚═════════════════════════════╝
 resource "kubernetes_namespace" "cicd" {
+  depends_on = [module.eks]
   for_each = { for k, v in var.aws.resources.eks : k => v if v.cicd }
   metadata {
     name = "devops"
@@ -242,7 +244,7 @@ resource "kubernetes_namespace" "cicd" {
 }
 
 resource "kubernetes_service_account" "cicd" {
-  depends_on = [kubernetes_namespace.cicd]
+  depends_on = [ kubernetes_namespace.cicd]
   for_each = { for k, v in var.aws.resources.eks : k => v if v.cicd }
   metadata {
     name      = "cicd"
@@ -251,7 +253,7 @@ resource "kubernetes_service_account" "cicd" {
 }
 
 resource "kubernetes_secret" "cicd" {
-  depends_on = [kubernetes_namespace.cicd, kubernetes_service_account.cicd]
+  depends_on = [ kubernetes_service_account.cicd]
   for_each = { for k, v in var.aws.resources.eks : k => v if v.cicd }
   metadata {
     name = "cicd-secret"
@@ -265,7 +267,7 @@ resource "kubernetes_secret" "cicd" {
 }
 
 resource "kubernetes_cluster_role_binding" "cicd" {
-  depends_on = [kubernetes_namespace.cicd, kubernetes_service_account.cicd]
+  depends_on = [ kubernetes_service_account.cicd ]
   for_each = { for k, v in var.aws.resources.eks : k => v if v.cicd }
   metadata {
     name = "devops-cicd-cluster-admin"

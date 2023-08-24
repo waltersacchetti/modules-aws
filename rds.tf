@@ -5,7 +5,7 @@ resource "random_password" "rds" {
   upper            = true
   lower            = true
   number           = true
-  override_special = "!@#$%^&*()-_=+[]{}|:;<>?,./"
+  override_special = "-_."
 }
 
 module "rds" {
@@ -29,6 +29,7 @@ module "rds" {
 
   db_name                             = each.value.db_name != null ? each.value.db_name : each.key
   username                            = each.value.username
+  manage_master_user_password         = false
   password                            = each.value.password == null || each.value.password == "" ? random_password.rds[each.key].result : each.value.password
   port                                = each.value.port != null ? each.value.port : local.translation_rds_ports[each.value.engine]
   iam_database_authentication_enabled = each.value.iam_db_auth_enabled
@@ -43,4 +44,26 @@ module "rds" {
   multi_az          = each.value.multi_az
 
   publicly_accessible = each.value.publicly_accessible
+}
+
+resource "random_password" "rds_postgres_db" {
+  for_each         = local.rds_map_postgres_databases
+  length           = 16
+  special          = true
+  upper            = true
+  lower            = true
+  number           = true
+  override_special = "-_."
+}
+
+resource "null_resource" "rds_postgres_db" {
+  depends_on = [ module.rds, random_password.rds_postgres_db ]
+  for_each         = local.rds_map_postgres_databases
+  provisioner "local-exec" {
+    command = templatefile("${path.module}/templates/rds-postgresql-create.tftpl", {
+      host = "postgresql://${module.rds[each.value.rds].db_instance_username}:${var.aws.resources.rds[each.value.rds].password == null || var.aws.resources.rds[each.value.rds].password == "" ? random_password.rds[each.value.rds].result : var.aws.resources.rds[each.value.rds].password}@${module.rds[each.value.rds].db_instance_endpoint}/${var.aws.resources.rds[each.value.rds].db_name == null ? each.value.rds : var.aws.resources.rds[each.value.rds].db_name}"
+      username = each.value.name
+      password = random_password.rds_postgres_db[each.key].result
+    })
+  }
 }

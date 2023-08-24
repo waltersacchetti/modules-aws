@@ -203,6 +203,7 @@ variable "aws" {
         deletion_protection    = optional(bool, false)
         multi_az               = optional(bool, false)
         publicly_accessible    = optional(bool, false)
+        databases              = optional(list(string), [])
       })), {})
       s3 = optional(map(object({
         force_destroy = optional(bool, false)
