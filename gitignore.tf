@@ -1,4 +1,10 @@
-resource "local_file" "crete_gitignore" {
-  filename = "${path.root}/.gitignore"
-  content  = templatefile("${path.module}/templates/gitignore.tftpl", {})
+resource "null_resource" "create_gitignore" {
+  triggers = {
+    always_run = timestamp()
+  }
+  provisioner "local-exec" {
+    command = templatefile("${path.module}/templates/gitignore.tftpl", {
+      gitgnore = "${path.root}/.gitignore"
+    })
+  }
 }

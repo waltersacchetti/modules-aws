@@ -1,7 +1,6 @@
-.terraform/
-terraform.tfstate.d/
-.terraform.lock.hcl
-errored.tfstate
-user_data/vpn-sso.xml
-data/
-.DS_Store
+#!/bin/bash -e
+for _iterator in ".terraform/" "terraform.tfstate.d/" ".terraform.lock.hcl" "errored.tfstate" "user_data/vpn-sso.xml" "data/" ".DS_Store";do
+    if ! grep -q "$_iterator" ${gitgnore}; then
+        echo "$_iterator" >> ${gitgnore}
+    fi
+done
