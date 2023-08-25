@@ -29,6 +29,27 @@ locals {
     Terraform   = "true"
   }, var.aws.tags)
 
+  eks_managed_node_groups = {
+    for nodegroup in flatten([
+      for key, value in var.aws.resources.eks : [
+        for mng_key, mng_value in value.eks_managed_node_groups : length(mng_value.subnets) > 0 ? {
+          eks     = key
+          mng     = mng_key
+          subnets = mng_value.subnets
+          vpc     = value.vpc
+          } : {
+          eks     = key
+          mng     = mng_key
+          subnets = value.subnets
+          vpc     = value.vpc
+        }
+      ]
+      ]) : "${nodegroup.eks}_${nodegroup.mng}" => {
+      subnets = nodegroup.subnets
+      vpc     = nodegroup.vpc
+    }
+  }
+
   eks_list_namespaces = flatten([
     for key, value in var.aws.resources.eks : [
       for namespace in value.namespaces : {
@@ -71,11 +92,11 @@ locals {
   eks_config_yaml = fileexists("data/${terraform.workspace}/eks/main/admin.kubeconfig") ? yamldecode(file("data/${terraform.workspace}/eks/main/admin.kubeconfig")) : null
 
   eks_config = {
-    host = local.eks_config_yaml != null ? local.eks_config_yaml.clusters[0].cluster.server : lookup(var.aws.resources, "eks", null) == null ? "" : lookup(var.aws.resources.eks, "main", null) == null ? "" : module.eks["main"].cluster_endpoint
+    host                   = local.eks_config_yaml != null ? local.eks_config_yaml.clusters[0].cluster.server : lookup(var.aws.resources, "eks", null) == null ? "" : lookup(var.aws.resources.eks, "main", null) == null ? "" : module.eks["main"].cluster_endpoint
     cluster_ca_certificate = local.eks_config_yaml != null ? base64decode(local.eks_config_yaml.clusters[0].cluster["certificate-authority-data"]) : lookup(var.aws.resources, "eks", null) == null ? "" : lookup(var.aws.resources.eks, "main", null) == null ? "" : base64decode(module.eks["main"].cluster_certificate_authority_data)
-    exec_api_version = "client.authentication.k8s.io/v1beta1"
-    exec_command     = "aws"
-    args = local.eks_config_yaml != null ? local.eks_config_yaml.users[0].user.exec.args : ["eks", "get-token", "--cluster-name", lookup(var.aws.resources, "eks", null) == null ? "" : lookup(var.aws.resources.eks, "main", null) == null ? "" : module.eks["main"].cluster_name, "--region", var.aws.region, "--profile", var.aws.profile]
+    exec_api_version       = "client.authentication.k8s.io/v1beta1"
+    exec_command           = "aws"
+    args                   = local.eks_config_yaml != null ? local.eks_config_yaml.users[0].user.exec.args : ["eks", "get-token", "--cluster-name", lookup(var.aws.resources, "eks", null) == null ? "" : lookup(var.aws.resources.eks, "main", null) == null ? "" : module.eks["main"].cluster_name, "--region", var.aws.region, "--profile", var.aws.profile]
   }
 
   rds_list_postgres_databases = flatten([

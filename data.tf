@@ -10,6 +10,18 @@ data "aws_subnets" "eks_network" {
   }
 }
 
+data "aws_subnets" "eks_mng_network" {
+  for_each = { for k, v in local.eks_managed_node_groups : k => v if v.vpc != "ESTO_NO_EXISTE" }
+  filter {
+    name   = "vpc-id"
+    values = [module.vpc[each.value.vpc].vpc_id]
+  }
+  filter {
+    name   = "tag:Name"
+    values = [for key in each.value.subnets : join(",", ["${local.translation_regions[var.aws.region]}-${var.aws.profile}-vpc-${each.value.vpc}-${key}"])]
+  }
+}
+
 data "aws_subnets" "asg_network" {
   for_each = var.aws.resources.asg
   filter {

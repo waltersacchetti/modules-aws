@@ -123,12 +123,13 @@ variable "aws" {
 
         eks_managed_node_groups = optional(map(object({
           ami_type           = optional(string, "AL2_x86_64")
-          desired_capacity   = optional(number, 1)
+          desired_size       = optional(number, 1)
           max_size           = optional(number, 2)
           min_size           = optional(number, 1)
           instance_type      = optional(string, "t3.medium")
           disk_size          = optional(number, "100")
           kubelet_extra_args = optional(string, "")
+          subnets            = optional(list(string), [])
         })), {})
         role_binding = optional(list(object({
           username    = string

@@ -78,12 +78,13 @@ module "eks" {
     for name, value in each.value.eks_managed_node_groups : name => {
       name               = "${local.translation_regions[var.aws.region]}-emng-${each.key}-${name}"
       ami_type           = value.ami_type
-      desired_capacity   = value.desired_capacity
+      desired_size       = value.desired_size
       instance_type      = value.instance_type
       min_size           = value.min_size
       max_size           = value.max_size
       disk_size          = value.disk_size
       kubelet_extra_args = value.kubelet_extra_args
+      subnet_ids         = data.aws_subnets.eks_mng_network["${each.key}_${name}"].ids
     }
   }
   tags = merge(local.common_tags, each.value.tags)
