@@ -82,6 +82,17 @@ data "aws_subnets" "lb_network" {
   }
 }
 
+data "aws_subnets" "ec2_network" {
+  for_each = var.aws.resources.ec2
+  filter {
+    name   = "vpc-id"
+    values = [module.vpc[each.value.vpc].vpc_id]
+  }
+  filter {
+    name   = "tag:Name"
+    values = ["${local.translation_regions[var.aws.region]}-${var.aws.profile}-vpc-${each.value.vpc}-${each.value.subnet}"]
+  }
+}
 
 # Configure with the necessary bucket policy
 data "aws_iam_policy_document" "s3" {

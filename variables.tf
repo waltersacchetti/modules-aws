@@ -91,6 +91,17 @@ variable "aws" {
         })), {})
         tags = optional(map(string), {})
       })), {})
+      ec2 = optional(map(object({
+        instance_type      = optional(string,"t3.micro")
+        key_name           = optional(string,null)
+        monitoring         = optional(bool,null)
+        ami                = optional(string,null)
+        vpc                = string
+        subnet             = string
+        sg                 = string
+        key_pair_tags      = optional(map(string), {})
+        tags               = optional(map(string), {})
+      })), {})
       elc = optional(map(object({
         engine                  = optional(string, "redis")
         engine_version          = optional(string, "7.0")
