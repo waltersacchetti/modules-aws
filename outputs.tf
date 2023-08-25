@@ -1,5 +1,6 @@
 output "output" {
-  value = local.merge_ouput
+  # value = local.merge_ouput
+  value = local.eks_config
 }
 
 

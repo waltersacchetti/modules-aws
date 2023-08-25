@@ -57,11 +57,11 @@ resource "random_password" "rds_postgres_db" {
 }
 
 resource "null_resource" "rds_postgres_db" {
-  depends_on = [ module.rds, random_password.rds_postgres_db ]
-  for_each         = local.rds_map_postgres_databases
+  depends_on = [module.rds, random_password.rds_postgres_db]
+  for_each   = local.rds_map_postgres_databases
   provisioner "local-exec" {
     command = templatefile("${path.module}/templates/rds-postgresql-create.tftpl", {
-      host = "postgresql://${module.rds[each.value.rds].db_instance_username}:${var.aws.resources.rds[each.value.rds].password == null || var.aws.resources.rds[each.value.rds].password == "" ? random_password.rds[each.value.rds].result : var.aws.resources.rds[each.value.rds].password}@${module.rds[each.value.rds].db_instance_endpoint}/${var.aws.resources.rds[each.value.rds].db_name == null ? each.value.rds : var.aws.resources.rds[each.value.rds].db_name}"
+      host     = "postgresql://${module.rds[each.value.rds].db_instance_username}:${var.aws.resources.rds[each.value.rds].password == null || var.aws.resources.rds[each.value.rds].password == "" ? random_password.rds[each.value.rds].result : var.aws.resources.rds[each.value.rds].password}@${module.rds[each.value.rds].db_instance_endpoint}/${var.aws.resources.rds[each.value.rds].db_name == null ? each.value.rds : var.aws.resources.rds[each.value.rds].db_name}"
       username = each.value.name
       password = random_password.rds_postgres_db[each.key].result
     })

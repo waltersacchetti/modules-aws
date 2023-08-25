@@ -1,8 +1,11 @@
+# ╔═════════════════════════════╗
+# ║ Create ELC Memcache         ║
+# ╚═════════════════════════════╝
 resource "aws_elasticache_cluster" "this" {
-  for_each   = var.aws.resources.elc-memcached
+  for_each   = { for k, v in var.aws.resources.elc : k => v if v.engine == "memcached" }
   cluster_id = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-elc-${each.key}"
 
-  engine               = "memcached"
+  engine               = each.value.engine
   engine_version       = each.value.engine_version
   port                 = 11211
   parameter_group_name = each.value.parameter_group_name
@@ -17,12 +20,16 @@ resource "aws_elasticache_cluster" "this" {
 }
 
 
+# ╔═════════════════════════════╗
+# ║ Create ELC Redis            ║
+# ╚═════════════════════════════╝
+
 resource "aws_elasticache_replication_group" "this" {
-  for_each             = var.aws.resources.elc-redis
+  for_each             = { for k, v in var.aws.resources.elc : k => v if v.engine == "redis" }
   replication_group_id = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-elc-${each.key}"
   description          = "Redis Replication Group for ${each.key}"
 
-  engine               = "redis"
+  engine               = each.value.engine
   engine_version       = each.value.engine_version
   port                 = 6379
   parameter_group_name = each.value.parameter_group_name

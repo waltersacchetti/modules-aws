@@ -90,8 +90,8 @@ module "eks" {
 }
 
 resource "kubernetes_namespace" "this" {
-  depends_on = [ module.eks ]
-  for_each = local.eks_map_namespaces
+  depends_on = [module.eks]
+  for_each   = local.eks_map_namespaces
   metadata {
     name = each.value.namespace
   }
@@ -141,7 +141,7 @@ resource "helm_release" "aws_load_balancer_controller" {
   repository = "https://aws.github.io/eks-charts"
   chart      = "aws-load-balancer-controller"
   namespace  = "kube-system"
-  depends_on = [ kubernetes_service_account.aws_load_balancer_controller ]
+  depends_on = [kubernetes_service_account.aws_load_balancer_controller]
   set {
     name  = "region"
     value = local.translation_regions[var.aws.region]
@@ -193,7 +193,7 @@ resource "kubernetes_role_binding" "this" {
 }
 
 resource "kubernetes_cluster_role_binding" "this" {
-  depends_on = [ module.eks ]
+  depends_on = [module.eks]
   for_each   = local.eks_map_cluster_role_binding
   metadata {
     name = "${each.value.clusterrole}-${each.value.username}"
@@ -237,15 +237,15 @@ module "eks_blueprints_addons" {
 # ╚═════════════════════════════╝
 resource "kubernetes_namespace" "cicd" {
   depends_on = [module.eks]
-  for_each = { for k, v in var.aws.resources.eks : k => v if v.cicd }
+  for_each   = { for k, v in var.aws.resources.eks : k => v if v.cicd }
   metadata {
     name = "devops"
   }
 }
 
 resource "kubernetes_service_account" "cicd" {
-  depends_on = [ kubernetes_namespace.cicd]
-  for_each = { for k, v in var.aws.resources.eks : k => v if v.cicd }
+  depends_on = [kubernetes_namespace.cicd]
+  for_each   = { for k, v in var.aws.resources.eks : k => v if v.cicd }
   metadata {
     name      = "cicd"
     namespace = "devops"
@@ -253,10 +253,10 @@ resource "kubernetes_service_account" "cicd" {
 }
 
 resource "kubernetes_secret" "cicd" {
-  depends_on = [ kubernetes_service_account.cicd]
-  for_each = { for k, v in var.aws.resources.eks : k => v if v.cicd }
+  depends_on = [kubernetes_service_account.cicd]
+  for_each   = { for k, v in var.aws.resources.eks : k => v if v.cicd }
   metadata {
-    name = "cicd-secret"
+    name      = "cicd-secret"
     namespace = "devops"
     annotations = {
       "kubernetes.io/service-account.name" = "cicd"
@@ -267,8 +267,8 @@ resource "kubernetes_secret" "cicd" {
 }
 
 resource "kubernetes_cluster_role_binding" "cicd" {
-  depends_on = [ kubernetes_service_account.cicd ]
-  for_each = { for k, v in var.aws.resources.eks : k => v if v.cicd }
+  depends_on = [kubernetes_service_account.cicd]
+  for_each   = { for k, v in var.aws.resources.eks : k => v if v.cicd }
   metadata {
     name = "devops-cicd-cluster-admin"
   }
@@ -290,10 +290,10 @@ resource "local_file" "kubeconfig_cicd" {
   for_each = { for k, v in var.aws.resources.eks : k => v if v.cicd }
   filename = "data/${terraform.workspace}/eks/${each.key}/cicd.kubeconfig"
   content = templatefile("${path.module}/templates/eks-cicd.tftpl", {
-    certificate  = module.eks[each.key].cluster_certificate_authority_data
-    host         = module.eks[each.key].cluster_endpoint
-    name         = "eks-${var.aws.profile}-${each.key}-cicd"
-    token        = kubernetes_secret.cicd[each.key].data.token
+    certificate = module.eks[each.key].cluster_certificate_authority_data
+    host        = module.eks[each.key].cluster_endpoint
+    name        = "eks-${var.aws.profile}-${each.key}-cicd"
+    token       = kubernetes_secret.cicd[each.key].data.token
   })
 }
 

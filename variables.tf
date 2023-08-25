@@ -4,6 +4,8 @@ variable "aws" {
     region  = string
     profile = string
     owner   = string
+    project = string
+    tags    = optional(map(string), {})
     resources = object({
       asg = optional(map(object({
         min_size          = optional(number, 1)
@@ -89,22 +91,15 @@ variable "aws" {
         })), {})
         tags = optional(map(string), {})
       })), {})
-      elc-memcached = optional(map(object({
-        engine_version       = string
-        node_type            = string
-        num_cache_nodes      = optional(number, 1)
-        parameter_group_name = string
-        sg                   = string
-        vpc                  = string
-        tags                 = optional(map(string), {})
-      })), {})
-      elc-redis = optional(map(object({
-        engine_version          = string
-        node_type               = string
-        num_cache_clusters      = optional(number,null)
-        num_node_groups         = optional(number,null)
-        replicas_per_node_group = optional(number,null)
-        parameter_group_name    = string
+      elc = optional(map(object({
+        engine                  = optional(string, "redis")
+        engine_version          = optional(string, "7.0")
+        node_type               = optional(string, "cache.m6g.large")
+        num_cache_nodes         = optional(number, 1)
+        num_cache_clusters      = optional(number, 0)
+        num_node_groups         = optional(number, 2)
+        replicas_per_node_group = optional(number, 1)
+        parameter_group_name    = optional(string, "default.redis7.cluster.on")
         sg                      = string
         vpc                     = string
         tags                    = optional(map(string), {})

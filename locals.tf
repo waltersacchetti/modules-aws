@@ -20,13 +20,14 @@ locals {
     postgres = 5432
   }
 
-  common_tags = {
+  common_tags = merge({
     Environment = lookup(local.translation_environments, element(split("-", var.aws.profile), 1), null) == null ? "custom" : local.translation_environments[element(split("-", var.aws.profile), 1)]
     ProjectKey  = element(split("-", var.aws.profile), 0)
+    ProjectName = var.aws.project
     Region      = var.aws.region
     Owner       = var.aws.owner
     Terraform   = "true"
-  }
+  }, var.aws.tags)
 
   eks_list_namespaces = flatten([
     for key, value in var.aws.resources.eks : [
@@ -67,11 +68,21 @@ locals {
     for role in local.eks_list_cluster_role_binding : "${role.eks}_${role.clusterrole}_${role.username}" => role
   }
 
-   rds_list_postgres_databases = flatten([
+  eks_config_yaml = fileexists("data/${terraform.workspace}/eks/main/admin.kubeconfig") ? yamldecode(file("data/${terraform.workspace}/eks/main/admin.kubeconfig")) : null
+
+  eks_config = {
+    host = local.eks_config_yaml != null ? local.eks_config_yaml.clusters[0].cluster.server : lookup(var.aws.resources, "eks", null) == null ? "" : lookup(var.aws.resources.eks, "main", null) == null ? "" : module.eks["main"].cluster_endpoint
+    cluster_ca_certificate = local.eks_config_yaml != null ? base64decode(local.eks_config_yaml.clusters[0].cluster["certificate-authority-data"]) : lookup(var.aws.resources, "eks", null) == null ? "" : lookup(var.aws.resources.eks, "main", null) == null ? "" : base64decode(module.eks["main"].cluster_certificate_authority_data)
+    exec_api_version = "client.authentication.k8s.io/v1beta1"
+    exec_command     = "aws"
+    args = local.eks_config_yaml != null ? local.eks_config_yaml.users[0].user.exec.args : ["eks", "get-token", "--cluster-name", lookup(var.aws.resources, "eks", null) == null ? "" : lookup(var.aws.resources.eks, "main", null) == null ? "" : module.eks["main"].cluster_name, "--region", var.aws.region, "--profile", var.aws.profile]
+  }
+
+  rds_list_postgres_databases = flatten([
     for key, value in var.aws.resources.rds : [
-        value.engine == "postgres" && length(value.databases) > 0 ? [
+      value.engine == "postgres" && length(value.databases) > 0 ? [
         for database in value.databases : {
-          rds = key
+          rds  = key
           name = database
         }
       ] : null
