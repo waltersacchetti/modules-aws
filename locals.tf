@@ -210,6 +210,11 @@ locals {
         resource_policy = local.output_cloudfront_policy
     })
 
+    ec2 = length(module.ec2) == 0 ? "" : templatefile("${path.module}/templates/output-ec2.tftpl",
+      {
+        resource_map = module.ec2
+    })
+
     eks = length(module.eks) == 0 ? "" : templatefile("${path.module}/templates/output-eks.tftpl",
       {
         resource_map        = module.eks,
