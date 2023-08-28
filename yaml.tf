@@ -1,5 +1,5 @@
 # ╔═════════════════════════════╗
-# ║ Create RDS yaml              ║
+# ║ Create RDS yaml             ║
 # ╚═════════════════════════════╝
 
 locals {
@@ -28,6 +28,10 @@ resource "local_file" "yaml_rds" {
   content  = yamlencode(local.yaml_rds)
 }
 
+# ╔════════════════════════════╗
+# ║ Create MQ yaml             ║
+# ╚════════════════════════════╝
+
 locals {
   yaml_mq = var.aws.resources.mq == 0 ? {} : {
     for key, value in var.aws.resources.mq : key => {
@@ -44,4 +48,25 @@ resource "local_file" "yaml_mq" {
   count    = length(var.aws.resources.mq) > 0 ? 1 : 0
   filename = "data/${terraform.workspace}/yaml/mq.yaml"
   content  = yamlencode(local.yaml_mq)
+}
+
+# ╔═════════════════════════════╗
+# ║ Create EC2 yaml             ║
+# ╚═════════════════════════════╝
+
+locals {
+  yaml_ec2 = var.aws.resources.ec2 == 0 ? {} : {
+    for key, value in var.aws.resources.ec2 : key => {
+      Ami               = module.ec2[key].ami,
+      Instance_Type     = value.instance_type,
+      Private_Ip        = module.ec2[key].private_ip,
+      Pem_Key_Location  = local_file.ec2-key[key].filename
+    }
+  }
+}
+
+resource "local_file" "yaml_ec2" {
+  count    = length(var.aws.resources.ec2) > 0 ? 1 : 0
+  filename = "data/${terraform.workspace}/yaml/ec2.yaml"
+  content  = yamlencode(local.yaml_ec2)
 }
