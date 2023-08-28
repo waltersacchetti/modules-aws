@@ -94,8 +94,8 @@ variable "aws" {
       ec2 = optional(map(object({
         instance_type               = optional(string,"t3.micro")
         key_name                    = optional(string,null)
-        monitoring                  = optional(bool,null)
-        ami                         = optional(string,null)
+        monitoring                  = optional(bool,false)
+        ami                         = optional(string,"ami-0ed752ea0f62749af")
         vpc                         = string
         subnet                      = string
         sg                          = string
@@ -107,7 +107,7 @@ variable "aws" {
           encrypted   = optional(bool,false)
           volume_type = optional(string,"gp3")
           throughput  = optional(number,125)
-          volume_size = optional(number,8)
+          volume_size = optional(number,100)
           tags        = optional(map(string),{})
         }),{})
       })), {})
@@ -150,6 +150,7 @@ variable "aws" {
           disk_size          = optional(number, "100")
           kubelet_extra_args = optional(string, "")
           subnets            = optional(list(string), [])
+          tags               = optional(map(string), {})
         })), {})
         role_binding = optional(list(object({
           username    = string
@@ -161,6 +162,7 @@ variable "aws" {
           clusterrole = string
         })), [])
         namespaces = optional(list(string), [])
+        cluster_addons = optional(map(any), null)
       })), {})
       iam = optional(map(object({
         policy = string
@@ -238,8 +240,10 @@ variable "aws" {
         egress_restricted = optional(bool, true)
         ingress_open      = optional(bool, false)
         ingress = optional(list(object({
-          from_port              = number
-          to_port                = optional(number, null)
+          ports = list(object({
+            from = number
+            to   = optional(number, null)
+          }))
           protocol               = optional(string, "tcp")
           source_security_groups = list(string)
         })), [])

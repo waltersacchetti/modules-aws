@@ -30,13 +30,15 @@ module "sg_ingress_rules" {
   security_group_id = module.sg[each.key].security_group_id
   ingress_with_source_security_group_id = flatten([
     for value in each.value.ingress : [
-      for sg in value.source_security_groups : {
-        from_port                = value.from_port
-        to_port                  = value.to_port != null ? value.to_port : value.from_port
-        protocol                 = value.protocol
-        source_security_group_id = module.sg[sg].security_group_id
-        description              = "${value.protocol}/${value.from_port} - Access from ${sg} to ${each.key}"
-      }
+      for sg in value.source_security_groups : [
+        for port in value.ports : {
+          from_port                = port.from
+          to_port                  = port.to != null ? port.to : port.from
+          protocol                 = value.protocol
+          source_security_group_id = module.sg[sg].security_group_id
+          description              = "${value.protocol}/${port.from} - Access from ${sg} to ${each.key}"
+        }
+      ]
     ]
   ])
 }

@@ -1,5 +1,5 @@
 #!/bin/bash -e
-for _iterator in ".terraform/" "terraform.tfstate.d/" ".terraform.lock.hcl" "errored.tfstate" "data/" "user_data/vpn-sso.xml" ".DS_Store";do
+for _iterator in ".terraform/" "terraform.tfstate.d/" ".terraform.lock.hcl" "errored.tfstate" "data/" "user_data/vpn-sso.xml" "private/" ".DS_Store";do
     if ! grep -w "$_iterator" ${gitgnore}; then
         echo "$_iterator" >> ${gitgnore}
     fi

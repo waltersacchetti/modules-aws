@@ -1,9 +1,9 @@
 # ╔═════════════════════════════╗
-# ║ Create RDS JSON              ║
+# ║ Create RDS yaml              ║
 # ╚═════════════════════════════╝
 
 locals {
-  json_rds = var.aws.resources.rds == 0 ? {} : {
+  yaml_rds = var.aws.resources.rds == 0 ? {} : {
     for key, value in var.aws.resources.rds : key => {
       Engine   = value.engine,
       Version  = value.engine_version,
@@ -22,14 +22,14 @@ locals {
   }
 }
 
-resource "local_file" "json_rds" {
+resource "local_file" "yaml_rds" {
   count    = length(var.aws.resources.rds) > 0 ? 1 : 0
-  filename = "data/${terraform.workspace}/json/rds.json"
-  content  = jsonencode(local.json_rds)
+  filename = "data/${terraform.workspace}/yaml/rds.yaml"
+  content  = yamlencode(local.yaml_rds)
 }
 
 locals {
-  json_mq = var.aws.resources.mq == 0 ? {} : {
+  yaml_mq = var.aws.resources.mq == 0 ? {} : {
     for key, value in var.aws.resources.mq : key => {
       Engine    = aws_mq_broker.this[key].engine_type,
       Version   = aws_mq_broker.this[key].engine_version,
@@ -40,8 +40,8 @@ locals {
   }
 }
 
-resource "local_file" "json_mq" {
+resource "local_file" "yaml_mq" {
   count    = length(var.aws.resources.mq) > 0 ? 1 : 0
-  filename = "data/${terraform.workspace}/json/mq.json"
-  content  = jsonencode(local.json_mq)
+  filename = "data/${terraform.workspace}/yaml/mq.yaml"
+  content  = yamlencode(local.yaml_mq)
 }

@@ -40,30 +40,7 @@ module "eks" {
     "controllerManager",
     "scheduler"
   ]
-  cluster_addons = {
-    aws-ebs-csi-driver = {}
-    aws-efs-csi-driver = {}
-    coredns            = {}
-    kube-proxy         = {}
-    vpc-cni = {
-      # Specify the VPC CNI addon should be deployed before compute to ensure
-      # the addon is configured before data plane compute resources are created
-      # See README for further details
-      before_compute = true
-      most_recent    = true
-      configuration_values = jsonencode({
-        env = {
-          # Reference https://aws.github.io/aws-eks-best-practices/reliability/docs/networkmanagement/#cni-custom-networking
-          AWS_VPC_K8S_CNI_CUSTOM_NETWORK_CFG = "false"
-          ENI_CONFIG_LABEL_DEF               = "topology.kubernetes.io/zone"
-
-          # Reference docs https://docs.aws.amazon.com/eks/latest/userguide/cni-increase-ip-addresses.html
-          ENABLE_PREFIX_DELEGATION = "true"
-          WARM_PREFIX_TARGET       = "1"
-        }
-      })
-    }
-  }
+  cluster_addons = each.value.cluster_addons == null ? local.eks_default_cluster_addons  : each.value.cluster_addons
 
   eks_managed_node_group_defaults = {
     ami_type                   = "AL2_x86_64"
@@ -85,6 +62,7 @@ module "eks" {
       disk_size          = value.disk_size
       kubelet_extra_args = value.kubelet_extra_args
       subnet_ids         = data.aws_subnets.eks_mng_network["${each.key}_${name}"].ids
+      tags               = merge(local.common_tags, each.value.tags, value.tags)
     }
   }
   tags = merge(local.common_tags, each.value.tags)
