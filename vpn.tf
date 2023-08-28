@@ -183,8 +183,8 @@ module "vpn_sg_ingress" {
     {
       from_port   = each.value.vpn_port
       to_port     = each.value.vpn_port
-      protocol    = each.value.transport_protocol
-      description = "Vpn access from ${each.value.transport_protocol} ${each.value.client_cidr_block} port ${each.value.vpn_port}"
+      protocol    = each.value.transport_protocol != null ? each.value.transport_protocol : each.value.type == "certificate" ? "udp" : "tcp"
+      description = "Vpn access from ${each.value.transport_protocol != null ? each.value.transport_protocol : each.value.type == "certificate" ? "udp" : "tcp"} ${each.value.client_cidr_block} port ${each.value.vpn_port}"
       cidr_blocks = each.value.client_cidr_block
     }
   ]
@@ -208,7 +208,7 @@ resource "aws_ec2_client_vpn_endpoint" "this" {
 
   server_certificate_arn = aws_acm_certificate.vpn_server[each.key].arn
   client_cidr_block      = each.value.client_cidr_block
-  transport_protocol     = each.value.transport_protocol
+  transport_protocol     = each.value.transport_protocol != null ? each.value.transport_protocol : each.value.type == "certificate" ? "udp" : "tcp"
   authentication_options {
     type                       = "${each.value.type}-authentication"
     root_certificate_chain_arn = each.value.type == "certificate" ? aws_acm_certificate.vpn_client[each.key].arn : null
@@ -247,7 +247,7 @@ resource "local_file" "ovpn_config_certificate" {
   content = templatefile("${path.module}/templates/ovpn-certificate.tftpl", {
     vpn_server    = replace(aws_ec2_client_vpn_endpoint.this[each.key].dns_name, "^\\*\\.", "")
     vpn_port      = each.value.vpn_port
-    vpn_transport = each.value.transport_protocol
+    vpn_transport = each.value.transport_protocol != null ? each.value.transport_protocol : "udp"
     keystore_cert = tls_self_signed_cert.vpn_ca.cert_pem
     cert_pem      = tls_locally_signed_cert.vpn_client[each.key].cert_pem
     cert_key      = tls_private_key.vpn_client[each.key].private_key_pem
@@ -261,7 +261,7 @@ resource "local_file" "ovpn_config_federeated" {
   content = templatefile("${path.module}/templates/ovpn-federated.tftpl", {
     vpn_server    = aws_ec2_client_vpn_endpoint.this[each.key].dns_name
     vpn_port      = each.value.vpn_port
-    vpn_transport = each.value.transport_protocol
+    vpn_transport = each.value.transport_protocol != null ? each.value.transport_protocol : "tcp"
     keystore_cert = tls_self_signed_cert.vpn_ca.cert_pem
     cert_name     = "${each.key}.${local.translation_regions[var.aws.region]}-${var.aws.profile}.vpn"
   })

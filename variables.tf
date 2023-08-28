@@ -92,24 +92,24 @@ variable "aws" {
         tags = optional(map(string), {})
       })), {})
       ec2 = optional(map(object({
-        instance_type               = optional(string,"t3.micro")
-        key_name                    = optional(string,null)
-        monitoring                  = optional(bool,false)
-        ami                         = optional(string,"ami-0ed752ea0f62749af")
+        instance_type               = optional(string, "t3.micro")
+        key_name                    = optional(string, null)
+        monitoring                  = optional(bool, false)
+        ami                         = optional(string, null)
         vpc                         = string
         subnet                      = string
         sg                          = string
         key_pair_tags               = optional(map(string), {})
-        user_data                   = optional(string,null)
-        user_data_replace_on_change = optional(bool,null)
+        user_data                   = optional(string, null)
+        user_data_replace_on_change = optional(bool, null)
         tags                        = optional(map(string), {})
-        root_block_device           = optional(object({
-          encrypted   = optional(bool,false)
-          volume_type = optional(string,"gp3")
-          throughput  = optional(number,125)
-          volume_size = optional(number,100)
-          tags        = optional(map(string),{})
-        }),{})
+        root_block_device = optional(object({
+          encrypted   = optional(bool, false)
+          volume_type = optional(string, "gp3")
+          throughput  = optional(number, 125)
+          volume_size = optional(number, 100)
+          tags        = optional(map(string), {})
+        }), {})
       })), {})
       elc = optional(map(object({
         engine                  = optional(string, "redis")
@@ -161,7 +161,7 @@ variable "aws" {
           username    = string
           clusterrole = string
         })), [])
-        namespaces = optional(list(string), [])
+        namespaces     = optional(list(string), [])
         cluster_addons = optional(map(any), null)
       })), {})
       iam = optional(map(object({
@@ -279,7 +279,7 @@ variable "aws" {
 
         tags                  = optional(map(string), {})
         client_cidr_block     = optional(string, "192.168.100.0/22")
-        transport_protocol    = optional(string, "udp")
+        transport_protocol    = optional(string, null)
         split_tunnel          = optional(bool, true)
         vpn_port              = optional(number, 443)
         session_timeout_hours = optional(number, 8)

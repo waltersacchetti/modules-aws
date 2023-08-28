@@ -40,7 +40,7 @@ module "eks" {
     "controllerManager",
     "scheduler"
   ]
-  cluster_addons = each.value.cluster_addons == null ? local.eks_default_cluster_addons  : each.value.cluster_addons
+  cluster_addons = each.value.cluster_addons == null ? local.eks_default_cluster_addons : each.value.cluster_addons
 
   eks_managed_node_group_defaults = {
     ami_type                   = "AL2_x86_64"

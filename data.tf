@@ -126,3 +126,17 @@ data "aws_cloudfront_response_headers_policy" "managed-cors-with-preflight" {
   name = "Managed-CORS-With-Preflight"
   #id -> 5cc3b908-e619-4b99-88e5-2cf7f45965bd
 }
+
+data "aws_ami" "amazon-linux-2" {
+  owners           = ["amazon"]
+  filter {
+    name   = "architecture"
+    values = ["x86_64"]
+  }
+  filter {
+    name   = "name"
+    values = ["amzn2-ami-hvm-*-x86_64-ebs"]
+  }
+
+  most_recent = true
+}
