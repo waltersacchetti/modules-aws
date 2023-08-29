@@ -49,6 +49,10 @@ module "eks" {
     tags                       = merge(local.common_tags, each.value.tags)
     instance_type              = "t3.medium"
     vpc_security_group_ids     = [module.sg[each.value.sg].security_group_id]
+    # Needed by the aws-ebs-csi-driver 
+    iam_role_additional_policies = { 
+        AmazonEBSCSIDriverPolicy = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy" 
+    }
   }
 
   eks_managed_node_groups = {
