@@ -48,6 +48,7 @@ module "eks" {
     subnets                    = data.aws_subnets.eks_network[each.key].ids
     tags                       = merge(local.common_tags, each.value.tags)
     instance_type              = "t3.medium"
+    disk_size                  = 100
     vpc_security_group_ids     = [module.sg[each.value.sg].security_group_id]
     # Needed by the aws-ebs-csi-driver 
     iam_role_additional_policies = { 
@@ -63,7 +64,6 @@ module "eks" {
       instance_type      = value.instance_type
       min_size           = value.min_size
       max_size           = value.max_size
-      disk_size          = value.disk_size
       kubelet_extra_args = value.kubelet_extra_args
       subnet_ids         = data.aws_subnets.eks_mng_network["${each.key}_${name}"].ids
       tags               = merge(local.common_tags, each.value.tags, value.tags)

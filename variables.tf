@@ -147,7 +147,6 @@ variable "aws" {
           max_size           = optional(number, 2)
           min_size           = optional(number, 1)
           instance_type      = optional(string, "t3.medium")
-          disk_size          = optional(number, "100")
           kubelet_extra_args = optional(string, "")
           subnets            = optional(list(string), [])
           tags               = optional(map(string), {})
