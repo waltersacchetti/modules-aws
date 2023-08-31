@@ -57,10 +57,10 @@ resource "local_file" "yaml_mq" {
 locals {
   yaml_ec2 = var.aws.resources.ec2 == 0 ? {} : {
     for key, value in var.aws.resources.ec2 : key => {
-      Ami               = module.ec2[key].ami,
-      Instance_Type     = value.instance_type,
-      Private_Ip        = module.ec2[key].private_ip,
-      Pem_Key_Location  = local_file.ec2-key[key].filename
+      Ami              = module.ec2[key].ami,
+      Instance_Type    = value.instance_type,
+      Private_Ip       = module.ec2[key].private_ip,
+      Pem_Key_Location = local_file.ec2-key[key].filename
     }
   }
 }
@@ -78,8 +78,8 @@ resource "local_file" "yaml_ec2" {
 locals {
   yaml_iam = var.aws.resources.iam == 0 ? {} : {
     for key, value in var.aws.resources.iam : key => {
-      Name         = aws_iam_role.this[key].name,
-      Description  = aws_iam_role.this[key].description,
+      Name                  = aws_iam_role.this[key].name,
+      Description           = aws_iam_role.this[key].description,
       Role_Policy_To_Assume = aws_iam_role.this[key].assume_role_policy
     }
   }
@@ -120,14 +120,14 @@ resource "local_file" "yaml_s3" {
 locals {
   yaml_asg = var.aws.resources.asg == 0 ? {} : {
     for key, value in var.aws.resources.asg : key => {
-      Name                        = module.asg[key].autoscaling_group_name,
-      Ami                         = value.image_id,
-      Instance_Type               = value.instance_type,
-      Desired_Size                = module.asg[key].autoscaling_group_desired_capacity,
-      Min_Size                    = module.asg[key].autoscaling_group_min_size,
-      Max_Size                    = module.asg[key].autoscaling_group_max_size,
-      Subnets                     = module.asg[key].autoscaling_group_vpc_zone_identifier,
-      Launch_Template_Name        = module.asg[key].launch_template_name
+      Name                 = module.asg[key].autoscaling_group_name,
+      Ami                  = value.image_id,
+      Instance_Type        = value.instance_type,
+      Desired_Size         = module.asg[key].autoscaling_group_desired_capacity,
+      Min_Size             = module.asg[key].autoscaling_group_min_size,
+      Max_Size             = module.asg[key].autoscaling_group_max_size,
+      Subnets              = module.asg[key].autoscaling_group_vpc_zone_identifier,
+      Launch_Template_Name = module.asg[key].launch_template_name
     }
   }
 }
@@ -146,22 +146,22 @@ resource "local_file" "yaml_asg" {
 locals {
   yaml_lb = var.aws.resources.lb == 0 ? {} : {
     for key, value in var.aws.resources.lb : key => {
-      Load_Balancer               = {
-        Name           = aws_lb.this[key].name,
-        Type           = aws_lb.this[key].load_balancer_type,
-        Subnets        = aws_lb.this[key].subnets
-        Scheme         = aws_lb.this[key].internal == false ? "Internet-facing" : "Internal"
+      Load_Balancer = {
+        Name    = aws_lb.this[key].name,
+        Type    = aws_lb.this[key].load_balancer_type,
+        Subnets = aws_lb.this[key].subnets
+        Scheme  = aws_lb.this[key].internal == false ? "Internet-facing" : "Internal"
       }
-      Lb_Target_Group                = {  
-        Port           = aws_lb_target_group.this[key].port,
-        Protocol       = aws_lb_target_group.this[key].protocol,
-        Target_Type    = aws_lb_target_group.this[key].target_type,
-        Health_Check   = aws_lb_target_group.this[key].health_check
+      Lb_Target_Group = {
+        Port         = aws_lb_target_group.this[key].port,
+        Protocol     = aws_lb_target_group.this[key].protocol,
+        Target_Type  = aws_lb_target_group.this[key].target_type,
+        Health_Check = aws_lb_target_group.this[key].health_check
       }
-      Lb_Listener                    = {
-        Port           = aws_lb_listener.this[key].port,
-        Protocol       = aws_lb_listener.this[key].protocol,
-        Ssl_Policy     = aws_lb_listener.this[key].ssl_policy
+      Lb_Listener = {
+        Port       = aws_lb_listener.this[key].port,
+        Protocol   = aws_lb_listener.this[key].protocol,
+        Ssl_Policy = aws_lb_listener.this[key].ssl_policy
       }
     }
   }
@@ -182,11 +182,11 @@ resource "local_file" "yaml_lb" {
 locals {
   yaml_kinesis = var.aws.resources.kinesis == 0 ? {} : {
     for key, value in var.aws.resources.kinesis : key => {
-      Name            = aws_kinesis_video_stream.this[key].name,
-      Device_Name     = aws_kinesis_video_stream.this[key].device_name,
-      Data_Retention  = aws_kinesis_video_stream.this[key].data_retention_in_hours,
-      Media_Type      = aws_kinesis_video_stream.this[key].media_type,
-      Version         = aws_kinesis_video_stream.this[key].version
+      Name           = aws_kinesis_video_stream.this[key].name,
+      Device_Name    = aws_kinesis_video_stream.this[key].device_name,
+      Data_Retention = aws_kinesis_video_stream.this[key].data_retention_in_hours,
+      Media_Type     = aws_kinesis_video_stream.this[key].media_type,
+      Version        = aws_kinesis_video_stream.this[key].version
     }
   }
 }
@@ -205,12 +205,12 @@ resource "local_file" "yaml_kinesis" {
 locals {
   yaml_waf = var.aws.resources.waf == 0 ? {} : {
     for key, value in var.aws.resources.waf : key => {
-      Name            = aws_wafv2_web_acl.this[key].name,
-      Capacity        = aws_wafv2_web_acl.this[key].capacity,
-      Scope           = aws_wafv2_web_acl.this[key].scope,
-      Rules           = length(value.rules) > 0 ? [
+      Name     = aws_wafv2_web_acl.this[key].name,
+      Capacity = aws_wafv2_web_acl.this[key].capacity,
+      Scope    = aws_wafv2_web_acl.this[key].scope,
+      Rules = length(value.rules) > 0 ? [
         for rule in value.rules : {
-          priority = rule.priority
+          priority  = rule.priority
           statement = rule.statement
         }
       ] : null,
@@ -232,17 +232,17 @@ resource "local_file" "yaml_waf" {
 locals {
   yaml_vpc = var.aws.resources.vpc == 0 ? {} : {
     for key, value in var.aws.resources.vpc : key => {
-      Name            = module.vpc[key].name,
-      Id              = module.vpc[key].vpc_id,
-      Azs             = module.vpc[key].azs,
-      Subnets         = {
+      Name = module.vpc[key].name,
+      Id   = module.vpc[key].vpc_id,
+      Azs  = module.vpc[key].azs,
+      Subnets = {
         Private_Subnets     = module.vpc[key].private_subnets,
         Public_Subnets      = module.vpc[key].public_subnets,
         Database_subnets    = module.vpc[key].database_subnets,
         Elasticache_subnets = module.vpc[key].elasticache_subnets
       }
-      Nat_Gw_Ids      = module.vpc[key].natgw_ids,
-      Internet_Gw_Id  = module.vpc[key].igw_id
+      Nat_Gw_Ids     = module.vpc[key].natgw_ids,
+      Internet_Gw_Id = module.vpc[key].igw_id
     }
   }
 }

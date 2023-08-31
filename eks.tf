@@ -51,22 +51,23 @@ module "eks" {
     disk_size                  = 100
     vpc_security_group_ids     = [module.sg[each.value.sg].security_group_id]
     # Needed by the aws-ebs-csi-driver 
-    iam_role_additional_policies = { 
-        AmazonEBSCSIDriverPolicy = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy" 
+    iam_role_additional_policies = {
+      AmazonEBSCSIDriverPolicy = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
     }
   }
 
   eks_managed_node_groups = {
     for name, value in each.value.eks_managed_node_groups : name => {
-      name               = "${local.translation_regions[var.aws.region]}-emng-${each.key}-${name}"
-      ami_type           = value.ami_type
-      desired_size       = value.desired_size
-      instance_type      = value.instance_type
-      min_size           = value.min_size
-      max_size           = value.max_size
-      kubelet_extra_args = value.kubelet_extra_args
-      subnet_ids         = data.aws_subnets.eks_mng_network["${each.key}_${name}"].ids
-      tags               = merge(local.common_tags, each.value.tags, value.tags)
+      name                       = "${local.translation_regions[var.aws.region]}-emng-${each.key}-${name}"
+      ami_type                   = value.ami_type
+      desired_size               = value.desired_size
+      instance_type              = value.instance_type
+      min_size                   = value.min_size
+      max_size                   = value.max_size
+      kubelet_extra_args         = value.kubelet_extra_args
+      subnet_ids                 = data.aws_subnets.eks_mng_network["${each.key}_${name}"].ids
+      tags                       = merge(local.common_tags, each.value.tags, value.tags)
+      block_device_mappings      = value.block_device_mappings == null ? local.eks_default_block_device_mappings : value.block_device_mappings
     }
   }
   tags = merge(local.common_tags, each.value.tags)

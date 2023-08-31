@@ -142,14 +142,15 @@ variable "aws" {
         })), [])
 
         eks_managed_node_groups = optional(map(object({
-          ami_type           = optional(string, "AL2_x86_64")
-          desired_size       = optional(number, 1)
-          max_size           = optional(number, 2)
-          min_size           = optional(number, 1)
-          instance_type      = optional(string, "t3.medium")
-          kubelet_extra_args = optional(string, "")
-          subnets            = optional(list(string), [])
-          tags               = optional(map(string), {})
+          ami_type                   = optional(string, "AL2_x86_64")
+          desired_size               = optional(number, 1)
+          max_size                   = optional(number, 2)
+          min_size                   = optional(number, 1)
+          instance_type              = optional(string, "t3.medium")
+          kubelet_extra_args         = optional(string, "")
+          subnets                    = optional(list(string), [])
+          block_device_mappings      = optional(map(map(any)), null)
+          tags                       = optional(map(string), {})
         })), {})
         role_binding = optional(list(object({
           username    = string
@@ -161,7 +162,7 @@ variable "aws" {
           clusterrole = string
         })), [])
         namespaces     = optional(list(string), [])
-        cluster_addons = optional(map(any), null)
+        cluster_addons = optional(map(map(string)), null)
       })), {})
       iam = optional(map(object({
         policy = string

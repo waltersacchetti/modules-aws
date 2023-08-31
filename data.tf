@@ -128,7 +128,7 @@ data "aws_cloudfront_response_headers_policy" "managed-cors-with-preflight" {
 }
 
 data "aws_ami" "amazon-linux-2" {
-  owners           = ["amazon"]
+  owners = ["amazon"]
   filter {
     name   = "architecture"
     values = ["x86_64"]
