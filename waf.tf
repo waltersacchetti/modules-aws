@@ -1,3 +1,6 @@
+# ╔══════════════════════════════════════════════════════════════════════════════════════════════╗
+# ║                                             Module                                           ║
+# ╚══════════════════════════════════════════════════════════════════════════════════════════════╝
 resource "aws_wafv2_web_acl" "this" {
   for_each    = var.aws.resources.waf
   name        = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-waf-${each.key}"
@@ -41,5 +44,3 @@ resource "aws_wafv2_web_acl" "this" {
     }
   }
 }
-
-

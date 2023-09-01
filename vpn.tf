@@ -1,7 +1,25 @@
+# ╔══════════════════════════════════════════════════════════════════════════════════════════════╗
+# ║                                             Data                                             ║
+# ╚══════════════════════════════════════════════════════════════════════════════════════════════╝
+data "aws_subnets" "vpn_network" {
+  for_each = var.aws.resources.vpn
+  filter {
+    name   = "vpc-id"
+    values = [module.vpc[each.value.vpc].vpc_id]
+  }
+  filter {
+    name   = "tag:Name"
+    values = [for key in each.value.subnets : join(",", ["${local.translation_regions[var.aws.region]}-${var.aws.profile}-vpc-${each.value.vpc}-${key}"])]
+  }
+}
+
+# ╔══════════════════════════════════════════════════════════════════════════════════════════════╗
+# ║                                             Module                                           ║
+# ╚══════════════════════════════════════════════════════════════════════════════════════════════╝
+
 # ╔═════════════════════════════╗
 # ║ Create VPN CA               ║
 # ╚═════════════════════════════╝
-
 resource "tls_private_key" "vpn_ca" {
   algorithm = "RSA"
   rsa_bits  = 4096

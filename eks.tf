@@ -1,4 +1,148 @@
+# ╔══════════════════════════════════════════════════════════════════════════════════════════════╗
+# ║                                             Locals                                           ║
+# ╚══════════════════════════════════════════════════════════════════════════════════════════════╝
+locals {
+  eks_default_block_device_mappings = {
+    xvda = {
+      device_name = "/dev/xvda"
+      ebs = {
+        volume_size           = 100
+        volume_type           = "gp3"
+        iops                  = 300
+        encrypted             = false
+        delete_on_termination = true
+      }
+    }
+  }
+
+  eks_default_cluster_addons = {
+    aws-ebs-csi-driver = {}
+    aws-efs-csi-driver = {}
+    coredns            = {}
+    kube-proxy         = {}
+    # vpc-cni = {
+    #   # Specify the VPC CNI addon should be deployed before compute to ensure
+    #   # the addon is configured before data plane compute resources are created
+    #   # See README for further details
+    #   before_compute = true
+    #   most_recent    = true
+    #   configuration_values = jsonencode({
+    #     env = {
+    #       # Reference https://aws.github.io/aws-eks-best-practices/reliability/docs/networkmanagement/#cni-custom-networking
+    #       AWS_VPC_K8S_CNI_CUSTOM_NETWORK_CFG = "true"
+    #       ENI_CONFIG_LABEL_DEF               = "topology.kubernetes.io/zone"
+
+    #       # Reference docs https://docs.aws.amazon.com/eks/latest/userguide/cni-increase-ip-addresses.html
+    #       ENABLE_PREFIX_DELEGATION = "true"
+    #       WARM_PREFIX_TARGET       = "1"
+    #     }
+    #   })
+    # }
+  }
+
+  eks_managed_node_groups = {
+    for nodegroup in flatten([
+      for key, value in var.aws.resources.eks : [
+        for mng_key, mng_value in value.eks_managed_node_groups : length(mng_value.subnets) > 0 ? {
+          eks     = key
+          mng     = mng_key
+          subnets = mng_value.subnets
+          vpc     = value.vpc
+          } : {
+          eks     = key
+          mng     = mng_key
+          subnets = value.subnets
+          vpc     = value.vpc
+        }
+      ]
+      ]) : "${nodegroup.eks}_${nodegroup.mng}" => {
+      subnets = nodegroup.subnets
+      vpc     = nodegroup.vpc
+    }
+  }
+
+  eks_list_namespaces = flatten([
+    for key, value in var.aws.resources.eks : [
+      for namespace in value.namespaces : {
+        namespace = namespace
+        eks       = key
+      }
+    ]
+  ])
+
+  eks_map_namespaces = {
+    for namespace in local.eks_list_namespaces : "${namespace.eks}_${namespace.namespace}" => namespace
+  }
+
+  eks_list_role_binding = flatten([
+    for key, value in var.aws.resources.eks : [
+      for role in value.role_binding : [
+        for namespace in role.namespaces : {
+          namespace   = namespace
+          clusterrole = role.clusterrole
+          username    = role.username
+          eks         = key
+  }]]])
+
+  eks_map_role_binding = {
+    for role in local.eks_list_role_binding : "${role.eks}_${role.namespace}_${role.clusterrole}_${role.username}" => role
+  }
+
+  eks_list_cluster_role_binding = flatten([
+    for key, value in var.aws.resources.eks : [
+      for role in value.cluster_role_binding : {
+        clusterrole = role.clusterrole
+        username    = role.username
+        eks         = key
+  }]])
+
+  eks_map_cluster_role_binding = {
+    for role in local.eks_list_cluster_role_binding : "${role.eks}_${role.clusterrole}_${role.username}" => role
+  }
+
+  eks_config_yaml = fileexists("data/${terraform.workspace}/eks/main/admin.kubeconfig") ? yamldecode(file("data/${terraform.workspace}/eks/main/admin.kubeconfig")) : null
+
+  eks_config = {
+    host                   = local.eks_config_yaml != null ? local.eks_config_yaml.clusters[0].cluster.server : lookup(var.aws.resources, "eks", null) == null ? "" : lookup(var.aws.resources.eks, "main", null) == null ? "" : module.eks["main"].cluster_endpoint
+    cluster_ca_certificate = local.eks_config_yaml != null ? base64decode(local.eks_config_yaml.clusters[0].cluster["certificate-authority-data"]) : lookup(var.aws.resources, "eks", null) == null ? "" : lookup(var.aws.resources.eks, "main", null) == null ? "" : base64decode(module.eks["main"].cluster_certificate_authority_data)
+    exec_api_version       = "client.authentication.k8s.io/v1beta1"
+    exec_command           = "aws"
+    args                   = local.eks_config_yaml != null ? local.eks_config_yaml.users[0].user.exec.args : ["eks", "get-token", "--cluster-name", lookup(var.aws.resources, "eks", null) == null ? "" : lookup(var.aws.resources.eks, "main", null) == null ? "" : module.eks["main"].cluster_name, "--region", var.aws.region, "--profile", var.aws.profile]
+  }
+}
+
+# ╔══════════════════════════════════════════════════════════════════════════════════════════════╗
+# ║                                             Data                                             ║
+# ╚══════════════════════════════════════════════════════════════════════════════════════════════╝
+data "aws_subnets" "eks_network" {
+  for_each = var.aws.resources.eks
+  filter {
+    name   = "vpc-id"
+    values = [module.vpc[each.value.vpc].vpc_id]
+  }
+  filter {
+    name   = "tag:Name"
+    values = [for key in each.value.subnets : join(",", ["${local.translation_regions[var.aws.region]}-${var.aws.profile}-vpc-${each.value.vpc}-${key}"])]
+  }
+}
+
+data "aws_subnets" "eks_mng_network" {
+  for_each = { for k, v in local.eks_managed_node_groups : k => v if v.vpc != "ESTO_NO_EXISTE" }
+  filter {
+    name   = "vpc-id"
+    values = [module.vpc[each.value.vpc].vpc_id]
+  }
+  filter {
+    name   = "tag:Name"
+    values = [for key in each.value.subnets : join(",", ["${local.translation_regions[var.aws.region]}-${var.aws.profile}-vpc-${each.value.vpc}-${key}"])]
+  }
+}
+
+# ╔══════════════════════════════════════════════════════════════════════════════════════════════╗
+# ║                                             Module                                           ║
+# ╚══════════════════════════════════════════════════════════════════════════════════════════════╝
 # The module of the EKS cluster does not support to define dynamic providers
+
 # ╔══════════════════════════════╗
 # ║ Deploy EKS & Create namspaces║
 # ╚══════════════════════════════╝

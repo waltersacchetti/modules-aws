@@ -1,3 +1,32 @@
+# ╔══════════════════════════════════════════════════════════════════════════════════════════════╗
+# ║                                             Locals                                           ║
+# ╚══════════════════════════════════════════════════════════════════════════════════════════════╝
+locals {
+  translation_rds_ports = {
+    aurora   = 3306
+    mysql    = 3306
+    postgres = 5432
+  }
+
+  rds_list_postgres_databases = flatten([
+    for key, value in var.aws.resources.rds : [
+      value.engine == "postgres" && length(value.databases) > 0 ? [
+        for database in value.databases : {
+          rds  = key
+          name = database
+        }
+      ] : null
+    ]
+  ])
+
+  rds_map_postgres_databases = {
+    for database in local.rds_list_postgres_databases : "${database.rds}_${database.name}" => database
+  }
+}
+
+# ╔══════════════════════════════════════════════════════════════════════════════════════════════╗
+# ║                                             Module                                           ║
+# ╚══════════════════════════════════════════════════════════════════════════════════════════════╝
 resource "random_password" "rds" {
   for_each         = var.aws.resources.rds
   length           = 16

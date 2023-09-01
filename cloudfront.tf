@@ -1,3 +1,24 @@
+# ╔══════════════════════════════════════════════════════════════════════════════════════════════╗
+# ║                                             Data                                             ║
+# ╚══════════════════════════════════════════════════════════════════════════════════════════════╝
+data "aws_cloudfront_cache_policy" "managed-cachingdisabled" {
+  name = "Managed-CachingDisabled"
+  #id -> 4135ea2d-6df8-44a3-9df3-4b5a84be39ad
+}
+
+data "aws_cloudfront_origin_request_policy" "managed-allviewer" {
+  name = "Managed-AllViewer"
+  #id -> 216adef6-5c7f-47e4-b989-5492eafa07d3
+}
+
+data "aws_cloudfront_response_headers_policy" "managed-cors-with-preflight" {
+  name = "Managed-CORS-With-Preflight"
+  #id -> 5cc3b908-e619-4b99-88e5-2cf7f45965bd
+}
+
+# ╔══════════════════════════════════════════════════════════════════════════════════════════════╗
+# ║                                             Module                                           ║
+# ╚══════════════════════════════════════════════════════════════════════════════════════════════╝
 resource "aws_cloudfront_distribution" "this" {
   for_each     = var.aws.resources.cloudfront_distributions
   enabled      = each.value.enabled

@@ -1,3 +1,6 @@
+# ╔══════════════════════════════════════════════════════════════════════════════════════════════╗
+# ║                                             Module                                           ║
+# ╚══════════════════════════════════════════════════════════════════════════════════════════════╝
 resource "aws_kinesis_video_stream" "this" {
   for_each                = var.aws.resources.kinesis
   name                    = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-kinesis-${each.key}"

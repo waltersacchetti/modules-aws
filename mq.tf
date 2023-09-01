@@ -1,3 +1,21 @@
+# ╔══════════════════════════════════════════════════════════════════════════════════════════════╗
+# ║                                             Data                                             ║
+# ╚══════════════════════════════════════════════════════════════════════════════════════════════╝
+data "aws_subnets" "mq_network" {
+  for_each = var.aws.resources.mq
+  filter {
+    name   = "vpc-id"
+    values = [module.vpc[each.value.vpc].vpc_id]
+  }
+  filter {
+    name   = "tag:Name"
+    values = [for key in each.value.subnets : join(",", ["${local.translation_regions[var.aws.region]}-${var.aws.profile}-vpc-${each.value.vpc}-${key}"])]
+  }
+}
+
+# ╔══════════════════════════════════════════════════════════════════════════════════════════════╗
+# ║                                             Module                                           ║
+# ╚══════════════════════════════════════════════════════════════════════════════════════════════╝
 resource "aws_mq_configuration" "this" {
   for_each       = var.aws.resources.mq
   name           = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-mq-config-${each.key}"

@@ -1,3 +1,36 @@
+# ╔══════════════════════════════════════════════════════════════════════════════════════════════╗
+# ║                                             Data                                             ║
+# ╚══════════════════════════════════════════════════════════════════════════════════════════════╝
+data "aws_subnets" "ec2_network" {
+  for_each = var.aws.resources.ec2
+  filter {
+    name   = "vpc-id"
+    values = [module.vpc[each.value.vpc].vpc_id]
+  }
+  filter {
+    name   = "tag:Name"
+    values = ["${local.translation_regions[var.aws.region]}-${var.aws.profile}-vpc-${each.value.vpc}-${each.value.subnet}"]
+  }
+}
+
+data "aws_ami" "amazon-linux-2" {
+  owners = ["amazon"]
+  filter {
+    name   = "architecture"
+    values = ["x86_64"]
+  }
+  filter {
+    name   = "name"
+    values = ["amzn2-ami-hvm-*-x86_64-ebs"]
+  }
+
+  most_recent = true
+}
+
+
+# ╔══════════════════════════════════════════════════════════════════════════════════════════════╗
+# ║                                             Module                                           ║
+# ╚══════════════════════════════════════════════════════════════════════════════════════════════╝
 resource "tls_private_key" "ec2_key" {
   for_each  = var.aws.resources.ec2
   algorithm = "RSA"
