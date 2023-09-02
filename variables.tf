@@ -23,7 +23,19 @@ variable "aws" {
         sg                = string
         iam_role_policies = optional(map(string), {})
         tags              = optional(map(string), {})
-        lb-tg             = string # Required for this use case
+        lb                = object({
+          private_lb = bool
+        })
+        lb_target_group   = object({
+          application_port     = number
+          application_protocol = string
+        })
+        lb_listener       = object({
+          lb_port              = number
+          lb_protocol          = string
+          ssl_policy           = optional(string,null)
+          certificate_arn      = optional(string,null)
+        })
       })), {})
       cloudfront_cache_policies = optional(map(object({
         name        = string
@@ -175,18 +187,6 @@ variable "aws" {
         media_type              = optional(string, null)
         tags                    = optional(map(string), {})
         region                  = optional(string, null)
-      })), {})
-      lb = optional(map(object({
-        vpc                  = string
-        subnets              = list(string)
-        application_port     = number
-        application_protocol = string
-        private_lb           = optional(bool, false)
-        lb_port              = optional(number, null)
-        lb_protocol          = optional(string, "TCP") # Optional TCP for this use case (NLB)
-        ssl_policy           = optional(string, null)
-        certificate_arn      = optional(string, null)
-        tags                 = optional(map(string), {})
       })), {})
       mq = optional(map(object({
         tags               = optional(map(string), {})

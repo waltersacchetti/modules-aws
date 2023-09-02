@@ -128,6 +128,23 @@ locals {
       Max_Size             = module.asg[key].autoscaling_group_max_size,
       Subnets              = module.asg[key].autoscaling_group_vpc_zone_identifier,
       Launch_Template_Name = module.asg[key].launch_template_name
+      Load_Balancer        = {
+        Name         = aws_lb.asg[key].name,
+        Type         = aws_lb.asg[key].load_balancer_type,
+        Subnets      = aws_lb.asg[key].subnets,
+        Scheme       = aws_lb.asg[key].internal == false ? "Internet-facing" : "Internal"
+      }
+      Load_Balancer_Target_Group      = {
+        Port         = aws_lb_target_group.asg[key].port,
+        Protocol     = aws_lb_target_group.asg[key].protocol,
+        Target_Type  = aws_lb_target_group.asg[key].target_type,
+        Health_Check = aws_lb_target_group.asg[key].health_check
+      }
+      Load_Balancer_Listener          = {
+        Port         = aws_lb_listener.asg[key].port,
+        Protocol     = aws_lb_listener.asg[key].protocol,
+        Ssl_Policy   = aws_lb_listener.asg[key].ssl_policy
+      }
     }
   }
 }
@@ -137,43 +154,6 @@ resource "local_file" "yaml_asg" {
   filename = "data/${terraform.workspace}/yaml/asg.yaml"
   content  = yamlencode(local.yaml_asg)
 }
-
-
-# ╔════════════════════════════╗
-# ║ Create Load Balancer yaml  ║
-# ╚════════════════════════════╝
-
-locals {
-  yaml_lb = var.aws.resources.lb == 0 ? {} : {
-    for key, value in var.aws.resources.lb : key => {
-      Load_Balancer = {
-        Name    = aws_lb.this[key].name,
-        Type    = aws_lb.this[key].load_balancer_type,
-        Subnets = aws_lb.this[key].subnets
-        Scheme  = aws_lb.this[key].internal == false ? "Internet-facing" : "Internal"
-      }
-      Lb_Target_Group = {
-        Port         = aws_lb_target_group.this[key].port,
-        Protocol     = aws_lb_target_group.this[key].protocol,
-        Target_Type  = aws_lb_target_group.this[key].target_type,
-        Health_Check = aws_lb_target_group.this[key].health_check
-      }
-      Lb_Listener = {
-        Port       = aws_lb_listener.this[key].port,
-        Protocol   = aws_lb_listener.this[key].protocol,
-        Ssl_Policy = aws_lb_listener.this[key].ssl_policy
-      }
-    }
-  }
-}
-
-resource "local_file" "yaml_lb" {
-  count    = length(var.aws.resources.lb) > 0 ? 1 : 0
-  filename = "data/${terraform.workspace}/yaml/lb.yaml"
-  content  = yamlencode(local.yaml_lb)
-}
-
-
 
 # ╔════════════════════════════╗
 # ║ Create Kinesis yaml        ║

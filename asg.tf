@@ -13,18 +13,6 @@ data "aws_subnets" "asg_network" {
   }
 }
 
-data "aws_subnets" "lb_network" {
-  for_each = var.aws.resources.lb
-  filter {
-    name   = "vpc-id"
-    values = [module.vpc[each.value.vpc].vpc_id]
-  }
-  filter {
-    name   = "tag:Name"
-    values = [for key in each.value.subnets : join(",", ["${local.translation_regions[var.aws.region]}-${var.aws.profile}-vpc-${each.value.vpc}-${key}"])]
-  }
-}
-
 # ╔══════════════════════════════════════════════════════════════════════════════════════════════╗
 # ║                                             Module                                           ║
 # ╚══════════════════════════════════════════════════════════════════════════════════════════════╝
@@ -75,24 +63,24 @@ module "asg" {
   tags      = merge(local.common_tags, each.value.tags)
 
   # The LB ARN is directly assigned without deploying an aws_autoscaling_attachment resource since this would change the state of the ASG module
-  target_group_arns = [aws_lb_target_group.this[each.value.lb-tg].arn]
+  target_group_arns = [aws_lb_target_group.asg[each.key].arn]
 
   # Making it dependient of all the resources of LB otherwise it would change the state of the ASG module in every plan/apply
   depends_on = [
-    aws_lb.this,
-    aws_lb_target_group.this,
-    aws_lb_listener.this
+    aws_lb.asg,
+    aws_lb_target_group.asg,
+    aws_lb_listener.asg
   ]
 }
 
-resource "aws_lb_target_group" "this" {
-  for_each = var.aws.resources.lb
-  name     = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-lb-${each.key}"
-  port     = each.value.application_port
-  protocol = each.value.application_protocol
+resource "aws_lb_target_group" "asg" {
+  for_each = var.aws.resources.asg
+  name     = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-lb-asg-${each.key}"
+  port     = each.value.lb_target_group.application_port
+  protocol = each.value.lb_target_group.application_protocol
   vpc_id   = module.vpc[each.value.vpc].vpc_id
 
-  health_check { #TODO: DEFINE IT
+  health_check {
     interval            = 5
     path                = "/"
     protocol            = "HTTP"
@@ -105,27 +93,27 @@ resource "aws_lb_target_group" "this" {
 
 }
 
-resource "aws_lb" "this" {
-  for_each                         = var.aws.resources.lb
-  name                             = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-nlb-${each.key}"
+resource "aws_lb" "asg" {
+  for_each                         = var.aws.resources.asg
+  name                             = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-nlb-asg-${each.key}"
   load_balancer_type               = "network"
-  internal                         = each.value.private_lb
+  internal                         = each.value.lb.private_lb
   enable_cross_zone_load_balancing = true
   enable_deletion_protection       = false
-  subnets                          = data.aws_subnets.lb_network[each.key].ids
+  subnets                          = data.aws_subnets.asg_network[each.key].ids
   tags                             = merge(local.common_tags, each.value.tags)
 }
 
-resource "aws_lb_listener" "this" {
-  for_each          = var.aws.resources.lb
-  load_balancer_arn = aws_lb.this[each.key].arn
-  port              = each.value.lb_port
-  protocol          = each.value.lb_protocol
-  ssl_policy        = each.value.ssl_policy
-  certificate_arn   = each.value.certificate_arn
+resource "aws_lb_listener" "asg" {
+  for_each          = var.aws.resources.asg
+  load_balancer_arn = aws_lb.asg[each.key].arn
+  port              = each.value.lb_listener.lb_port
+  protocol          = each.value.lb_listener.lb_protocol
+  ssl_policy        = each.value.lb_listener.ssl_policy
+  certificate_arn   = each.value.lb_listener.certificate_arn
   default_action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.this[each.key].arn
+    target_group_arn = aws_lb_target_group.asg[each.key].arn
   }
   tags = merge(local.common_tags, each.value.tags)
 }

@@ -59,6 +59,16 @@ locals {
   #   ])}"
   # }
 
+  output_asg_lb = length(aws_lb.asg) == 0 ? {} : {
+    for key, value in aws_lb.asg :
+    key => "╚ Load Balancer:\n\t ${join("\n\t", [
+      "\t╠ Name: ${value.name}",
+      "\t╠ Type: ${value.load_balancer_type}",
+      "\t╚ Internal: ${value.internal}"
+    ])}"
+  }
+
+
   output = {
     # Let AWS the first output
     a_aws = templatefile("${path.module}/templates/output-aws.tftpl",
@@ -76,7 +86,8 @@ locals {
 
     asg = length(module.asg) == 0 ? "" : templatefile("${path.module}/templates/output-asg.tftpl",
       {
-        resource_map = module.asg
+        resource_map = module.asg,
+        resource_lb  = local.output_asg_lb
     })
 
     cloudfront = length(aws_cloudfront_distribution.this) == 0 ? "" : templatefile("${path.module}/templates/output-cloudfront.tftpl",
@@ -117,12 +128,6 @@ locals {
     kinesis = length(aws_kinesis_video_stream.this) == 0 ? "" : templatefile("${path.module}/templates/output-kinesis.tftpl",
       {
         resource_map = aws_kinesis_video_stream.this
-    })
-
-    lb = length(aws_lb.this) == 0 ? "" : templatefile("${path.module}/templates/output-lb.tftpl",
-      {
-        resource_map    = aws_lb.this,
-        resource_config = var.aws.resources.lb,
     })
 
     mq = length(aws_mq_broker.this) == 0 ? "" : templatefile("${path.module}/templates/output-mq.tftpl",
