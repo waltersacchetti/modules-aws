@@ -1,38 +1,36 @@
 # ╔══════════════════════════════════════════════════════════════════════════════════════════════╗
 # ║                                             Locals                                           ║
 # ╚══════════════════════════════════════════════════════════════════════════════════════════════╝
-locals {
-  s3_list_policy = flatten([
-    for key, value in var.aws.resources.s3 : [
-      value.iam != "" ? {
-        bucket = key
-        policy = value.iam
-      } : null
-    ]
-  ])
-
-  s3_map_policy = {
-    for policy in local.s3_list_policy : policy.bucket => policy.policy
-  }
-}
+# locals {
+#   s3_iam_roles = flatten([
+#     for key, value in var.aws.resources.s3 :
+#     [
+#       for role_key, role in value.iam_role :
+#       {
+#         s3_key   = key
+#         role_key = role_key
+#         role     = role 
+#       }
+#     ]
+#   ])
+# }
 
 # ╔══════════════════════════════════════════════════════════════════════════════════════════════╗
 # ║                                             Data                                             ║
 # ╚══════════════════════════════════════════════════════════════════════════════════════════════╝
-# Configure with the necessary bucket policy
-data "aws_iam_policy_document" "s3" {
-  for_each = local.s3_map_policy
-  statement {
-    principals {
-      type        = "AWS"
-      identifiers = [aws_iam_role.this[each.value].arn]
+data "aws_iam_policy_document" "s3-bucket" {
+  for_each = var.aws.resources.s3
+  dynamic "statement" {
+    for_each = each.value.bucket_policy_statements
+    content {
+        effect    = "${statement.value.effect}"
+        actions   = [for action in statement.value.actions : action]
+        resources = ["arn:aws:s3:::${local.translation_regions[var.aws.region]}-${var.aws.profile}-bucket-${each.key}${statement.value.prefix}"]
+        principals {
+          type        = "${statement.value.principal_type}"
+          identifiers = [for role in statement.value.iam_role : "${aws_iam_role.this[role].arn}"]
+        }
     }
-    actions = [
-      "s3:ListBucket",
-    ]
-    resources = [
-      "arn:aws:s3:::${local.translation_regions[var.aws.region]}-${var.aws.profile}-bucket-${each.key}",
-    ]
   }
 }
 
@@ -52,7 +50,18 @@ module "s3" {
   # object_lock_enabled       = length(each.value.object_lock_configuration) == 0 ? false : true
   # object_lock_configuration = each.value.object_lock_configuration
 
-  # Configure with the necessary bucket policy in aws_iam_policy_document data block
-  attach_policy = true
-  policy        = data.aws_iam_policy_document.s3[each.key].json
+  attach_policy = length(each.value.bucket_policy_statements) > 0 ? true : false
+  policy        = length(each.value.bucket_policy_statements) > 0 ? data.aws_iam_policy_document.s3-bucket[each.key].json : null
 }
+
+
+# resource "aws_iam_role" "s3-bucket" {
+#   for_each           = { for k, v in var.aws.resources.s3 : k => v.iam_role }
+#   name               = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-iamrole-${each.key}"
+#   assume_role_policy = each.value[each.key].assume_role_policy_jsonfile
+#   description        = "IAM role for ${each.key}"
+#   #tags               = merge(local.common_tags, each.value.tags)
+# }
+
+
+

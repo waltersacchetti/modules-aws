@@ -165,8 +165,10 @@ variable "aws" {
         cluster_addons = optional(map(map(string)), null)
       })), {})
       iam = optional(map(object({
-        policy = string
-        tags   = optional(map(string), {})
+        iam_role = optional(object({
+          assume_role_policy_jsonfile = optional(string,"")
+          tags   = optional(map(string), {})
+        }), {})
       })), {})
       kinesis = optional(map(object({
         data_retention_in_hours = optional(number, 0)
@@ -230,6 +232,13 @@ variable "aws" {
         #     default_retention = map(string)
         #   })
         # })
+        bucket_policy_statements = optional(map(object({
+          principal_type = string
+          iam_role = list(string)
+          actions = list(string)
+          prefix  = optional(string,"")
+          effect  = optional(string,"Allow")
+        })), {})
         versioning = map(bool)
         iam        = string
         tags       = optional(map(string), {})
