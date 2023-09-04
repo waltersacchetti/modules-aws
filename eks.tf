@@ -20,24 +20,24 @@ locals {
     aws-efs-csi-driver = {}
     coredns            = {}
     kube-proxy         = {}
-    # vpc-cni = {
-    #   # Specify the VPC CNI addon should be deployed before compute to ensure
-    #   # the addon is configured before data plane compute resources are created
-    #   # See README for further details
-    #   before_compute = true
-    #   most_recent    = true
-    #   configuration_values = jsonencode({
-    #     env = {
-    #       # Reference https://aws.github.io/aws-eks-best-practices/reliability/docs/networkmanagement/#cni-custom-networking
-    #       AWS_VPC_K8S_CNI_CUSTOM_NETWORK_CFG = "true"
-    #       ENI_CONFIG_LABEL_DEF               = "topology.kubernetes.io/zone"
+    vpc-cni = {
+      # Specify the VPC CNI addon should be deployed before compute to ensure
+      # the addon is configured before data plane compute resources are created
+      # See README for further details
+      before_compute = true
+      most_recent    = true
+      configuration_values = jsonencode({
+        env = {
+          # Reference https://aws.github.io/aws-eks-best-practices/reliability/docs/networkmanagement/#cni-custom-networking
+          AWS_VPC_K8S_CNI_CUSTOM_NETWORK_CFG = "true"
+          ENI_CONFIG_LABEL_DEF               = "topology.kubernetes.io/zone"
 
-    #       # Reference docs https://docs.aws.amazon.com/eks/latest/userguide/cni-increase-ip-addresses.html
-    #       ENABLE_PREFIX_DELEGATION = "true"
-    #       WARM_PREFIX_TARGET       = "1"
-    #     }
-    #   })
-    # }
+          # Reference docs https://docs.aws.amazon.com/eks/latest/userguide/cni-increase-ip-addresses.html
+          ENABLE_PREFIX_DELEGATION = "true"
+          WARM_PREFIX_TARGET       = "1"
+        }
+      })
+    }
   }
 
   eks_managed_node_groups = {

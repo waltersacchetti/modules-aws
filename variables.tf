@@ -132,6 +132,7 @@ variable "aws" {
         num_node_groups         = optional(number, 2)
         replicas_per_node_group = optional(number, 1)
         parameter_group_name    = optional(string, "default.redis7.cluster.on")
+        subnets                 = optional(list(string), [])
         sg                      = string
         vpc                     = string
         tags                    = optional(map(string), {})
@@ -219,7 +220,6 @@ variable "aws" {
         maintenance_window     = optional(string, "Mon:00:00-Mon:03:00")
         backup_window          = optional(string, "03:00-06:00")
         create_db_subnet_group = optional(bool, false)
-        subnet_ids             = optional(list(string), [])
         deletion_protection    = optional(bool, false)
         multi_az               = optional(bool, false)
         publicly_accessible    = optional(bool, false)

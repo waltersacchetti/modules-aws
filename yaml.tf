@@ -320,21 +320,21 @@ resource "local_file" "yaml_elc_redis" {
 # ╔════════════════════════════╗
 # ║ Create EKS yaml            ║
 # ╚════════════════════════════╝
-# locals {
-#   yaml_eks = var.aws.resources.eks == 0 ? {} : {
-#     for key, value in var.aws.resources.eks : key => {
-#       Cluster_Name              = module.eks[key].cluster_name,
-#       Cluster_Version           = module.eks[key].cluster_version,
-#       Cluster_Endpoint          = module.eks[key].cluster_endpoint,
-#       Cloudwatch_Log_Group_Name = module.eks[key].cloudwatch_log_group_name,
-#       Oidc_Provider_Arn         = module.eks[key].oidc_provider_arn,
-#       Eks_Managed_Node_Groups   = module.eks[key].eks_managed_node_groups
-#     }
-#   }
-# }
+locals {
+  yaml_eks = var.aws.resources.eks == 0 ? {} : {
+    for key, value in var.aws.resources.eks : key => {
+      Cluster_Name              = module.eks[key].cluster_name,
+      Cluster_Version           = module.eks[key].cluster_version,
+      Cluster_Endpoint          = module.eks[key].cluster_endpoint,
+      Cloudwatch_Log_Group_Name = module.eks[key].cloudwatch_log_group_name,
+      Oidc_Provider_Arn         = module.eks[key].oidc_provider_arn,
+      Eks_Managed_Node_Groups   = module.eks[key].eks_managed_node_groups
+    }
+  }
+}
 
-# resource "local_file" "yaml_eks" {
-#   count    = length(var.aws.resources.eks) > 0 ? 1 : 0
-#   filename = "data/${terraform.workspace}/yaml/eks.yaml"
-#   content  = yamlencode(local.yaml_eks)
-# }
+resource "local_file" "yaml_eks" {
+  count    = length(var.aws.resources.eks) > 0 ? 1 : 0
+  filename = "data/${terraform.workspace}/yaml/eks.yaml"
+  content  = yamlencode(local.yaml_eks)
+}
