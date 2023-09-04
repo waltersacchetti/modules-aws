@@ -232,3 +232,109 @@ resource "local_file" "yaml_vpc" {
   filename = "data/${terraform.workspace}/yaml/vpc.yaml"
   content  = yamlencode(local.yaml_vpc)
 }
+
+# ╔════════════════════════════╗
+# ║ Create Cloudfront yaml     ║
+# ╚════════════════════════════╝
+locals {
+  yaml_cloudfront = var.aws.resources.cloudfront_distributions == 0 ? {} : {
+    for key, value in var.aws.resources.cloudfront_distributions : key => {
+      Id                     = aws_cloudfront_distribution.this[key].id,
+      Domain_Name            = aws_cloudfront_distribution.this[key].domain_name,
+      Origin                 = aws_cloudfront_distribution.this[key].origin
+      Default_Cache_Behavior = {
+        Cache_Policy_Id            = aws_cloudfront_distribution.this[key].default_cache_behavior[*].cache_policy_id,
+        Origin_Request_Policy_Id   = aws_cloudfront_distribution.this[key].default_cache_behavior[*].origin_request_policy_id,
+        Response_Headers_Policy_Id = aws_cloudfront_distribution.this[key].default_cache_behavior[*].response_headers_policy_id
+      }
+
+      Ordered_Cache_Behavior = length(aws_cloudfront_distribution.this[key].ordered_cache_behavior) > 0 ? [
+        for ocb in aws_cloudfront_distribution.this[key].ordered_cache_behavior : {
+          Cache_Policy_Id            = ocb.cache_policy_id,
+          Response_Headers_Policy_Id = ocb.response_headers_policy_id
+        }
+      ] : null,
+    }
+  }
+
+  yaml_cloudfront_policy = var.aws.resources.cloudfront_cache_policies == 0 ? {} : {
+    for key, value in var.aws.resources.cloudfront_cache_policies : key => {
+          Id     = aws_cloudfront_cache_policy.this[key].id,
+          Name   = aws_cloudfront_cache_policy.this[key].name
+    }
+  }
+}
+
+resource "local_file" "yaml_cloudfront" {
+  count    = length(var.aws.resources.cloudfront_distributions) > 0 ? 1 : 0
+  filename = "data/${terraform.workspace}/yaml/cloudfront.yaml"
+  content  = yamlencode({cloudfront_distributions = local.yaml_cloudfront, cloudfront_cache_policies = local.yaml_cloudfront_policy})
+}
+
+# ╔════════════════════════════╗
+# ║ Create ELC Memcache yaml   ║
+# ╚════════════════════════════╝
+locals {
+  yaml_elc_memcache = var.aws.resources.elc == 0 ? {} : {
+    for key, value in var.aws.resources.elc : key => {
+      Cluster_Id  = aws_elasticache_cluster.this[key].cluster_id,
+      Address     = aws_elasticache_cluster.this[key].cluster_address,
+      Nodes       = aws_elasticache_cluster.this[key].cache_nodes,
+      Engine      = aws_elasticache_cluster.this[key].engine,
+      Version     = aws_elasticache_cluster.this[key].engine_version
+    } if value.engine == "memcached"
+  }
+}
+
+resource "local_file" "yaml_elc_memcache" {
+  count    = length(local.yaml_elc_memcache) > 0 ? 1 : 0
+  filename = "data/${terraform.workspace}/yaml/elc_memcache.yaml"
+  content  = yamlencode(local.yaml_elc_memcache)
+}
+
+
+# ╔════════════════════════════╗
+# ║ Create ELC Redis yaml      ║
+# ╚════════════════════════════╝
+locals {
+  yaml_elc_redis = var.aws.resources.elc == 0 ? {} : {
+    for key, value in var.aws.resources.elc : key => {
+      Id                              = aws_elasticache_replication_group.this[key].id,
+      Member_Clusters                 = aws_elasticache_replication_group.this[key].member_clusters,
+      Configuration_Endpoint_Address  = aws_elasticache_replication_group.this[key].configuration_endpoint_address,
+      Num_Cache_Clusters              = aws_elasticache_replication_group.this[key].num_cache_clusters,
+      Num_Node_Groups                 = aws_elasticache_replication_group.this[key].num_node_groups,
+      Replicas_Per_Node_Group         = aws_elasticache_replication_group.this[key].replicas_per_node_group,
+      Engine                          = aws_elasticache_replication_group.this[key].engine,
+      Version                         = aws_elasticache_replication_group.this[key].engine_version_actual
+    } if value.engine == "redis"
+  }
+}
+
+resource "local_file" "yaml_elc_redis" {
+  count    = length(local.yaml_elc_redis) > 0 ? 1 : 0
+  filename = "data/${terraform.workspace}/yaml/elc_redis.yaml"
+  content  = yamlencode(local.yaml_elc_redis)
+}
+
+# ╔════════════════════════════╗
+# ║ Create EKS yaml            ║
+# ╚════════════════════════════╝
+# locals {
+#   yaml_eks = var.aws.resources.eks == 0 ? {} : {
+#     for key, value in var.aws.resources.eks : key => {
+#       Cluster_Name              = module.eks[key].cluster_name,
+#       Cluster_Version           = module.eks[key].cluster_version,
+#       Cluster_Endpoint          = module.eks[key].cluster_endpoint,
+#       Cloudwatch_Log_Group_Name = module.eks[key].cloudwatch_log_group_name,
+#       Oidc_Provider_Arn         = module.eks[key].oidc_provider_arn,
+#       Eks_Managed_Node_Groups   = module.eks[key].eks_managed_node_groups
+#     }
+#   }
+# }
+
+# resource "local_file" "yaml_eks" {
+#   count    = length(var.aws.resources.eks) > 0 ? 1 : 0
+#   filename = "data/${terraform.workspace}/yaml/eks.yaml"
+#   content  = yamlencode(local.yaml_eks)
+# }
