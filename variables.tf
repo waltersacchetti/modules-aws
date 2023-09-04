@@ -192,15 +192,16 @@ variable "aws" {
       mq = optional(map(object({
         tags               = optional(map(string), {})
         vpc                = string
-        subnets            = list(string)
-        engine_type        = string
-        engine_version     = string
-        deployment_mode    = optional(string, "SINGLE_INSTANCE")
-        host_instance_type = string
         sg                 = string
-        username           = string
-        password           = string
-        configuration      = string
+        subnets            = list(string)
+        engine_type        = optional(string, "ActiveMQ")
+        engine_version     = optional(string, "5.16.4")
+        # SINGLE_INSTANCE, ACTIVE_STANDBY_MULTI_AZ, and CLUSTER_MULTI_AZ
+        deployment_mode    = optional(string, "SINGLE_INSTANCE")
+        host_instance_type = optional(string, "mq.m5.large")
+        username           = optional(string, "master")
+        password           = optional(string, null)
+        configuration      = optional(string, "")
       })), {})
       rds = optional(map(object({
         tags                   = optional(map(string), {})
