@@ -23,13 +23,13 @@ data "aws_iam_policy_document" "s3-bucket" {
   dynamic "statement" {
     for_each = each.value.bucket_policy_statements
     content {
-        effect    = "${statement.value.effect}"
-        actions   = [for action in statement.value.actions : action]
-        resources = ["arn:aws:s3:::${local.translation_regions[var.aws.region]}-${var.aws.profile}-bucket-${each.key}${statement.value.prefix}"]
-        principals {
-          type        = "${statement.value.principal_type}"
-          identifiers = [for role in statement.value.iam_role : "${aws_iam_role.this[role].arn}"]
-        }
+      effect    = statement.value.effect
+      actions   = [for action in statement.value.actions : action]
+      resources = ["arn:aws:s3:::${local.translation_regions[var.aws.region]}-${var.aws.profile}-bucket-${each.key}${statement.value.prefix}"]
+      principals {
+        type        = statement.value.principal_type
+        identifiers = [for role in statement.value.iam_role : "${aws_iam_role.this[role].arn}"]
+      }
     }
   }
 }

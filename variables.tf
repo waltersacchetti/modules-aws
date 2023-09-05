@@ -23,18 +23,18 @@ variable "aws" {
         sg                = string
         iam_role_policies = optional(map(string), {})
         tags              = optional(map(string), {})
-        lb                = object({
+        lb = object({
           private_lb = bool
         })
-        lb_target_group   = object({
+        lb_target_group = object({
           application_port     = number
           application_protocol = string
         })
-        lb_listener       = object({
-          lb_port              = number
-          lb_protocol          = string
-          ssl_policy           = optional(string,null)
-          certificate_arn      = optional(string,null)
+        lb_listener = object({
+          lb_port         = number
+          lb_protocol     = string
+          ssl_policy      = optional(string, null)
+          certificate_arn = optional(string, null)
         })
       })), {})
       cloudfront_cache_policies = optional(map(object({
@@ -155,21 +155,21 @@ variable "aws" {
         })), [])
 
         eks_managed_node_groups = optional(map(object({
-          ami_type                   = optional(string, "AL2_x86_64")
-          desired_size               = optional(number, 1)
-          max_size                   = optional(number, 2)
-          min_size                   = optional(number, 1)
-          instance_type              = optional(string, "t3.medium")
-          kubelet_extra_args         = optional(string, "")
-          subnets                    = optional(list(string), [])
-          block_device_mappings      = optional(map(map(any)), null)
-          labels                     = optional(map(string), {})
-          taints                     = optional(list(object({
-            key   = string
-            value = string
+          ami_type              = optional(string, "AL2_x86_64")
+          desired_size          = optional(number, 1)
+          max_size              = optional(number, 2)
+          min_size              = optional(number, 1)
+          instance_type         = optional(string, "t3.medium")
+          kubelet_extra_args    = optional(string, "")
+          subnets               = optional(list(string), [])
+          block_device_mappings = optional(map(map(any)), null)
+          labels                = optional(map(string), {})
+          taints = optional(list(object({
+            key    = string
+            value  = string
             effect = string
           })), [])
-          tags                       = optional(map(string), {})
+          tags = optional(map(string), {})
         })), {})
         role_binding = optional(list(object({
           username    = string
@@ -185,8 +185,8 @@ variable "aws" {
       })), {})
       iam = optional(map(object({
         iam_role = optional(object({
-          assume_role_policy_jsonfile = optional(string,"")
-          tags   = optional(map(string), {})
+          assume_role_policy_jsonfile = optional(string, "")
+          tags                        = optional(map(string), {})
         }), {})
       })), {})
       kinesis = optional(map(object({
@@ -196,12 +196,12 @@ variable "aws" {
         region                  = optional(string, null)
       })), {})
       mq = optional(map(object({
-        tags               = optional(map(string), {})
-        vpc                = string
-        sg                 = string
-        subnets            = list(string)
-        engine_type        = optional(string, "ActiveMQ")
-        engine_version     = optional(string, "5.16.4")
+        tags           = optional(map(string), {})
+        vpc            = string
+        sg             = string
+        subnets        = list(string)
+        engine_type    = optional(string, "ActiveMQ")
+        engine_version = optional(string, "5.16.4")
         # SINGLE_INSTANCE, ACTIVE_STANDBY_MULTI_AZ, and CLUSTER_MULTI_AZ
         deployment_mode    = optional(string, "SINGLE_INSTANCE")
         host_instance_type = optional(string, "mq.m5.large")
@@ -241,10 +241,10 @@ variable "aws" {
         # })
         bucket_policy_statements = optional(map(object({
           principal_type = string
-          iam_role = list(string)
-          actions = list(string)
-          prefix  = optional(string,"")
-          effect  = optional(string,"Allow")
+          iam_role       = list(string)
+          actions        = list(string)
+          prefix         = optional(string, "")
+          effect         = optional(string, "Allow")
         })), {})
         versioning = map(bool)
         iam        = string

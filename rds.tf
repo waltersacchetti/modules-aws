@@ -15,10 +15,10 @@ locals {
           rds  = key
           name = database
         }
-      ] : [
+        ] : [
         {
-        rds = key
-        name = key
+          rds  = key
+          name = key
         }
       ]
     ]

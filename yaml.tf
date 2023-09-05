@@ -18,7 +18,7 @@ locals {
           Username = database,
           Password = random_password.rds_postgres_db["${key}_${database}"].result,
         }
-      ] : [
+        ] : [
         {
           Database = key,
           Username = key,
@@ -135,22 +135,22 @@ locals {
       Max_Size             = module.asg[key].autoscaling_group_max_size,
       Subnets              = module.asg[key].autoscaling_group_vpc_zone_identifier,
       Launch_Template_Name = module.asg[key].launch_template_name
-      Load_Balancer        = {
-        Name         = aws_lb.asg[key].name,
-        Type         = aws_lb.asg[key].load_balancer_type,
-        Subnets      = aws_lb.asg[key].subnets,
-        Scheme       = aws_lb.asg[key].internal == false ? "Internet-facing" : "Internal"
+      Load_Balancer = {
+        Name    = aws_lb.asg[key].name,
+        Type    = aws_lb.asg[key].load_balancer_type,
+        Subnets = aws_lb.asg[key].subnets,
+        Scheme  = aws_lb.asg[key].internal == false ? "Internet-facing" : "Internal"
       }
-      Load_Balancer_Target_Group      = {
+      Load_Balancer_Target_Group = {
         Port         = aws_lb_target_group.asg[key].port,
         Protocol     = aws_lb_target_group.asg[key].protocol,
         Target_Type  = aws_lb_target_group.asg[key].target_type,
         Health_Check = aws_lb_target_group.asg[key].health_check
       }
-      Load_Balancer_Listener          = {
-        Port         = aws_lb_listener.asg[key].port,
-        Protocol     = aws_lb_listener.asg[key].protocol,
-        Ssl_Policy   = aws_lb_listener.asg[key].ssl_policy
+      Load_Balancer_Listener = {
+        Port       = aws_lb_listener.asg[key].port,
+        Protocol   = aws_lb_listener.asg[key].protocol,
+        Ssl_Policy = aws_lb_listener.asg[key].ssl_policy
       }
     }
   }
@@ -246,9 +246,9 @@ resource "local_file" "yaml_vpc" {
 locals {
   yaml_cloudfront = var.aws.resources.cloudfront_distributions == 0 ? {} : {
     for key, value in var.aws.resources.cloudfront_distributions : key => {
-      Id                     = aws_cloudfront_distribution.this[key].id,
-      Domain_Name            = aws_cloudfront_distribution.this[key].domain_name,
-      Origin                 = aws_cloudfront_distribution.this[key].origin
+      Id          = aws_cloudfront_distribution.this[key].id,
+      Domain_Name = aws_cloudfront_distribution.this[key].domain_name,
+      Origin      = aws_cloudfront_distribution.this[key].origin
       Default_Cache_Behavior = {
         Cache_Policy_Id            = aws_cloudfront_distribution.this[key].default_cache_behavior[*].cache_policy_id,
         Origin_Request_Policy_Id   = aws_cloudfront_distribution.this[key].default_cache_behavior[*].origin_request_policy_id,
@@ -266,8 +266,8 @@ locals {
 
   yaml_cloudfront_policy = var.aws.resources.cloudfront_cache_policies == 0 ? {} : {
     for key, value in var.aws.resources.cloudfront_cache_policies : key => {
-          Id     = aws_cloudfront_cache_policy.this[key].id,
-          Name   = aws_cloudfront_cache_policy.this[key].name
+      Id   = aws_cloudfront_cache_policy.this[key].id,
+      Name = aws_cloudfront_cache_policy.this[key].name
     }
   }
 }
@@ -275,7 +275,7 @@ locals {
 resource "local_file" "yaml_cloudfront" {
   count    = length(var.aws.resources.cloudfront_distributions) > 0 ? 1 : 0
   filename = "data/${terraform.workspace}/yaml/cloudfront.yaml"
-  content  = yamlencode({cloudfront_distributions = local.yaml_cloudfront, cloudfront_cache_policies = local.yaml_cloudfront_policy})
+  content  = yamlencode({ cloudfront_distributions = local.yaml_cloudfront, cloudfront_cache_policies = local.yaml_cloudfront_policy })
 }
 
 # ╔════════════════════════════╗
@@ -284,11 +284,11 @@ resource "local_file" "yaml_cloudfront" {
 locals {
   yaml_elc_memcache = var.aws.resources.elc == 0 ? {} : {
     for key, value in var.aws.resources.elc : key => {
-      Cluster_Id  = aws_elasticache_cluster.this[key].cluster_id,
-      Address     = aws_elasticache_cluster.this[key].cluster_address,
-      Nodes       = aws_elasticache_cluster.this[key].cache_nodes,
-      Engine      = aws_elasticache_cluster.this[key].engine,
-      Version     = aws_elasticache_cluster.this[key].engine_version
+      Cluster_Id = aws_elasticache_cluster.this[key].cluster_id,
+      Address    = aws_elasticache_cluster.this[key].cluster_address,
+      Nodes      = aws_elasticache_cluster.this[key].cache_nodes,
+      Engine     = aws_elasticache_cluster.this[key].engine,
+      Version    = aws_elasticache_cluster.this[key].engine_version
     } if value.engine == "memcached"
   }
 }
@@ -306,14 +306,14 @@ resource "local_file" "yaml_elc_memcache" {
 locals {
   yaml_elc_redis = var.aws.resources.elc == 0 ? {} : {
     for key, value in var.aws.resources.elc : key => {
-      Id                              = aws_elasticache_replication_group.this[key].id,
-      Member_Clusters                 = aws_elasticache_replication_group.this[key].member_clusters,
-      Configuration_Endpoint_Address  = aws_elasticache_replication_group.this[key].configuration_endpoint_address,
-      Num_Cache_Clusters              = aws_elasticache_replication_group.this[key].num_cache_clusters,
-      Num_Node_Groups                 = aws_elasticache_replication_group.this[key].num_node_groups,
-      Replicas_Per_Node_Group         = aws_elasticache_replication_group.this[key].replicas_per_node_group,
-      Engine                          = aws_elasticache_replication_group.this[key].engine,
-      Version                         = aws_elasticache_replication_group.this[key].engine_version_actual
+      Id                             = aws_elasticache_replication_group.this[key].id,
+      Member_Clusters                = aws_elasticache_replication_group.this[key].member_clusters,
+      Configuration_Endpoint_Address = aws_elasticache_replication_group.this[key].configuration_endpoint_address,
+      Num_Cache_Clusters             = aws_elasticache_replication_group.this[key].num_cache_clusters,
+      Num_Node_Groups                = aws_elasticache_replication_group.this[key].num_node_groups,
+      Replicas_Per_Node_Group        = aws_elasticache_replication_group.this[key].replicas_per_node_group,
+      Engine                         = aws_elasticache_replication_group.this[key].engine,
+      Version                        = aws_elasticache_replication_group.this[key].engine_version_actual
     } if value.engine == "redis"
   }
 }

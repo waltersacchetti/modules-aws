@@ -2,7 +2,7 @@
 # ║                                             Data                                             ║
 # ╚══════════════════════════════════════════════════════════════════════════════════════════════╝
 data "aws_subnets" "elc_network" {
-  for_each   = { for k, v in var.aws.resources.elc : k => v if length(v.subnets) > 0 }
+  for_each = { for k, v in var.aws.resources.elc : k => v if length(v.subnets) > 0 }
   filter {
     name   = "vpc-id"
     values = [module.vpc[each.value.vpc].vpc_id]
