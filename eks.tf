@@ -213,6 +213,8 @@ module "eks" {
       subnet_ids                 = data.aws_subnets.eks_mng_network["${each.key}_${name}"].ids
       tags                       = merge(local.common_tags, each.value.tags, value.tags)
       block_device_mappings      = value.block_device_mappings == null ? local.eks_default_block_device_mappings : value.block_device_mappings
+      labels                     = merge(value.labels, { "mova/nodegroup" = name, "mova/clustername" = each.key })
+      taints                     = value.taints
     }
   }
   tags = merge(local.common_tags, each.value.tags)

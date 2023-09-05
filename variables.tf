@@ -163,6 +163,12 @@ variable "aws" {
           kubelet_extra_args         = optional(string, "")
           subnets                    = optional(list(string), [])
           block_device_mappings      = optional(map(map(any)), null)
+          labels                     = optional(map(string), {})
+          taints                     = optional(list(object({
+            key   = string
+            value = string
+            effect = string
+          })), [])
           tags                       = optional(map(string), {})
         })), {})
         role_binding = optional(list(object({
