@@ -122,6 +122,7 @@ variable "aws" {
           volume_size = optional(number, 100)
           tags        = optional(map(string), {})
         }), {})
+        iam_instance_profile = optional(string,null)
       })), {})
       elc = optional(map(object({
         engine                  = optional(string, "redis")
@@ -184,9 +185,20 @@ variable "aws" {
         cluster_addons = optional(map(map(string)), null)
       })), {})
       iam = optional(map(object({
+        create_iam_role = optional(bool, false)
+        create_iam_role_policy_attachment = optional(bool, false)
+        create_iam_instance_profile = optional(bool, false)
         iam_role = optional(object({
-          assume_role_policy_jsonfile = optional(string, "")
-          tags                        = optional(map(string), {})
+          assume_role_policy_jsonfile = optional(string,null)
+          tags   = optional(map(string), {})
+        }), {})
+        iam_role_policy_attachment = optional(object({
+          policy_arn = optional(string,null)
+          role   = optional(string,null)
+        }), {})
+        iam_instance_profile = optional(object({
+          role   = optional(string,null)
+          tags   = optional(map(string), {})
         }), {})
       })), {})
       kinesis = optional(map(object({

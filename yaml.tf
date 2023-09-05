@@ -82,21 +82,21 @@ resource "local_file" "yaml_ec2" {
 # ║ Create IAM Role yaml             ║
 # ╚══════════════════════════════════╝
 
-locals {
-  yaml_iam = var.aws.resources.iam == 0 ? {} : {
-    for key, value in var.aws.resources.iam : key => {
-      Name                  = aws_iam_role.this[key].name,
-      Description           = aws_iam_role.this[key].description,
-      Role_Policy_To_Assume = aws_iam_role.this[key].assume_role_policy
-    }
-  }
-}
+# locals {
+#   yaml_iam = var.aws.resources.iam == 0 ? {} : {
+#     for key, value in var.aws.resources.iam : key => {
+#       Name                  = aws_iam_role.this[key].name,
+#       Description           = aws_iam_role.this[key].description,
+#       Role_Policy_To_Assume = aws_iam_role.this[key].assume_role_policy
+#     }
+#   }
+# }
 
-resource "local_file" "yaml_iam" {
-  count    = length(var.aws.resources.iam) > 0 ? 1 : 0
-  filename = "data/${terraform.workspace}/yaml/iam.yaml"
-  content  = yamlencode(local.yaml_iam)
-}
+# resource "local_file" "yaml_iam" {
+#   count    = length(var.aws.resources.iam) > 0 ? 1 : 0
+#   filename = "data/${terraform.workspace}/yaml/iam.yaml"
+#   content  = yamlencode(local.yaml_iam)
+# }
 
 # ╔════════════════════════════╗
 # ║ Create S3 yaml             ║

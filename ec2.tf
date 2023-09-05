@@ -65,6 +65,7 @@ module "ec2" {
   user_data_base64            = each.value.user_data != null ? base64encode(each.value.user_data) : null
   user_data_replace_on_change = each.value.user_data_replace_on_change
   enable_volume_tags          = false
+  iam_instance_profile        = aws_iam_instance_profile.this[each.value.iam_instance_profile].name
   tags                        = merge(local.common_tags, each.value.tags)
   root_block_device = [
     {
