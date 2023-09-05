@@ -213,8 +213,8 @@ variable "aws" {
         major_engine_version   = optional(string, "12.11")
         instance_class         = optional(string, "db.r6g.large")
         allocated_storage      = optional(number, 100)
-        db_name                = optional(string, null)
-        username               = string
+        db_name                = optional(string, "master")
+        username               = optional(string, "master")
         password               = optional(string, null)
         port                   = optional(number, null)
         iam_db_auth_enabled    = optional(bool, true)

@@ -9,15 +9,22 @@ locals {
       Version  = value.engine_version,
       Endpoint = module.rds[key].db_instance_endpoint,
       Port     = module.rds[key].db_instance_port,
+      Database = value.db_name
       Username = module.rds[key].db_instance_username,
       Password = value.password == null || value.password == "" ? random_password.rds[key].result : value.password,
       Databases = value.engine == "postgres" && length(value.databases) > 0 ? [
-        for database in value.databases : {
+        for database in concat(value.databases, [key]) : {
           Database = database,
           Username = database,
           Password = random_password.rds_postgres_db["${key}_${database}"].result,
         }
-      ] : null,
+      ] : [
+        {
+          Database = key,
+          Username = key,
+          Password = random_password.rds_postgres_db["${key}_${key}"].result,
+        }
+      ],
     }
   }
 }

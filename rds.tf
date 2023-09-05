@@ -11,11 +11,16 @@ locals {
   rds_list_postgres_databases = flatten([
     for key, value in var.aws.resources.rds : [
       value.engine == "postgres" && length(value.databases) > 0 ? [
-        for database in value.databases : {
+        for database in concat(value.databases, [key]) : {
           rds  = key
           name = database
         }
-      ] : null
+      ] : [
+        {
+        rds = key
+        name = key
+        }
+      ]
     ]
   ])
 
@@ -56,7 +61,7 @@ module "rds" {
   instance_class    = each.value.instance_class
   allocated_storage = each.value.allocated_storage
 
-  db_name                             = each.value.db_name != null ? each.value.db_name : each.key
+  db_name                             = each.value.db_name
   username                            = each.value.username
   manage_master_user_password         = false
   password                            = each.value.password == null || each.value.password == "" ? random_password.rds[each.key].result : each.value.password
