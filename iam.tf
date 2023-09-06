@@ -4,8 +4,8 @@
 data "aws_iam_policy_document" "assume_role_policy" {
   for_each = { for k, v in var.aws.resources.iam : k => v if v.create_iam_role == true }
   statement {
-    effect    = each.value.iam_role.assume_role_policy.effect
-    actions   = [for action in each.value.iam_role.assume_role_policy.actions : action]
+    effect  = each.value.iam_role.assume_role_policy.effect
+    actions = [for action in each.value.iam_role.assume_role_policy.actions : action]
     principals {
       type        = each.value.iam_role.assume_role_policy.principal_type
       identifiers = [for idt in each.value.iam_role.assume_role_policy.identifiers : idt]
@@ -37,10 +37,10 @@ resource "aws_iam_role" "this" {
 }
 
 resource "aws_iam_policy" "this" {
-for_each           = { for k, v in var.aws.resources.iam : k => v if v.create_iam_policy == true }
-  name   = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-iam-policy-${each.key}"
-  policy = data.aws_iam_policy_document.this[each.key].json
-  tags   = merge(local.common_tags, each.value.iam_policy.tags)
+  for_each = { for k, v in var.aws.resources.iam : k => v if v.create_iam_policy == true }
+  name     = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-iam-policy-${each.key}"
+  policy   = data.aws_iam_policy_document.this[each.key].json
+  tags     = merge(local.common_tags, each.value.iam_policy.tags)
 }
 
 resource "aws_iam_role_policy_attachment" "this" {
@@ -51,7 +51,7 @@ resource "aws_iam_role_policy_attachment" "this" {
 
 resource "aws_iam_instance_profile" "this" {
   for_each = { for k, v in var.aws.resources.iam : k => v if v.create_iam_instance_profile == true }
-  name = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-iam-instance-profile-${each.key}"
-  role = aws_iam_role.this[each.value.iam_instance_profile.role].name
-  tags = merge(local.common_tags, each.value.iam_instance_profile.tags)
+  name     = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-iam-instance-profile-${each.key}"
+  role     = aws_iam_role.this[each.value.iam_instance_profile.role].name
+  tags     = merge(local.common_tags, each.value.iam_instance_profile.tags)
 }

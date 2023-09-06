@@ -12,10 +12,15 @@ module "vpc" {
   tags                  = merge(local.common_tags, each.value.tags)
 
   enable_nat_gateway   = each.value.enable_nat_gateway
-  single_nat_gateway   = each.value.single_nat_gateway
+  single_nat_gateway   = var.aws.resources.alternat.vpc == each.key ? false : each.value.single_nat_gateway
   enable_vpn_gateway   = each.value.enable_vpn_gateway
   enable_dns_hostnames = each.value.enable_dns_hostnames
   enable_dns_support   = each.value.enable_dns_support
+
+  ## Alternat Configuration
+  manage_default_network_acl    = var.aws.resources.alternat.vpc == each.key ? true : false
+  manage_default_route_table    = var.aws.resources.alternat.vpc == each.key ? true : false
+  manage_default_security_group = var.aws.resources.alternat.vpc == each.key ? true : false
 
   public_subnets      = [for value in each.value.public_subnets : join(",", [value])]
   public_subnet_names = [for key, _ in each.value.public_subnets : join(",", ["${local.translation_regions[var.aws.region]}-${var.aws.profile}-vpc-${each.key}-public-${key}"])]
@@ -33,6 +38,4 @@ module "vpc" {
   create_elasticache_subnet_route_table = length(each.value.elasticache_subnets) == 0 ? false : each.value.create_elasticache_subnet_route_table == null ? each.value.create_elasticache_subnet_group : each.value.create_elasticache_subnet_route_table
   elasticache_subnets                   = [for value in each.value.elasticache_subnets : join(",", [value])]
   elasticache_subnet_names              = [for key, _ in each.value.elasticache_subnets : join(",", ["${local.translation_regions[var.aws.region]}-${var.aws.profile}-vpc-${each.key}-${key}"])]
-
-
 }

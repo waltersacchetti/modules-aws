@@ -7,6 +7,14 @@ variable "aws" {
     project = string
     tags    = optional(map(string), {})
     resources = object({
+      alternat = optional(object({
+        image_uri           = optional(string, "0123456789012.dkr.ecr.us-east-1.amazonaws.com/alternat-functions-lambda")
+        image_tag           = optional(string, "v0.3.3")
+        instance_type       = optional(string, "c6gn.large")
+        lambda_package_type = optional(string, "Zip")
+        sgs                 = optional(list(string), [])
+        vpc                 = optional(string, null)
+      }), {})
       asg = optional(map(object({
         min_size          = optional(number, 1)
         max_size          = optional(number, 1)
@@ -122,7 +130,7 @@ variable "aws" {
           volume_size = optional(number, 100)
           tags        = optional(map(string), {})
         }), {})
-        iam_instance_profile = optional(string,null)
+        iam_instance_profile = optional(string, null)
       })), {})
       elc = optional(map(object({
         engine                  = optional(string, "redis")
@@ -185,35 +193,35 @@ variable "aws" {
         cluster_addons = optional(map(map(string)), null)
       })), {})
       iam = optional(map(object({
-        create_iam_role = optional(bool, false)
-        create_iam_policy = optional(bool, false)
+        create_iam_role                   = optional(bool, false)
+        create_iam_policy                 = optional(bool, false)
         create_iam_role_policy_attachment = optional(bool, false)
-        create_iam_instance_profile = optional(bool, false)
+        create_iam_instance_profile       = optional(bool, false)
         iam_role = optional(object({
           assume_role_policy = optional(object({
-            effect         = optional(string,"Allow")
+            effect         = optional(string, "Allow")
             principal_type = string
             actions        = list(string)
             identifiers    = list(string)
-          }),null)
-          tags   = optional(map(string), {})
+          }), null)
+          tags = optional(map(string), {})
         }), {})
         iam_policy = optional(object({
           policies = optional(map(object({
-            actions        = list(string)
-            prefix         = optional(string, "")
-            effect         = optional(string, "Allow")
-            resources      = list(string)
+            actions   = list(string)
+            prefix    = optional(string, "")
+            effect    = optional(string, "Allow")
+            resources = list(string)
           })), {})
-          tags   = optional(map(string), {})
+          tags = optional(map(string), {})
         }), {})
         iam_role_policy_attachment = optional(object({
-          iam_policy = optional(string,null)
-          role   = optional(string,null)
+          iam_policy = optional(string, null)
+          role       = optional(string, null)
         }), {})
         iam_instance_profile = optional(object({
-          role   = optional(string,null)
-          tags   = optional(map(string), {})
+          role = optional(string, null)
+          tags = optional(map(string), {})
         }), {})
       })), {})
       kinesis = optional(map(object({

@@ -164,7 +164,8 @@ locals {
 # ╚══════════════════════════════════════════════════════════════════════════════════════════════╝
 output "output" {
   value = local.merge_ouput
-  # value = local.eks_config
+  # value = flatten([ for sg in var.aws.resources.alternat.sgs : module.sg[sg].security_group_id ])
+  # value = local.alternat_vpc_az_maps
 }
 
 
