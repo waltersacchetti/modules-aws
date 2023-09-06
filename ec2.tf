@@ -41,7 +41,7 @@ resource "local_file" "ec2-key" {
   for_each        = var.aws.resources.ec2
   content         = tls_private_key.ec2_key[each.key].private_key_pem
   filename        = "data/${terraform.workspace}/ec2/${each.key}/${local.translation_regions[var.aws.region]}-${var.aws.profile}-key-pair-${each.key}.pem"
-  file_permission = "0400"
+  file_permission = "0600"
 }
 
 resource "aws_key_pair" "this" {

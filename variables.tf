@@ -186,14 +186,29 @@ variable "aws" {
       })), {})
       iam = optional(map(object({
         create_iam_role = optional(bool, false)
+        create_iam_policy = optional(bool, false)
         create_iam_role_policy_attachment = optional(bool, false)
         create_iam_instance_profile = optional(bool, false)
         iam_role = optional(object({
-          assume_role_policy_jsonfile = optional(string,null)
+          assume_role_policy = optional(object({
+            effect         = optional(string,"Allow")
+            principal_type = string
+            actions        = list(string)
+            identifiers    = list(string)
+          }),null)
+          tags   = optional(map(string), {})
+        }), {})
+        iam_policy = optional(object({
+          policies = optional(map(object({
+            actions        = list(string)
+            prefix         = optional(string, "")
+            effect         = optional(string, "Allow")
+            resources      = list(string)
+          })), {})
           tags   = optional(map(string), {})
         }), {})
         iam_role_policy_attachment = optional(object({
-          policy_arn = optional(string,null)
+          iam_policy = optional(string,null)
           role   = optional(string,null)
         }), {})
         iam_instance_profile = optional(object({
