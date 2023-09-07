@@ -146,6 +146,22 @@ data "aws_subnets" "eks_mng_network" {
 # ╔══════════════════════════════╗
 # ║ Deploy EKS & Create namspaces║
 # ╚══════════════════════════════╝
+# resource "aws_security_group" "eks_efs" {
+#   for_each = var.aws.resources.eks
+#   name        = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-sg-eks-efs-${each.key}"
+#   description = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-sg-eks-efs-${each.key}"
+#   vpc_id      = module.vpc[each.value.vpc].vpc_id
+
+#   ingress {
+#     description      = "nfs"
+#     from_port        = 2049
+#     to_port          = 2049
+#     protocol         = "TCP"
+#     cidr_blocks      = [module.vpc[each.value.vpc].vpc_cidr_block]
+#   }
+# }
+
+
 module "eks" {
   source   = "terraform-aws-modules/eks/aws"
   version  = "19.15.4"
@@ -199,6 +215,7 @@ module "eks" {
       AmazonEBSCSIDriverPolicy     = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
       AmazonEKS_CNI_Policy         = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
       AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+      AmazonEFSCSIDriverPolicy     = "arn:aws:iam::aws:policy/service-role/AmazonEFSCSIDriverPolicy"
     }
   }
 
