@@ -118,7 +118,7 @@ variable "aws" {
         ami                         = optional(string, null)
         vpc                         = optional(string, null)
         subnet                      = optional(string, null)
-        sg                          = optional(string,null)
+        sg                          = optional(string, null)
         key_pair_tags               = optional(map(string), {})
         user_data                   = optional(string, null)
         user_data_replace_on_change = optional(bool, null)
@@ -130,7 +130,7 @@ variable "aws" {
           volume_size = optional(number, 100)
           tags        = optional(map(string), {})
         }), {})
-        iam_role_policies = optional(map(string),null)
+        iam_role_policies = optional(map(string), null)
         network_interfaces = optional(list(object({
           vpc    = string
           subnet = string
@@ -167,8 +167,8 @@ variable "aws" {
           username = string
           groups   = optional(list(string), [])
         })), [])
-        
-        iam_role_additional_policies  = optional(map(string),null)
+
+        iam_role_additional_policies = optional(map(string), null)
 
         eks_managed_node_groups = optional(map(object({
           ami_type              = optional(string, "AL2_x86_64")
@@ -329,6 +329,12 @@ variable "aws" {
         create_elasticache_subnet_group       = optional(bool, false)
         create_elasticache_subnet_route_table = optional(bool, null)
         elasticache_subnets                   = optional(map(string), {})
+
+        private_nat_gateway = optional(list(string), [])
+        aws_route = optional(map(list(object({
+          cidr_block          = string
+          private_nat_gateway = optional(string, null)
+        }))), {})
       })), {})
       vpn = optional(map(object({
         sg   = string

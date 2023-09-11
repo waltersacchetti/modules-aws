@@ -206,9 +206,9 @@ module "eks" {
       AmazonEKS_CNI_Policy         = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
       AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
       AmazonEFSCSIDriverPolicy     = "arn:aws:iam::aws:policy/service-role/AmazonEFSCSIDriverPolicy"
-    } : {
+      } : {
       for key, value in each.value.iam_role_additional_policies :
-        key => strcontains(value,"arn:aws") ? value : aws_iam_policy.this[value].arn
+      key => strcontains(value, "arn:aws") ? value : aws_iam_policy.this[value].arn
     }
   }
 

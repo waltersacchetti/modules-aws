@@ -1,18 +1,18 @@
 
 locals {
   ec2_list_network_interace = flatten([
-      for key, value in var.aws.resources.ec2 : [
-          for index, interface in value.network_interfaces: {
-              ec2 = key
-              vpc = interface.vpc 
-              subnet = interface.subnet
-              index = index
-              sg = interface.sg
-          }
-      ]
+    for key, value in var.aws.resources.ec2 : [
+      for index, interface in value.network_interfaces : {
+        ec2    = key
+        vpc    = interface.vpc
+        subnet = interface.subnet
+        index  = index
+        sg     = interface.sg
+      }
+    ]
   ])
   ec2_map_network_interface = {
-      for interface in local.ec2_list_network_interace : "${interface.ec2}_${interface.index}" => interface
+    for interface in local.ec2_list_network_interace : "${interface.ec2}_${interface.index}" => interface
   }
 }
 
@@ -84,37 +84,37 @@ resource "aws_key_pair" "this" {
 }
 
 resource "aws_network_interface" "this" {
-  for_each = local.ec2_map_network_interface
-  subnet_id = element(data.aws_subnets.ec2_network_interfaces[each.key].ids, 0)
+  for_each        = local.ec2_map_network_interface
+  subnet_id       = element(data.aws_subnets.ec2_network_interfaces[each.key].ids, 0)
   security_groups = [module.sg[each.value.sg].security_group_id]
 }
 
 module "ec2" {
-  source                      = "terraform-aws-modules/ec2-instance/aws"
-  version                     = "5.3.1"
-  for_each                    = var.aws.resources.ec2
-  name                        = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-ec2-${each.key}"
-  instance_type               = each.value.instance_type
-  ami                         = each.value.ami == null ? data.aws_ami.amazon-linux-2.id : each.value.ami
-  key_name                    = aws_key_pair.this[each.key].key_name
-  monitoring                  = each.value.monitoring
+  source        = "terraform-aws-modules/ec2-instance/aws"
+  version       = "5.3.1"
+  for_each      = var.aws.resources.ec2
+  name          = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-ec2-${each.key}"
+  instance_type = each.value.instance_type
+  ami           = each.value.ami == null ? data.aws_ami.amazon-linux-2.id : each.value.ami
+  key_name      = aws_key_pair.this[each.key].key_name
+  monitoring    = each.value.monitoring
 
-  vpc_security_group_ids      = length(each.value.network_interfaces) == 0 ? [module.sg[each.value.sg].security_group_id] : null
-  subnet_id                   = length(each.value.network_interfaces) == 0 ? data.aws_subnets.ec2_network[each.key].ids[0] : null
-  
+  vpc_security_group_ids = length(each.value.network_interfaces) == 0 ? [module.sg[each.value.sg].security_group_id] : null
+  subnet_id              = length(each.value.network_interfaces) == 0 ? data.aws_subnets.ec2_network[each.key].ids[0] : null
+
   user_data_base64            = each.value.user_data != null ? base64encode(each.value.user_data) : null
   user_data_replace_on_change = each.value.user_data_replace_on_change
   enable_volume_tags          = false
   tags                        = merge(local.common_tags, each.value.tags)
   create_iam_instance_profile = true
   iam_role_description        = "IAM role for ${local.translation_regions[var.aws.region]}-${var.aws.profile}-ec2-${each.key}"
-  iam_role_policies           = each.value.iam_role_policies != null ? {
+  iam_role_policies = each.value.iam_role_policies != null ? {
     for key, value in each.value.iam_role_policies :
-    key => strcontains(value,"arn:aws") ? value : aws_iam_policy.this[value].arn
-  } : {
+    key => strcontains(value, "arn:aws") ? value : aws_iam_policy.this[value].arn
+    } : {
     AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
   }
-  root_block_device           = [
+  root_block_device = [
     {
       encrypted   = each.value.root_block_device.encrypted
       volume_type = each.value.root_block_device.volume_type
@@ -124,7 +124,7 @@ module "ec2" {
     }
   ]
   network_interface = length(each.value.network_interfaces) == 0 ? [] : [
-    for index, value in each.value.network_interfaces:
+    for index, value in each.value.network_interfaces :
     {
       device_index          = index
       network_interface_id  = aws_network_interface.this["${each.key}_${index}"].id
