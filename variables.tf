@@ -167,6 +167,8 @@ variable "aws" {
           username = string
           groups   = optional(list(string), [])
         })), [])
+        
+        iam_role_additional_policies  = optional(map(string),null)
 
         eks_managed_node_groups = optional(map(object({
           ami_type              = optional(string, "AL2_x86_64")
