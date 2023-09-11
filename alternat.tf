@@ -2,22 +2,22 @@
 # ║                                             Locals                                           ║
 # ╚══════════════════════════════════════════════════════════════════════════════════════════════╝
 locals {
-      aws_subnet_public = {
+      aws_subnet_public = var.aws.resources.alternat.vpc == null ? {} : {
           for az in module.vpc[var.aws.resources.alternat.vpc].azs: az => flatten([
               for subnet in data.aws_subnet.public_subnets: compact([subnet.availability_zone == az ? subnet.id : null])
           ])
       }
-      aws_subnet_private = {
+      aws_subnet_private = var.aws.resources.alternat.vpc == null ? {} :  {
           for az in module.vpc[var.aws.resources.alternat.vpc].azs: az => flatten([
               for subnet in data.aws_subnet.private_subnets: compact([subnet.availability_zone == az ? subnet.id : null])
           ])
       }
 
-      aws_maps_private_subnets = {
+      aws_maps_private_subnets =  var.aws.resources.alternat.vpc == null ? {} : {
          for subnet in data.aws_subnet.private_subnets: subnet.id => subnet.availability_zone
       }
 
-      aws_routes_private = {
+      aws_routes_private = var.aws.resources.alternat.vpc == null ? {} : {
           for az in module.vpc[var.aws.resources.alternat.vpc].azs: az => flatten([
               for route in data.aws_route_table.router_tables: compact([local.aws_maps_private_subnets[route.subnet_id] == az ? route.id : null])
           ])
@@ -37,13 +37,13 @@ locals {
 # ║                                             Data                                             ║
 # ╚══════════════════════════════════════════════════════════════════════════════════════════════╝
 data "aws_subnet" "private_subnets" {
-  count = length(module.vpc[var.aws.resources.alternat.vpc].private_subnets)
+  count = var.aws.resources.alternat.vpc == null ? 0 : length(module.vpc[var.aws.resources.alternat.vpc].private_subnets)
   id    = module.vpc[var.aws.resources.alternat.vpc].private_subnets[count.index]
 }
 
 
 data "aws_subnet" "public_subnets" {
-  count = length(module.vpc[var.aws.resources.alternat.vpc].public_subnets)
+  count = var.aws.resources.alternat.vpc == null ? 0 : length(module.vpc[var.aws.resources.alternat.vpc].public_subnets)
   id    = module.vpc[var.aws.resources.alternat.vpc].public_subnets[count.index]
 }
 
