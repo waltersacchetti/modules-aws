@@ -16,11 +16,11 @@ locals {
   vpc_list_aws_route = flatten([
     for key, value in var.aws.resources.vpc : [
       for route_key, route_value in value.aws_route : [
-        for route in route_value : { 
-            vpc                 = key
-            subnet              = route_key
-            cidr_block          = route.cidr_block
-            private_nat_gateway = route.private_nat_gateway
+        for route in route_value : {
+          vpc                 = key
+          subnet              = route_key
+          cidr_block          = route.cidr_block
+          private_nat_gateway = route.private_nat_gateway
         }
       ]
     ]
@@ -109,14 +109,14 @@ resource "aws_nat_gateway" "this" {
   for_each          = local.vpc_map_private_nat_gateway
   connectivity_type = "private"
   subnet_id         = data.aws_subnets.vpc_private_nat_gateway[each.key].ids[0]
-  tags                       = merge(local.common_tags, {
+  tags = merge(local.common_tags, {
     Name = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-vpc-${each.value.vpc}-${each.value.subnet}-nat-gateway"
   })
 }
 
 resource "aws_route" "this" {
-  for_each  = local.vpc_map_aws_route
-  route_table_id            = data.aws_route_table.aws_route[each.key].id
-  destination_cidr_block    = each.value.cidr_block
-  nat_gateway_id            = each.value.private_nat_gateway == null ? null :  aws_nat_gateway.this["${each.value.vpc}_${each.value.subnet}"].id
+  for_each               = local.vpc_map_aws_route
+  route_table_id         = data.aws_route_table.aws_route[each.key].id
+  destination_cidr_block = each.value.cidr_block
+  nat_gateway_id         = each.value.private_nat_gateway == null ? null : aws_nat_gateway.this["${each.value.vpc}_${each.value.private_nat_gateway}"].id
 }
