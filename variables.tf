@@ -116,9 +116,9 @@ variable "aws" {
         key_name                    = optional(string, null)
         monitoring                  = optional(bool, false)
         ami                         = optional(string, null)
-        vpc                         = string
-        subnet                      = string
-        sg                          = string
+        vpc                         = optional(string, null)
+        subnet                      = optional(string, null)
+        sg                          = optional(string,null)
         key_pair_tags               = optional(map(string), {})
         user_data                   = optional(string, null)
         user_data_replace_on_change = optional(bool, null)
@@ -131,10 +131,11 @@ variable "aws" {
           tags        = optional(map(string), {})
         }), {})
         iam_role_policies = optional(map(string),null)
-        network_interface = optional(list(object({
-          device_index = number
+        network_interfaces = optional(list(object({
+          vpc    = string
           subnet = string
-        })))
+          sg     = string
+        })), [])
       })), {})
       elc = optional(map(object({
         engine                  = optional(string, "redis")

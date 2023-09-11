@@ -1,14 +1,19 @@
 
 locals {
-  network_interface_subnets = flatten ([
-    for key, value in var.aws.resources.ec2 : [
-      for interface in value.network_interface : { "${interface.index}" => "${interface.subnet}"
-        interface = interface.subnet
-        vpc       = interface.vpc
-        device_index = interface.device_index
-      }
-    ]
+  ec2_list_network_interace = flatten([
+      for key, value in var.aws.resources.ec2 : [
+          for index, interface in value.network_interfaces: {
+              ec2 = key
+              vpc = interface.vpc 
+              subnet = interface.subnet
+              index = index
+              sg = interface.sg
+          }
+      ]
   ])
+  ec2_map_network_interface = {
+      for interface in local.ec2_list_network_interace : "${interface.ec2}_${interface.index}" => interface
+  }
 }
 
 
@@ -17,7 +22,7 @@ locals {
 # ║                                             Data                                             ║
 # ╚══════════════════════════════════════════════════════════════════════════════════════════════╝
 data "aws_subnets" "ec2_network" {
-  for_each = var.aws.resources.ec2
+  for_each = { for k, v in var.aws.resources.ec2 : k => v if v.subnet != null }
   filter {
     name   = "vpc-id"
     values = [module.vpc[each.value.vpc].vpc_id]
@@ -28,15 +33,15 @@ data "aws_subnets" "ec2_network" {
   }
 }
 
-data "aws_subnets" "network_interfaces" {
-  for_each = local.network_interface_subnets
+data "aws_subnets" "ec2_network_interfaces" {
+  for_each = local.ec2_map_network_interface
   filter {
     name   = "vpc-id"
     values = [module.vpc[each.value.vpc].vpc_id]
   }
   filter {
     name   = "tag:Name"
-    values = ["${local.translation_regions[var.aws.region]}-${var.aws.profile}-vpc-${each.value.vpc}-${each.value.network_interface.subnet}"]
+    values = ["${local.translation_regions[var.aws.region]}-${var.aws.profile}-vpc-${each.value.vpc}-${each.value.subnet}"]
   }
 }
 
@@ -78,6 +83,12 @@ resource "aws_key_pair" "this" {
   tags       = merge(local.common_tags, each.value.key_pair_tags)
 }
 
+resource "aws_network_interface" "this" {
+  for_each = local.ec2_map_network_interface
+  subnet_id = element(data.aws_subnets.ec2_network_interfaces[each.key].ids, 0)
+  security_groups = [module.sg[each.value.sg].security_group_id]
+}
+
 module "ec2" {
   source                      = "terraform-aws-modules/ec2-instance/aws"
   version                     = "5.3.1"
@@ -87,8 +98,10 @@ module "ec2" {
   ami                         = each.value.ami == null ? data.aws_ami.amazon-linux-2.id : each.value.ami
   key_name                    = aws_key_pair.this[each.key].key_name
   monitoring                  = each.value.monitoring
-  vpc_security_group_ids      = [module.sg[each.value.sg].security_group_id]
-  subnet_id                   = data.aws_subnets.ec2_network[each.key].ids[0]
+
+  vpc_security_group_ids      = length(each.value.network_interfaces) == 0 ? [module.sg[each.value.sg].security_group_id] : null
+  subnet_id                   = length(each.value.network_interfaces) == 0 ? data.aws_subnets.ec2_network[each.key].ids[0] : null
+  
   user_data_base64            = each.value.user_data != null ? base64encode(each.value.user_data) : null
   user_data_replace_on_change = each.value.user_data_replace_on_change
   enable_volume_tags          = false
@@ -108,17 +121,13 @@ module "ec2" {
       tags        = merge({ "Name" = "${var.aws.region}-${var.aws.profile}-ec2-${each.key}" }, local.common_tags, each.value.root_block_device.tags)
     }
   ]
-  network_interface = [
-    for key, value in each.value.network_interface :
+  network_interface = length(each.value.network_interfaces) == 0 ? [] : [
+    for index, value in each.value.network_interfaces:
     {
-      device_index          = value.device_index
-      network_interface_id  = aws_network_interface.this[value.subnet].id
+      device_index          = index
+      network_interface_id  = aws_network_interface.this["${each.key}_${index}"].id
       delete_on_termination = false
     }
   ]
 }
 
-resource "aws_network_interface" "this" {
-  for_each = { for k, v in var.aws.resources.ec2 : k => v if length(v.network_interface) > 0 }
-  subnet_id = 
-}
