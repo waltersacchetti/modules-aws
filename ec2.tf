@@ -111,7 +111,9 @@ module "ec2" {
   iam_role_policies           = each.value.iam_role_policies != null ? {
     for key, value in each.value.iam_role_policies :
     key => strcontains(value,"arn:aws") ? value : aws_iam_policy.this[value].arn
-  } : {}
+  } : {
+    AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+  }
   root_block_device           = [
     {
       encrypted   = each.value.root_block_device.encrypted
