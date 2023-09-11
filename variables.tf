@@ -130,7 +130,11 @@ variable "aws" {
           volume_size = optional(number, 100)
           tags        = optional(map(string), {})
         }), {})
-        iam_instance_profile = optional(string, null)
+        iam_role_policies = optional(map(string),null)
+        network_interface = optional(list(object({
+          device_index = number
+          subnet = string
+        })))
       })), {})
       elc = optional(map(object({
         engine                  = optional(string, "redis")

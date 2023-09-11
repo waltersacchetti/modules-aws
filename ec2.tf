@@ -1,3 +1,18 @@
+
+locals {
+  network_interface_subnets = flatten ([
+    for key, value in var.aws.resources.ec2 : [
+      for interface in value.network_interface : { "${interface.index}" => "${interface.subnet}"
+        interface = interface.subnet
+        vpc       = interface.vpc
+        device_index = interface.device_index
+      }
+    ]
+  ])
+}
+
+
+
 # ╔══════════════════════════════════════════════════════════════════════════════════════════════╗
 # ║                                             Data                                             ║
 # ╚══════════════════════════════════════════════════════════════════════════════════════════════╝
@@ -10,6 +25,18 @@ data "aws_subnets" "ec2_network" {
   filter {
     name   = "tag:Name"
     values = ["${local.translation_regions[var.aws.region]}-${var.aws.profile}-vpc-${each.value.vpc}-${each.value.subnet}"]
+  }
+}
+
+data "aws_subnets" "network_interfaces" {
+  for_each = local.network_interface_subnets
+  filter {
+    name   = "vpc-id"
+    values = [module.vpc[each.value.vpc].vpc_id]
+  }
+  filter {
+    name   = "tag:Name"
+    values = ["${local.translation_regions[var.aws.region]}-${var.aws.profile}-vpc-${each.value.vpc}-${each.value.network_interface.subnet}"]
   }
 }
 
@@ -65,9 +92,14 @@ module "ec2" {
   user_data_base64            = each.value.user_data != null ? base64encode(each.value.user_data) : null
   user_data_replace_on_change = each.value.user_data_replace_on_change
   enable_volume_tags          = false
-  iam_instance_profile        = aws_iam_instance_profile.this[each.value.iam_instance_profile].name
   tags                        = merge(local.common_tags, each.value.tags)
-  root_block_device = [
+  create_iam_instance_profile = true
+  iam_role_description        = "IAM role for ${local.translation_regions[var.aws.region]}-${var.aws.profile}-ec2-${each.key}"
+  iam_role_policies           = each.value.iam_role_policies != null ? {
+    for key, value in each.value.iam_role_policies :
+    key => strcontains(value,"arn:aws") ? value : aws_iam_policy.this[value].arn
+  } : {}
+  root_block_device           = [
     {
       encrypted   = each.value.root_block_device.encrypted
       volume_type = each.value.root_block_device.volume_type
@@ -76,4 +108,17 @@ module "ec2" {
       tags        = merge({ "Name" = "${var.aws.region}-${var.aws.profile}-ec2-${each.key}" }, local.common_tags, each.value.root_block_device.tags)
     }
   ]
+  network_interface = [
+    for key, value in each.value.network_interface :
+    {
+      device_index          = value.device_index
+      network_interface_id  = aws_network_interface.this[value.subnet].id
+      delete_on_termination = false
+    }
+  ]
+}
+
+resource "aws_network_interface" "this" {
+  for_each = { for k, v in var.aws.resources.ec2 : k => v if length(v.network_interface) > 0 }
+  subnet_id = 
 }
