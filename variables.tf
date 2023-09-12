@@ -334,6 +334,7 @@ variable "aws" {
         aws_route = optional(map(list(object({
           cidr_block          = string
           private_nat_gateway = optional(string, null)
+          transit_gateway     = optional(string, null)
         }))), {})
       })), {})
       vpn = optional(map(object({

@@ -21,6 +21,7 @@ locals {
           subnet              = route_key
           cidr_block          = route.cidr_block
           private_nat_gateway = route.private_nat_gateway
+          transit_gateway     = route.transit_gateway
         }
       ]
     ]
@@ -119,4 +120,5 @@ resource "aws_route" "this" {
   route_table_id         = data.aws_route_table.aws_route[each.key].id
   destination_cidr_block = each.value.cidr_block
   nat_gateway_id         = each.value.private_nat_gateway == null ? null : aws_nat_gateway.this["${each.value.vpc}_${each.value.private_nat_gateway}"].id
+  transit_gateway_id     = each.value.transit_gateway
 }
