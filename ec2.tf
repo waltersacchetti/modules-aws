@@ -123,6 +123,17 @@ module "ec2" {
       tags        = merge({ "Name" = "${var.aws.region}-${var.aws.profile}-ec2-${each.key}" }, local.common_tags, each.value.root_block_device.tags)
     }
   ]
+  ebs_block_device = each.value.ebs_block_device != null ? [
+    for disk_key, disk_value in each.value.ebs_block_device :
+    {
+      device_name = "/dev/${disk_key}"
+      encrypted   = disk_value.encrypted
+      volume_type = disk_value.volume_type
+      throughput  = disk_value.throughput
+      volume_size = disk_value.volume_size
+      tags        = merge({ "Name" = "${var.aws.region}-${var.aws.profile}-ec2-${each.key}-${disk_key}" }, local.common_tags, disk_value.tags)
+    }
+  ] : []
   network_interface = length(each.value.network_interfaces) == 0 ? [] : [
     for index, value in each.value.network_interfaces :
     {

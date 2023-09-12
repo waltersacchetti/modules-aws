@@ -130,6 +130,13 @@ variable "aws" {
           volume_size = optional(number, 100)
           tags        = optional(map(string), {})
         }), {})
+        ebs_block_device = optional(map(object({
+          encrypted   = optional(bool, false)
+          volume_type = optional(string, "gp3")
+          throughput  = optional(number, 125)
+          volume_size = optional(number, 100)
+          tags        = optional(map(string), {})
+        })), {})
         iam_role_policies = optional(map(string), null)
         network_interfaces = optional(list(object({
           vpc    = string
