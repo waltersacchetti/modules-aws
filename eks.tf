@@ -197,7 +197,7 @@ module "eks" {
     iam_role_attach_cni_policy = true
     subnets                    = data.aws_subnets.eks_network[each.key].ids
     tags                       = merge(local.common_tags, each.value.tags)
-    instance_type              = "t3.medium"
+    instance_types             = ["t3.medium"]
     disk_size                  = 100
     vpc_security_group_ids     = [module.sg[each.value.sg].security_group_id]
     # Needed by the aws-ebs-csi-driver 
@@ -217,7 +217,7 @@ module "eks" {
       name                  = "${local.translation_regions[var.aws.region]}-emng-${each.key}-${name}"
       ami_type              = value.ami_type
       desired_size          = value.desired_size
-      instance_type         = value.instance_type
+      instance_types        = [value.instance_type]
       min_size              = value.min_size
       max_size              = value.max_size
       kubelet_extra_args    = value.kubelet_extra_args
