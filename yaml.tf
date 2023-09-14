@@ -82,21 +82,42 @@ resource "local_file" "yaml_ec2" {
 # ║ Create IAM Role yaml             ║
 # ╚══════════════════════════════════╝
 
-# locals {
-#   yaml_iam = var.aws.resources.iam == 0 ? {} : {
-#     for key, value in var.aws.resources.iam : key => {
-#       Name                  = aws_iam_role.this[key].name,
-#       Description           = aws_iam_role.this[key].description,
-#       Role_Policy_To_Assume = aws_iam_role.this[key].assume_role_policy
-#     }
-#   }
-# }
+locals {
+  yaml_iam_role = var.aws.resources.iam == 0 ? {} : {
+    for key, value in var.aws.resources.iam : key => can(aws_iam_role.this[key]) ? {
+      Name                  = aws_iam_role.this[key].name,
+      Description           = aws_iam_role.this[key].description,
+      Assume_Role_Policy    = aws_iam_role.this[key].assume_role_policy
+    } : null
+  }
+  yaml_iam_policy = var.aws.resources.iam == 0 ? {} : {
+    for key, value in var.aws.resources.iam : key => can(aws_iam_policy.this[key]) ? {
+      Name                  = aws_iam_policy.this[key].name,
+      Path                  = aws_iam_policy.this[key].path,
+      Policy_Id             = aws_iam_policy.this[key].policy_id
+    } : null
+  }
+  yaml_iam_role_policy_attachment = var.aws.resources.iam == 0 ? {} : {
+    for key, value in var.aws.resources.iam : key => can(aws_iam_role_policy_attachment.this[key]) ? {
+      Id                    = aws_iam_role_policy_attachment.this[key].id,
+      Policy_arn            = aws_iam_role_policy_attachment.this[key].policy_arn,
+      Role                  = aws_iam_role_policy_attachment.this[key].role
+    } : null
+  }
+  yaml_iam_instance_profile = var.aws.resources.iam == 0 ? {} : {
+    for key, value in var.aws.resources.iam : key => can(aws_iam_instance_profile.this[key]) ? {
+      Id                    = aws_iam_instance_profile.this[key].id,
+      Path                  = aws_iam_instance_profile.this[key].path,
+      Role                  = aws_iam_instance_profile.this[key].role
+    } : null
+  }
+}
 
-# resource "local_file" "yaml_iam" {
-#   count    = length(var.aws.resources.iam) > 0 ? 1 : 0
-#   filename = "data/${terraform.workspace}/yaml/iam.yaml"
-#   content  = yamlencode(local.yaml_iam)
-# }
+resource "local_file" "yaml_iam" {
+  count    = length(var.aws.resources.iam) > 0 ? 1 : 0
+  filename = "data/${terraform.workspace}/yaml/iam.yaml"
+  content  = yamlencode({iam_role = local.yaml_iam_role, iam_policy = local.yaml_iam_policy,iam_role_policy_attachment = local.yaml_iam_role_policy_attachment, iam_instance_profile = local.yaml_iam_instance_profile})
+}
 
 # ╔════════════════════════════╗
 # ║ Create S3 yaml             ║
@@ -127,31 +148,18 @@ resource "local_file" "yaml_s3" {
 locals {
   yaml_asg = var.aws.resources.asg == 0 ? {} : {
     for key, value in var.aws.resources.asg : key => {
-      Name                 = module.asg[key].autoscaling_group_name,
-      Ami                  = value.image_id,
-      Instance_Type        = value.instance_type,
-      Desired_Size         = module.asg[key].autoscaling_group_desired_capacity,
-      Min_Size             = module.asg[key].autoscaling_group_min_size,
-      Max_Size             = module.asg[key].autoscaling_group_max_size,
-      Subnets              = module.asg[key].autoscaling_group_vpc_zone_identifier,
-      Launch_Template_Name = module.asg[key].launch_template_name
-      Load_Balancer = {
-        Name    = aws_lb.asg[key].name,
-        Type    = aws_lb.asg[key].load_balancer_type,
-        Subnets = aws_lb.asg[key].subnets,
-        Scheme  = aws_lb.asg[key].internal == false ? "Internet-facing" : "Internal"
-      }
-      Load_Balancer_Target_Group = {
-        Port         = aws_lb_target_group.asg[key].port,
-        Protocol     = aws_lb_target_group.asg[key].protocol,
-        Target_Type  = aws_lb_target_group.asg[key].target_type,
-        Health_Check = aws_lb_target_group.asg[key].health_check
-      }
-      Load_Balancer_Listener = {
-        Port       = aws_lb_listener.asg[key].port,
-        Protocol   = aws_lb_listener.asg[key].protocol,
-        Ssl_Policy = aws_lb_listener.asg[key].ssl_policy
-      }
+      Name                      = module.asg[key].autoscaling_group_name,
+      Ami                       = value.image_id,
+      Instance_Type             = value.instance_type,
+      Desired_Size              = module.asg[key].autoscaling_group_desired_capacity,
+      Min_Size                  = module.asg[key].autoscaling_group_min_size,
+      Max_Size                  = module.asg[key].autoscaling_group_max_size,
+      Subnets                   = module.asg[key].autoscaling_group_vpc_zone_identifier,
+      Launch_Template_Name      = module.asg[key].launch_template_name,
+      Target_group_Arns         = module.asg[key].autoscaling_group_target_group_arns,
+      Health_Check_Type         = module.asg[key].autoscaling_group_health_check_type,
+      Health_Check_Grace_Period = module.asg[key].autoscaling_group_health_check_grace_period,
+      Default_Cooldown          = module.asg[key].autoscaling_group_default_cooldown
     }
   }
 }
@@ -160,6 +168,30 @@ resource "local_file" "yaml_asg" {
   count    = length(var.aws.resources.asg) > 0 ? 1 : 0
   filename = "data/${terraform.workspace}/yaml/asg.yaml"
   content  = yamlencode(local.yaml_asg)
+}
+
+# ╔════════════════════════════╗
+# ║ Create LB yaml             ║
+# ╚════════════════════════════╝
+
+locals {
+  yaml_lb = var.aws.resources.lb == 0 ? {} : {
+    for key, value in var.aws.resources.lb : key => {
+      Id                      = module.lb[key].lb_id,
+      Lb_Dns_Name             = module.lb[key].lb_dns_name,
+      Scheme                  = value.internal == false ? "Internet-facing" : "Internal",
+      Http_Tcp_Listener_Arns  = module.lb[key].http_tcp_listener_arns,
+      Https_Listener_Arns     = module.lb[key].https_listener_arns,
+      Security_Group_Id       = module.lb[key].security_group_id,
+      Target_Group_names      = module.lb[key].target_group_names
+    }
+  }
+}
+
+resource "local_file" "yaml_lb" {
+  count    = length(var.aws.resources.lb) > 0 ? 1 : 0
+  filename = "data/${terraform.workspace}/yaml/lb.yaml"
+  content  = yamlencode(local.yaml_lb)
 }
 
 # ╔════════════════════════════╗

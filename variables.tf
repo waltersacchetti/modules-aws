@@ -22,7 +22,7 @@ variable "aws" {
         health_check_type = optional(string, null)
         subnets           = list(string)
         vpc               = string
-        image_id          = optional(string, "")
+        image_id          = optional(string,null)
         instance_type     = optional(string, null)
         ebs_optimized     = optional(bool, false)
         enable_monitoring = optional(bool, false)
@@ -31,19 +31,22 @@ variable "aws" {
         sg                = string
         iam_role_policies = optional(map(string), {})
         tags              = optional(map(string), {})
-        lb = object({
-          private_lb = bool
-        })
-        lb_target_group = object({
-          application_port     = number
-          application_protocol = string
-        })
-        lb_listener = object({
-          lb_port         = number
-          lb_protocol     = string
-          ssl_policy      = optional(string, null)
-          certificate_arn = optional(string, null)
-        })
+        lb_target_group   = optional(string, null)
+        block_device_mappings = optional(list(object({
+          device_name = string
+          ebs         = optional(object({
+            delete_on_termination = optional(bool,null)
+            encrypted             = optional(bool,null)
+            volume_size           = optional(number,null)
+            volume_type           = optional(string,null)
+          }),null)
+        })), [])
+        metadata_options = optional(map(string),{})
+        network_interfaces = optional(list(object({
+          delete_on_termination = bool
+          description           = string
+          security_groups       = list(string)
+        })), [])
       })), {})
       cloudfront_cache_policies = optional(map(object({
         name        = string
@@ -243,6 +246,44 @@ variable "aws" {
         media_type              = optional(string, null)
         tags                    = optional(map(string), {})
         region                  = optional(string, null)
+      })), {})
+      lb = optional(map(object({
+        load_balancer_type = string
+        internal           = optional(bool,false)
+        vpc                = string
+        sg                 = optional(string,null)
+        subnets            = list(string)
+        enable_cross_zone_load_balancing = optional(bool,false)
+        enable_deletion_protection       = optional(bool,false)
+        tags               = optional(map(string), {})
+        http_tcp_listeners = optional(list(object({
+          port               = number
+          protocol           = string
+          target_group_index = number
+        })), [])
+        target_groups = optional(list(object({
+          backend_protocol        = optional(string,null)
+          backend_port            = optional(number,null)
+          target_type             = optional(string,null)
+          deregistration_delay    = optional(number,null)
+          connection_termination  = optional(bool,null)
+          preserve_client_ip      = optional(bool,null)
+          health_check            = optional(object({
+            interval            = optional(number,null)
+            path                = optional(string,null)
+            matcher             = optional(string,null)
+            port                = optional(string,null)
+            protocol            = optional(string,null)
+            healthy_threshold   = optional(number,null)
+            unhealthy_threshold = optional(number,null)
+            timeout             = optional(number,null)
+          }), null)
+          tags                    = optional(map(string), {})
+          stickiness              = optional(object({
+            type            = optional(string,"source_ip")
+            cookie_duration = optional(number,null)
+          }), null)
+        })), [])
       })), {})
       mq = optional(map(object({
         tags           = optional(map(string), {})

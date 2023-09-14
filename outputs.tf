@@ -78,15 +78,40 @@ locals {
   #   ])}"
   # }
 
-  output_asg_lb = length(aws_lb.asg) == 0 ? {} : {
-    for key, value in aws_lb.asg :
-    key => "╚ Load Balancer:\n\t ${join("\n\t", [
-      "\t╠ Name: ${value.name}",
-      "\t╠ Type: ${value.load_balancer_type}",
-      "\t╚ Internal: ${value.internal}"
+  output_iam_role = length(aws_iam_role.this) == 0 ? {} : {
+    for key, value in aws_iam_role.this :
+    key => "${join("\n\t", [
+      "\t(${key})${value.name}:",
+      "\t╚ Assume role policy: ${value.assume_role_policy}"
     ])}"
   }
 
+  output_iam_policy = length(aws_iam_policy.this) == 0 ? {} : {
+    for key, value in aws_iam_policy.this :
+    key => "${join("\n\t", [
+      "\t(${key})${value.name}:",
+      "\t╠  Path: ${value.path}",
+      "\t╚ Policy id: ${value.policy_id}",
+    ])}"
+  }
+
+  output_iam_role_policy_attachment = length(aws_iam_role_policy_attachment.this) == 0 ? {} : {
+    for key, value in aws_iam_role_policy_attachment.this :
+    key => "${join("\n\t", [
+      "\t(${key})${value.id}:",
+      "\t╠  Policy arn: ${value.policy_arn}",
+      "\t╚ Role: ${value.role}",
+    ])}"
+  }
+
+  output_iam_instance_profile = length(aws_iam_instance_profile.this) == 0 ? {} : {
+    for key, value in aws_iam_instance_profile.this :
+    key => "${join("\n\t", [
+      "\t(${key})${value.id}:",
+      "\t╠ Path: ${value.path}",
+      "\t╚ Role: ${value.role}",
+    ])}"
+  }
 
   output = {
     # Let AWS the first output
@@ -105,8 +130,7 @@ locals {
 
     asg = length(module.asg) == 0 ? "" : templatefile("${path.module}/templates/output-asg.tftpl",
       {
-        resource_map = module.asg,
-        resource_lb  = local.output_asg_lb
+        resource_map = module.asg
     })
 
     cloudfront = length(aws_cloudfront_distribution.this) == 0 ? "" : templatefile("${path.module}/templates/output-cloudfront.tftpl",
@@ -139,14 +163,26 @@ locals {
         resource_endpoints = local.output_elc_redis_endpoints
     })
 
-    iam = length(aws_iam_role.this) == 0 ? "" : templatefile("${path.module}/templates/output-iam.tftpl",
+    iam = length(aws_iam_role.this) != 0 || length(aws_iam_policy.this) != 0 || length(aws_iam_role_policy_attachment.this) != 0 || length(aws_iam_instance_profile.this) != 0 ? templatefile("${path.module}/templates/output-iam.tftpl",
       {
-        resource_map = aws_iam_role.this
-    })
+        resource_map_iam_role                   = aws_iam_role.this
+        resource_map_iam_policy                 = aws_iam_policy.this
+        resource_map_iam_role_policy_attachment = aws_iam_role_policy_attachment.this
+        resource_map_iam_instance_profile       = aws_iam_instance_profile.this
+        resource_iam_role                       = local.output_iam_role != {} ? local.output_iam_role : null,
+        resource_iam_policy                     = local.output_iam_policy != {} ? local.output_iam_policy : null
+        resource_iam_role_policy_attachment     = local.output_iam_role_policy_attachment != {} ? local.output_iam_role_policy_attachment : null,
+        resource_iam_instance_profile           = local.output_iam_instance_profile != {} ? local.output_iam_instance_profile : null
+    }) : ""
 
     kinesis = length(aws_kinesis_video_stream.this) == 0 ? "" : templatefile("${path.module}/templates/output-kinesis.tftpl",
       {
         resource_map = aws_kinesis_video_stream.this
+    })
+
+    lb = length(module.lb) == 0 ? "" : templatefile("${path.module}/templates/output-lb.tftpl",
+      {
+        resource_map        = module.lb
     })
 
     mq = length(aws_mq_broker.this) == 0 ? "" : templatefile("${path.module}/templates/output-mq.tftpl",
