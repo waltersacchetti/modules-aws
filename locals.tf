@@ -8,7 +8,7 @@ locals {
 
   translation_environments = {
     dev  = "development"
-    prod = "production"
+    pro = "production"
     tst  = "test"
     pre  = "preproduction"
     qa   = "qualityassurance"
