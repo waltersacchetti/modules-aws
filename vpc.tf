@@ -33,10 +33,11 @@ locals {
   vpc_list_vgw_dx = flatten([
     for key, value in var.aws.resources.vpc : [
       for vgw_dx_key, vgw_dx_value in value.vgw_dx : {
-        vpc        = key
-        vgw_dx     = vgw_dx_key
-        account_id = vgw_dx_value.account_id
-        dx_gw_id   = vgw_dx_value.dx_gw_id
+        vpc             = key
+        vgw_dx          = vgw_dx_key
+        account_id      = vgw_dx_value.account_id
+        dx_gw_id        = vgw_dx_value.dx_gw_id
+        amazon_side_asn = vgw_dx_value.amazon_side_asn
       }
     ]
   ])
@@ -139,8 +140,9 @@ resource "aws_route" "this" {
 }
 
 resource "aws_vpn_gateway" "this" {
-  for_each = local.vpc_map_vgw_dx
-  vpc_id   = module.vpc[each.value.vpc].vpc_id
+  for_each        = local.vpc_map_vgw_dx
+  vpc_id          = module.vpc[each.value.vpc].vpc_id
+  amazon_side_asn = each.value.amazon_side_asn
 
   tags = {
     Name = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-vpn-gw-${each.key}"

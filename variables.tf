@@ -379,8 +379,9 @@ variable "aws" {
         elasticache_subnets                   = optional(map(string), {})
 
         vgw_dx = optional(map(object({
-          account_id = string
-          dx_gw_id   = string
+          amazon_side_asn = optional(string, null)
+          account_id      = string
+          dx_gw_id        = string
         })), {})
 
         private_nat_gateway = optional(list(string), [])
