@@ -29,7 +29,7 @@ module "lb" {
   subnets                          = data.aws_subnets.lb_network[each.key].ids
   security_groups                  = each.value.sg != null ? [module.sg[each.value.sg].security_group_id] : null
   tags                             = merge(local.common_tags, each.value.tags)
-  http_tcp_listeners               = length(each.value.http_tcp_listeners) == 0 ? [] : [
+  http_tcp_listeners = length(each.value.http_tcp_listeners) == 0 ? [] : [
     for key, value in each.value.http_tcp_listeners :
     {
       port               = value.port
@@ -37,17 +37,17 @@ module "lb" {
       target_group_index = value.target_group_index
     }
   ]
-  target_groups                    = length(each.value.target_groups) == 0 ? [] : [
+  target_groups = length(each.value.target_groups) == 0 ? [] : [
     for key, value in each.value.target_groups :
     {
-      name                    = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-lb-tg-${key}-${each.key}"
-      backend_protocol        = value.backend_protocol
-      backend_port            = value.backend_port
-      target_type             = value.target_type
-      deregistration_delay    = value.deregistration_delay 
-      connection_termination  = contains(["UDP","TCP_UDP"],value.backend_protocol) && value.connection_termination == null ? true : value.connection_termination
-      preserve_client_ip      = value.preserve_client_ip
-      health_check            = value.health_check == null ? { # Default health_check if not set
+      name                   = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-lb-tg-${key}-${each.key}"
+      backend_protocol       = value.backend_protocol
+      backend_port           = value.backend_port
+      target_type            = value.target_type
+      deregistration_delay   = value.deregistration_delay
+      connection_termination = contains(["UDP", "TCP_UDP"], value.backend_protocol) && value.connection_termination == null ? true : value.connection_termination
+      preserve_client_ip     = value.preserve_client_ip
+      health_check = value.health_check == null ? { # Default health_check if not set
         enabled             = true
         healthy_threshold   = 5
         interval            = 30
@@ -55,7 +55,7 @@ module "lb" {
         protocol            = "TCP"
         timeout             = 10
         unhealthy_threshold = 2
-      } : {
+        } : {
         enabled             = true
         interval            = value.health_check.interval
         path                = value.health_check.path
@@ -66,15 +66,15 @@ module "lb" {
         unhealthy_threshold = value.health_check.unhealthy_threshold
         timeout             = value.health_check.timeout
       }
-      stickiness             = value.stickiness == null ? {   # Default stickiness if not set
-        enabled         = false
-        type            = "source_ip"
-      } : {
+      stickiness = value.stickiness == null ? { # Default stickiness if not set
+        enabled = false
+        type    = "source_ip"
+        } : {
         enabled         = true
         type            = value.stickiness.type
         cookie_duration = value.stickiness.cookie_duration
       }
-      tags                   = merge(local.common_tags, value.tags)
+      tags = merge(local.common_tags, value.tags)
     }
   ]
 }

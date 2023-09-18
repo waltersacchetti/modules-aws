@@ -29,6 +29,21 @@ locals {
   vpc_map_aws_route = {
     for route in local.vpc_list_aws_route : "${route.vpc}_${route.subnet}_${route.cidr_block}" => route
   }
+
+  vpc_list_vgw_dx = flatten([
+    for key, value in var.aws.resources.vpc : [
+      for vgw_dx_key, vgw_dx_value in value.vgw_dx : {
+        vpc        = key
+        vgw_dx     = vgw_dx_key
+        account_id = vgw_dx_value.account_id
+        dx_gw_id   = vgw_dx_value.dx_gw_id
+      }
+    ]
+  ])
+
+  vpc_map_vgw_dx = {
+    for vgw_dx in local.vpc_list_vgw_dx : "${vgw_dx.vpc}_${vgw_dx.vgw_dx}" => vgw_dx
+  }
 }
 
 # ╔══════════════════════════════════════════════════════════════════════════════════════════════╗
@@ -121,4 +136,21 @@ resource "aws_route" "this" {
   destination_cidr_block = each.value.cidr_block
   nat_gateway_id         = each.value.private_nat_gateway == null ? null : aws_nat_gateway.this["${each.value.vpc}_${each.value.private_nat_gateway}"].id
   transit_gateway_id     = each.value.transit_gateway
+}
+
+resource "aws_vpn_gateway" "this" {
+  for_each = local.vpc_map_vgw_dx
+  vpc_id   = module.vpc[each.value.vpc].vpc_id
+
+  tags = {
+    Name = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-vpn-gw-${each.key}"
+  }
+}
+
+
+resource "aws_dx_gateway_association_proposal" "this" {
+  for_each                    = local.vpc_map_vgw_dx
+  dx_gateway_id               = each.value.dx_gw_id
+  dx_gateway_owner_account_id = each.value.account_id
+  associated_gateway_id       = aws_vpn_gateway.this[each.key].id
 }

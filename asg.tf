@@ -45,20 +45,20 @@ module "asg" {
   ebs_optimized               = each.value.ebs_optimized
   enable_monitoring           = each.value.enable_monitoring
   create_iam_instance_profile = true
-  iam_role_policies           = each.value.iam_role_policies != null ? {
+  iam_role_policies = each.value.iam_role_policies != null ? {
     for key, value in each.value.iam_role_policies :
     key => strcontains(value, "arn:aws") ? value : aws_iam_policy.this[value].arn
     } : {
     AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
   }
-  iam_role_name               = "iam-role-${local.translation_regions[var.aws.region]}-${var.aws.profile}-asg-${each.key}"
-  iam_role_use_name_prefix    = true
-  block_device_mappings       = length(each.value.block_device_mappings) == 0 ? [] : [
+  iam_role_name            = "iam-role-${local.translation_regions[var.aws.region]}-${var.aws.profile}-asg-${each.key}"
+  iam_role_use_name_prefix = true
+  block_device_mappings = length(each.value.block_device_mappings) == 0 ? [] : [
     for key, value in each.value.block_device_mappings :
     {
       device_name = value.device_name
       no_device   = key
-      ebs         = value.ebs != null ? {
+      ebs = value.ebs != null ? {
         delete_on_termination = value.ebs.delete_on_termination
         encrypted             = value.ebs.encrypted
         volume_size           = value.ebs.volume_size
@@ -76,7 +76,7 @@ module "asg" {
       security_groups       = [for value in value.security_groups : module.sg[value].security_group_id]
     }
   ]
-  user_data = base64encode(each.value.user_data_script)
+  user_data         = base64encode(each.value.user_data_script)
   target_group_arns = each.value.lb_target_group == null ? [] : module.lb[each.value.lb_target_group].target_group_arns
-  tags      = merge(local.common_tags, each.value.tags)
+  tags              = merge(local.common_tags, each.value.tags)
 }

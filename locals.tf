@@ -7,11 +7,11 @@ locals {
   }
 
   translation_environments = {
-    dev  = "development"
+    dev = "development"
     pro = "production"
-    tst  = "test"
-    pre  = "preproduction"
-    qa   = "qualityassurance"
+    tst = "test"
+    pre = "preproduction"
+    qa  = "qualityassurance"
   }
 
   common_tags = merge({

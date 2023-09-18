@@ -85,30 +85,30 @@ resource "local_file" "yaml_ec2" {
 locals {
   yaml_iam_role = var.aws.resources.iam == 0 ? {} : {
     for key, value in var.aws.resources.iam : key => can(aws_iam_role.this[key]) ? {
-      Name                  = aws_iam_role.this[key].name,
-      Description           = aws_iam_role.this[key].description,
-      Assume_Role_Policy    = aws_iam_role.this[key].assume_role_policy
+      Name               = aws_iam_role.this[key].name,
+      Description        = aws_iam_role.this[key].description,
+      Assume_Role_Policy = aws_iam_role.this[key].assume_role_policy
     } : null
   }
   yaml_iam_policy = var.aws.resources.iam == 0 ? {} : {
     for key, value in var.aws.resources.iam : key => can(aws_iam_policy.this[key]) ? {
-      Name                  = aws_iam_policy.this[key].name,
-      Path                  = aws_iam_policy.this[key].path,
-      Policy_Id             = aws_iam_policy.this[key].policy_id
+      Name      = aws_iam_policy.this[key].name,
+      Path      = aws_iam_policy.this[key].path,
+      Policy_Id = aws_iam_policy.this[key].policy_id
     } : null
   }
   yaml_iam_role_policy_attachment = var.aws.resources.iam == 0 ? {} : {
     for key, value in var.aws.resources.iam : key => can(aws_iam_role_policy_attachment.this[key]) ? {
-      Id                    = aws_iam_role_policy_attachment.this[key].id,
-      Policy_arn            = aws_iam_role_policy_attachment.this[key].policy_arn,
-      Role                  = aws_iam_role_policy_attachment.this[key].role
+      Id         = aws_iam_role_policy_attachment.this[key].id,
+      Policy_arn = aws_iam_role_policy_attachment.this[key].policy_arn,
+      Role       = aws_iam_role_policy_attachment.this[key].role
     } : null
   }
   yaml_iam_instance_profile = var.aws.resources.iam == 0 ? {} : {
     for key, value in var.aws.resources.iam : key => can(aws_iam_instance_profile.this[key]) ? {
-      Id                    = aws_iam_instance_profile.this[key].id,
-      Path                  = aws_iam_instance_profile.this[key].path,
-      Role                  = aws_iam_instance_profile.this[key].role
+      Id   = aws_iam_instance_profile.this[key].id,
+      Path = aws_iam_instance_profile.this[key].path,
+      Role = aws_iam_instance_profile.this[key].role
     } : null
   }
 }
@@ -116,7 +116,7 @@ locals {
 resource "local_file" "yaml_iam" {
   count    = length(var.aws.resources.iam) > 0 ? 1 : 0
   filename = "data/${terraform.workspace}/yaml/iam.yaml"
-  content  = yamlencode({iam_role = local.yaml_iam_role, iam_policy = local.yaml_iam_policy,iam_role_policy_attachment = local.yaml_iam_role_policy_attachment, iam_instance_profile = local.yaml_iam_instance_profile})
+  content  = yamlencode({ iam_role = local.yaml_iam_role, iam_policy = local.yaml_iam_policy, iam_role_policy_attachment = local.yaml_iam_role_policy_attachment, iam_instance_profile = local.yaml_iam_instance_profile })
 }
 
 # ╔════════════════════════════╗
@@ -177,13 +177,13 @@ resource "local_file" "yaml_asg" {
 locals {
   yaml_lb = var.aws.resources.lb == 0 ? {} : {
     for key, value in var.aws.resources.lb : key => {
-      Id                      = module.lb[key].lb_id,
-      Lb_Dns_Name             = module.lb[key].lb_dns_name,
-      Scheme                  = value.internal == false ? "Internet-facing" : "Internal",
-      Http_Tcp_Listener_Arns  = module.lb[key].http_tcp_listener_arns,
-      Https_Listener_Arns     = module.lb[key].https_listener_arns,
-      Security_Group_Id       = module.lb[key].security_group_id,
-      Target_Group_names      = module.lb[key].target_group_names
+      Id                     = module.lb[key].lb_id,
+      Lb_Dns_Name            = module.lb[key].lb_dns_name,
+      Scheme                 = value.internal == false ? "Internet-facing" : "Internal",
+      Http_Tcp_Listener_Arns = module.lb[key].http_tcp_listener_arns,
+      Https_Listener_Arns    = module.lb[key].https_listener_arns,
+      Security_Group_Id      = module.lb[key].security_group_id,
+      Target_Group_names     = module.lb[key].target_group_names
     }
   }
 }

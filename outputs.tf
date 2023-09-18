@@ -182,7 +182,7 @@ locals {
 
     lb = length(module.lb) == 0 ? "" : templatefile("${path.module}/templates/output-lb.tftpl",
       {
-        resource_map        = module.lb
+        resource_map = module.lb
     })
 
     mq = length(aws_mq_broker.this) == 0 ? "" : templatefile("${path.module}/templates/output-mq.tftpl",
