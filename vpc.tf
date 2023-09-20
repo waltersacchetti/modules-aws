@@ -15,7 +15,7 @@ locals {
   }
   vpc_list_aws_route = flatten([
     for key, value in var.aws.resources.vpc : [
-      for route_key, route_value in value.aws_route : [
+      for route_key, route_value in value.routes : [
         for route in route_value : {
           vpc                 = key
           subnet              = route_key
@@ -33,11 +33,13 @@ locals {
   vpc_list_vgw_dx = flatten([
     for key, value in var.aws.resources.vpc : [
       for vgw_dx_key, vgw_dx_value in value.vgw_dx : {
-        vpc             = key
-        vgw_dx          = vgw_dx_key
-        account_id      = vgw_dx_value.account_id
-        dx_gw_id        = vgw_dx_value.dx_gw_id
-        amazon_side_asn = vgw_dx_value.amazon_side_asn
+        vpc              = key
+        vgw_dx           = vgw_dx_key
+        account_id       = vgw_dx_value.account_id
+        dx_gw_id         = vgw_dx_value.dx_gw_id
+        subnets          = vgw_dx_value.subnets
+        amazon_side_asn  = vgw_dx_value.amazon_side_asn
+        allowed_prefixes = vgw_dx_value.allowed_prefixes
       }
     ]
   ])
@@ -45,7 +47,24 @@ locals {
   vpc_map_vgw_dx = {
     for vgw_dx in local.vpc_list_vgw_dx : "${vgw_dx.vpc}_${vgw_dx.vgw_dx}" => vgw_dx
   }
+
+  vpc_map_vgw_dx_subnets = flatten([
+    for key, value in local.vpc_map_vgw_dx :
+    [
+      for subnet in value.subnets : {
+        vpc            = value.vpc
+        vgw_dx         = value.vgw_dx
+        vpn_gateway_id = key
+        subnet         = subnet
+      }
+    ] if length(value.subnets) > 0
+  ])
+
+  vpc_list_vgw_dx_subnets = {
+    for vpc_list_vgw_dx_subnet in local.vpc_map_vgw_dx_subnets : "${vpc_list_vgw_dx_subnet.vpn_gateway_id}_${vpc_list_vgw_dx_subnet.subnet}" => vpc_list_vgw_dx_subnet
+  }
 }
+
 
 # ╔══════════════════════════════════════════════════════════════════════════════════════════════╗
 # ║                                             Data                                             ║
@@ -62,7 +81,7 @@ data "aws_subnets" "vpc_private_nat_gateway" {
   }
 }
 
-data "aws_subnets" "aws_route" {
+data "aws_subnets" "routes" {
   for_each = local.vpc_map_aws_route
   filter {
     name   = "vpc-id"
@@ -74,10 +93,28 @@ data "aws_subnets" "aws_route" {
   }
 }
 
-data "aws_route_table" "aws_route" {
+data "aws_subnets" "routes_propagation" {
+  for_each = local.vpc_list_vgw_dx_subnets
+  filter {
+    name   = "vpc-id"
+    values = [module.vpc[each.value.vpc].vpc_id]
+  }
+  filter {
+    name   = "tag:Name"
+    values = ["${local.translation_regions[var.aws.region]}-${var.aws.profile}-vpc-${each.value.vpc}-${each.value.subnet}"]
+  }
+}
+
+data "aws_route_table" "routes" {
   for_each  = local.vpc_map_aws_route
   vpc_id    = module.vpc[each.value.vpc].vpc_id
-  subnet_id = data.aws_subnets.aws_route[each.key].ids[0]
+  subnet_id = data.aws_subnets.routes[each.key].ids[0]
+}
+
+data "aws_route_table" "routes_propagation" {
+  for_each  = local.vpc_list_vgw_dx_subnets
+  vpc_id    = module.vpc[each.value.vpc].vpc_id
+  subnet_id = data.aws_subnets.routes_propagation[each.key].ids[0]
 }
 
 # ╔══════════════════════════════════════════════════════════════════════════════════════════════╗
@@ -133,7 +170,7 @@ resource "aws_nat_gateway" "this" {
 
 resource "aws_route" "this" {
   for_each               = local.vpc_map_aws_route
-  route_table_id         = data.aws_route_table.aws_route[each.key].id
+  route_table_id         = data.aws_route_table.routes[each.key].id
   destination_cidr_block = each.value.cidr_block
   nat_gateway_id         = each.value.private_nat_gateway == null ? null : aws_nat_gateway.this["${each.value.vpc}_${each.value.private_nat_gateway}"].id
   transit_gateway_id     = each.value.transit_gateway
@@ -155,4 +192,11 @@ resource "aws_dx_gateway_association_proposal" "this" {
   dx_gateway_id               = each.value.dx_gw_id
   dx_gateway_owner_account_id = each.value.account_id
   associated_gateway_id       = aws_vpn_gateway.this[each.key].id
+  allowed_prefixes            = each.value.allowed_prefixes
+}
+
+resource "aws_vpn_gateway_route_propagation" "example" {
+  for_each       = local.vpc_list_vgw_dx_subnets
+  vpn_gateway_id = aws_vpn_gateway.this[each.value.vpn_gateway_id].id
+  route_table_id = data.aws_route_table.routes_propagation[each.key].id
 }

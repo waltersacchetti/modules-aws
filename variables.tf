@@ -379,17 +379,20 @@ variable "aws" {
         elasticache_subnets                   = optional(map(string), {})
 
         vgw_dx = optional(map(object({
-          amazon_side_asn = optional(string, null)
-          account_id      = string
-          dx_gw_id        = string
+          amazon_side_asn  = optional(string, null)
+          allowed_prefixes = optional(list(string), [])
+          account_id       = string
+          dx_gw_id         = string
+          subnets          = optional(list(string), [])
         })), {})
 
         private_nat_gateway = optional(list(string), [])
-        aws_route = optional(map(list(object({
+        routes = optional(map(list(object({
           cidr_block          = string
           private_nat_gateway = optional(string, null)
           transit_gateway     = optional(string, null)
         }))), {})
+
       })), {})
       vpn = optional(map(object({
         sg   = string
