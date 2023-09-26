@@ -69,9 +69,10 @@ module "rds" {
   iam_database_authentication_enabled = each.value.iam_db_auth_enabled
 
   #Maintenance
-  maintenance_window  = each.value.maintenance_window
-  backup_window       = each.value.backup_window
-  deletion_protection = each.value.deletion_protection
+  maintenance_window      = each.value.maintenance_window
+  backup_window           = each.value.backup_window
+  backup_retention_period = each.value.backup_retention_period
+  deletion_protection     = each.value.deletion_protection
 
   #AZ
   availability_zone = each.value.multi_az == false ? module.vpc[each.value.vpc].azs[0] : null
