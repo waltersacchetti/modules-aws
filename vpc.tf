@@ -195,7 +195,7 @@ resource "aws_dx_gateway_association_proposal" "this" {
   allowed_prefixes            = each.value.allowed_prefixes
 }
 
-resource "aws_vpn_gateway_route_propagation" "example" {
+resource "aws_vpn_gateway_route_propagation" "this" {
   for_each       = local.vpc_list_vgw_dx_subnets
   vpn_gateway_id = aws_vpn_gateway.this[each.value.vpn_gateway_id].id
   route_table_id = data.aws_route_table.routes_propagation[each.key].id
