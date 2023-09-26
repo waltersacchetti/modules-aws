@@ -9,7 +9,7 @@ locals {
         volume_size           = 100
         volume_type           = "gp3"
         iops                  = 300
-        encrypted             = false
+        encrypted             = true
         delete_on_termination = true
       }
     }
