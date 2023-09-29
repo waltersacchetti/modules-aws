@@ -180,10 +180,10 @@ locals {
         resource_map = aws_kinesis_video_stream.this
     })
 
-    lb = length(module.lb) == 0 ? "" : templatefile("${path.module}/templates/output-lb.tftpl",
-      {
-        resource_map = module.lb
-    })
+    # lb = length(module.lb) == 0 ? "" : templatefile("${path.module}/templates/output-lb.tftpl",
+    #   {
+    #     resource_map = module.lb
+    # })
 
     mq = length(aws_mq_broker.this) == 0 ? "" : templatefile("${path.module}/templates/output-mq.tftpl",
       {

@@ -7,6 +7,43 @@ variable "aws" {
     project = string
     tags    = optional(map(string), {})
     resources = object({
+      alb = optional(map(object({
+        internal                         = optional(bool, false)
+        vpc                              = string
+        sg                               = optional(string, null)
+        subnets                          = list(string)
+        enable_cross_zone_load_balancing = optional(bool, false)
+        enable_deletion_protection       = optional(bool, false)
+        drop_invalid_header_fields       = optional(bool, false)
+        tags                             = optional(map(string), {})
+        http_tcp_listeners               = optional(any, [])
+        https_listeners                  = optional(any, [])
+        target_groups = optional(list(object({
+          name                   = string
+          backend_protocol       = string
+          backend_port           = number
+          target_type            = optional(string, null) # instance by default
+          deregistration_delay   = optional(number, null) # 300 by default
+          connection_termination = optional(bool, null)   # false by default
+          preserve_client_ip     = optional(bool, null)   # true by default
+          protocol_version       = optional(string, null) # HTTP1 by default
+          health_check = optional(object({
+            interval            = optional(number, null)
+            path                = optional(string, null)
+            matcher             = optional(string, null)
+            port                = optional(string, null)
+            protocol            = optional(string, null)
+            healthy_threshold   = optional(number, null)
+            unhealthy_threshold = optional(number, null)
+            timeout             = optional(number, null)
+          }), null)
+          targets = optional(map(object({
+            target_id = string
+            port      = optional(number, null)
+          })), null)
+          tags = optional(map(string), {})
+        })), [])
+      })), {})
       alternat = optional(object({
         image_uri             = optional(string, "0123456789012.dkr.ecr.us-east-1.amazonaws.com/alternat-functions-lambda")
         image_tag             = optional(string, "v0.3.3")
@@ -32,7 +69,11 @@ variable "aws" {
         sg                = string
         iam_role_policies = optional(map(string), {})
         tags              = optional(map(string), {})
-        lb_target_group   = optional(string, null)
+        target_groups = optional(object({
+          load_balancer_type = string
+          load_balancer_key = string
+          target_group_names = list(string)
+        }),null)
         block_device_mappings = optional(list(object({
           device_name = string
           ebs = optional(object({
@@ -248,44 +289,6 @@ variable "aws" {
         tags                    = optional(map(string), {})
         region                  = optional(string, null)
       })), {})
-      lb = optional(map(object({
-        load_balancer_type               = string
-        internal                         = optional(bool, false)
-        vpc                              = string
-        sg                               = optional(string, null)
-        subnets                          = list(string)
-        enable_cross_zone_load_balancing = optional(bool, false)
-        enable_deletion_protection       = optional(bool, false)
-        tags                             = optional(map(string), {})
-        http_tcp_listeners = optional(list(object({
-          port               = number
-          protocol           = string
-          target_group_index = number
-        })), [])
-        target_groups = optional(list(object({
-          backend_protocol       = optional(string, null)
-          backend_port           = optional(number, null)
-          target_type            = optional(string, null)
-          deregistration_delay   = optional(number, null)
-          connection_termination = optional(bool, null)
-          preserve_client_ip     = optional(bool, null)
-          health_check = optional(object({
-            interval            = optional(number, null)
-            path                = optional(string, null)
-            matcher             = optional(string, null)
-            port                = optional(string, null)
-            protocol            = optional(string, null)
-            healthy_threshold   = optional(number, null)
-            unhealthy_threshold = optional(number, null)
-            timeout             = optional(number, null)
-          }), null)
-          tags = optional(map(string), {})
-          stickiness = optional(object({
-            type            = optional(string, "source_ip")
-            cookie_duration = optional(number, null)
-          }), null)
-        })), [])
-      })), {})
       mq = optional(map(object({
         tags           = optional(map(string), {})
         vpc            = string
@@ -299,6 +302,45 @@ variable "aws" {
         username           = optional(string, "master")
         password           = optional(string, null)
         configuration      = optional(string, "")
+      })), {})
+      nlb = optional(map(object({
+        internal                         = optional(bool, false)
+        vpc                              = string
+        sg                               = optional(string, null)
+        subnets                          = list(string)
+        enable_cross_zone_load_balancing = optional(bool, false)
+        enable_deletion_protection       = optional(bool, false)
+        tags                             = optional(map(string), {})
+        http_tcp_listeners               = optional(any, [])
+        https_listeners                  = optional(any, [])
+        target_groups = optional(list(object({
+          backend_protocol       = string
+          backend_port           = number
+          target_type            = optional(string, null) #instance by default
+          deregistration_delay   = optional(number, null) # 300 by default
+          connection_termination = optional(bool, null)   # false by default
+          preserve_client_ip     = optional(bool, null)   # true by default
+          protocol_version       = optional(string, null) # HTTP1 by default
+          health_check = optional(object({
+            interval            = optional(number, null)
+            path                = optional(string, null)
+            matcher             = optional(string, null)
+            port                = optional(string, null)
+            protocol            = optional(string, null)
+            healthy_threshold   = optional(number, null)
+            unhealthy_threshold = optional(number, null)
+            timeout             = optional(number, null)
+          }), null)
+          targets = optional(map(object({
+            target_id = string
+            port      = optional(number, null)
+          })), null)
+          tags = optional(map(string), {})
+          stickiness = optional(object({
+            type            = optional(string, "source_ip")
+            cookie_duration = optional(number, null)
+          }), null)
+        })), [])
       })), {})
       rds = optional(map(object({
         tags                    = optional(map(string), {})

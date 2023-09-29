@@ -174,25 +174,25 @@ resource "local_file" "yaml_asg" {
 # ║ Create LB yaml             ║
 # ╚════════════════════════════╝
 
-locals {
-  yaml_lb = var.aws.resources.lb == 0 ? {} : {
-    for key, value in var.aws.resources.lb : key => {
-      Id                     = module.lb[key].lb_id,
-      Lb_Dns_Name            = module.lb[key].lb_dns_name,
-      Scheme                 = value.internal == false ? "Internet-facing" : "Internal",
-      Http_Tcp_Listener_Arns = module.lb[key].http_tcp_listener_arns,
-      Https_Listener_Arns    = module.lb[key].https_listener_arns,
-      Security_Group_Id      = module.lb[key].security_group_id,
-      Target_Group_names     = module.lb[key].target_group_names
-    }
-  }
-}
+# locals {
+#   yaml_lb = var.aws.resources.lb == 0 ? {} : {
+#     for key, value in var.aws.resources.lb : key => {
+#       Id                     = module.lb[key].lb_id,
+#       Lb_Dns_Name            = module.lb[key].lb_dns_name,
+#       Scheme                 = value.internal == false ? "Internet-facing" : "Internal",
+#       Http_Tcp_Listener_Arns = module.lb[key].http_tcp_listener_arns,
+#       Https_Listener_Arns    = module.lb[key].https_listener_arns,
+#       Security_Group_Id      = module.lb[key].security_group_id,
+#       Target_Group_names     = module.lb[key].target_group_names
+#     }
+#   }
+# }
 
-resource "local_file" "yaml_lb" {
-  count    = length(var.aws.resources.lb) > 0 ? 1 : 0
-  filename = "data/${terraform.workspace}/yaml/lb.yaml"
-  content  = yamlencode(local.yaml_lb)
-}
+# resource "local_file" "yaml_lb" {
+#   count    = length(var.aws.resources.lb) > 0 ? 1 : 0
+#   filename = "data/${terraform.workspace}/yaml/lb.yaml"
+#   content  = yamlencode(local.yaml_lb)
+# }
 
 # ╔════════════════════════════╗
 # ║ Create Kinesis yaml        ║
