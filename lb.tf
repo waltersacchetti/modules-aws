@@ -44,6 +44,8 @@ module "alb" {
   tags                             = merge(local.common_tags, each.value.tags)
   http_tcp_listeners               = each.value.http_tcp_listeners
   https_listeners                  = each.value.https_listeners
+  https_listener_rules             = each.value.https_listener_rules
+
   target_groups = length(each.value.target_groups) == 0 ? [] : [
     for key, value in each.value.target_groups :
     {

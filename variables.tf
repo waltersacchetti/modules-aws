@@ -18,6 +18,7 @@ variable "aws" {
         tags                             = optional(map(string), {})
         http_tcp_listeners               = optional(any, [])
         https_listeners                  = optional(any, [])
+        https_listener_rules             = optional(any, [])
         target_groups = optional(list(object({
           name                   = string
           backend_protocol       = string
