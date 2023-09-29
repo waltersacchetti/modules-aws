@@ -8,12 +8,13 @@ variable "aws" {
     tags    = optional(map(string), {})
     resources = object({
       alternat = optional(object({
-        image_uri           = optional(string, "0123456789012.dkr.ecr.us-east-1.amazonaws.com/alternat-functions-lambda")
-        image_tag           = optional(string, "v0.3.3")
-        instance_type       = optional(string, "c6gn.large")
-        lambda_package_type = optional(string, "Zip")
-        sgs                 = optional(list(string), [])
-        vpc                 = optional(string, null)
+        image_uri             = optional(string, "0123456789012.dkr.ecr.us-east-1.amazonaws.com/alternat-functions-lambda")
+        image_tag             = optional(string, "v0.3.3")
+        instance_type         = optional(string, "c6gn.large")
+        lambda_package_type   = optional(string, "Zip")
+        max_instance_lifetime = optional(number, 1209600)
+        sgs                   = optional(list(string), [])
+        vpc                   = optional(string, null)
       }), {})
       asg = optional(map(object({
         min_size          = optional(number, 1)

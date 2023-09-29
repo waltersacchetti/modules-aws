@@ -65,6 +65,7 @@ module "alternat_instances" {
   nat_instance_type          = var.aws.resources.alternat.instance_type
   lambda_package_type        = var.aws.resources.alternat.lambda_package_type
   ingress_security_group_ids = flatten([for sg in var.aws.resources.alternat.sgs : module.sg[sg].security_group_id])
+  max_instance_lifetime      = var.aws.resources.alternat.max_instance_lifetime
 
   # Optional EBS volume settings. If omitted, the AMI defaults will be used.
   nat_instance_block_devices = {
