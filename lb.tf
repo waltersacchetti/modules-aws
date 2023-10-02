@@ -42,14 +42,13 @@ module "alb" {
   subnets                          = data.aws_subnets.alb_network[each.key].ids
   security_groups                  = each.value.sg != null ? [module.sg[each.value.sg].security_group_id] : null
   tags                             = merge(local.common_tags, each.value.tags)
+  lb_tags                          = each.value.lb_tags
   http_tcp_listeners               = each.value.http_tcp_listeners
   https_listeners                  = each.value.https_listeners
   https_listener_rules             = each.value.https_listener_rules
-
   target_groups = length(each.value.target_groups) == 0 ? [] : [
     for key, value in each.value.target_groups :
     {
-      #name                   = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-alb-${key}-${each.key}"
       name                   = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-${each.key}-${value.name}"
       backend_protocol       = value.backend_protocol
       backend_port           = value.backend_port
@@ -102,12 +101,14 @@ module "nlb" {
   subnets                          = data.aws_subnets.nlb_network[each.key].ids
   security_groups                  = each.value.sg != null ? [module.sg[each.value.sg].security_group_id] : null
   tags                             = merge(local.common_tags, each.value.tags)
+  lb_tags                          = each.value.lb_tags
   http_tcp_listeners               = each.value.http_tcp_listeners
   https_listeners                  = each.value.https_listeners
+  https_listener_rules             = each.value.https_listener_rules
   target_groups = length(each.value.target_groups) == 0 ? [] : [
     for key, value in each.value.target_groups :
     {
-      name                   = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-nlb-${key}-${each.key}"
+      name                   = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-${each.key}-${value.name}"
       backend_protocol       = value.backend_protocol
       backend_port           = value.backend_port
       target_type            = value.target_type

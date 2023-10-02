@@ -16,6 +16,7 @@ variable "aws" {
         enable_deletion_protection       = optional(bool, false)
         drop_invalid_header_fields       = optional(bool, false)
         tags                             = optional(map(string), {})
+        lb_tags                          = optional(map(string), {})
         http_tcp_listeners               = optional(any, [])
         https_listeners                  = optional(any, [])
         https_listener_rules             = optional(any, [])
@@ -312,9 +313,12 @@ variable "aws" {
         enable_cross_zone_load_balancing = optional(bool, false)
         enable_deletion_protection       = optional(bool, false)
         tags                             = optional(map(string), {})
+        lb_tags                          = optional(map(string), {})
         http_tcp_listeners               = optional(any, [])
         https_listeners                  = optional(any, [])
+        https_listener_rules             = optional(any, [])
         target_groups = optional(list(object({
+          name                   = string
           backend_protocol       = string
           backend_port           = number
           target_type            = optional(string, null) #instance by default

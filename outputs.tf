@@ -128,6 +128,11 @@ locals {
         resource_map = module.vpc
     })
 
+    alb = length(module.alb) == 0 ? "" : templatefile("${path.module}/templates/output-alb.tftpl",
+      {
+        resource_map = module.alb
+    })
+
     asg = length(module.asg) == 0 ? "" : templatefile("${path.module}/templates/output-asg.tftpl",
       {
         resource_map = module.asg
@@ -180,16 +185,16 @@ locals {
         resource_map = aws_kinesis_video_stream.this
     })
 
-    # lb = length(module.lb) == 0 ? "" : templatefile("${path.module}/templates/output-lb.tftpl",
-    #   {
-    #     resource_map = module.lb
-    # })
-
     mq = length(aws_mq_broker.this) == 0 ? "" : templatefile("${path.module}/templates/output-mq.tftpl",
       {
         resource_map    = aws_mq_broker.this,
         resource_config = var.aws.resources.mq,
         password        = random_password.mq
+    })
+
+    nlb = length(module.nlb) == 0 ? "" : templatefile("${path.module}/templates/output-nlb.tftpl",
+      {
+        resource_map = module.nlb
     })
 
     rds = length(module.rds) == 0 ? "" : templatefile("${path.module}/templates/output-rds.tftpl",
