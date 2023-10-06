@@ -71,18 +71,23 @@ variable "aws" {
         sg                = string
         iam_role_policies = optional(map(string), {})
         tags              = optional(map(string), {})
+        update_default_version = optional(bool,null)
+        instance_refresh       = optional(any,{})
         target_groups = optional(object({
           load_balancer_type = string
-          load_balancer_key = string
+          load_balancer_key  = string
           target_group_names = list(string)
-        }),null)
+        }), null)
         block_device_mappings = optional(list(object({
           device_name = string
           ebs = optional(object({
-            delete_on_termination = optional(bool, null)
-            encrypted             = optional(bool, null)
-            volume_size           = optional(number, null)
-            volume_type           = optional(string, null)
+            delete_on_termination = optional(bool, true)
+            encrypted             = optional(bool, false)
+            kms_key_id            = optional(string,null)
+            throughput            = optional(number,null)
+            iops                  = optional(number,null)
+            volume_size           = optional(number, 100)
+            volume_type           = optional(string, "gp3")
           }), null)
         })), [])
         metadata_options = optional(map(string), {})
@@ -171,7 +176,9 @@ variable "aws" {
         user_data_replace_on_change = optional(bool, null)
         tags                        = optional(map(string), {})
         root_block_device = optional(object({
+          delete_on_termination = optional(bool,true)
           encrypted   = optional(bool, false)
+          kms_key_id  =  optional(string,null)
           volume_type = optional(string, "gp3")
           throughput  = optional(number, 125)
           volume_size = optional(number, 100)
@@ -179,16 +186,19 @@ variable "aws" {
         }), {})
         ebs_block_device = optional(map(object({
           encrypted   = optional(bool, false)
-          volume_type = optional(string, "gp3")
+          type = optional(string, "gp3")
           throughput  = optional(number, 125)
-          volume_size = optional(number, 100)
+          size = optional(number, 100)
+          kms_key_id  =  optional(string,null)
+          iops        = optional(number,null)
           tags        = optional(map(string), {})
         })), {})
         iam_role_policies = optional(map(string), null)
-        network_interfaces = optional(list(object({
+        additional_network_interfaces = optional(list(object({
           vpc    = string
           subnet = string
           sg     = string
+          tags   = optional(map(string), {})
         })), [])
       })), {})
       elc = optional(map(object({
@@ -290,6 +300,25 @@ variable "aws" {
         media_type              = optional(string, null)
         tags                    = optional(map(string), {})
         region                  = optional(string, null)
+      })), {})
+      kms = optional(map(object({
+        deletion_window_in_days                = optional(number, 30)
+        enable_key_rotation                    = optional(bool, true)
+        key_usage                              = optional(string, "ENCRYPT_DECRYPT")
+        key_owners                             = optional(list(string), [])
+        key_administrators                     = optional(list(string), [])
+        key_users                              = optional(list(string), [])
+        key_service_users                      = optional(list(string), [])
+        key_service_roles_for_autoscaling      = optional(list(string), [])
+        key_symmetric_encryption_users         = optional(list(string), [])
+        key_hmac_users                         = optional(list(string), [])
+        key_asymmetric_public_encryption_users = optional(list(string), [])
+        key_asymmetric_sign_verify_users       = optional(list(string), [])
+        key_statements                         = optional(any, {})
+        aliases                                = optional(list(string), [])
+        computed_aliases                       = optional(any, {})
+        grants                                 = optional(any, {})
+        tags                                   = optional(map(string), {})
       })), {})
       mq = optional(map(object({
         tags           = optional(map(string), {})

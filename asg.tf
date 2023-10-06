@@ -45,6 +45,8 @@ module "asg" {
   ebs_optimized               = each.value.ebs_optimized
   enable_monitoring           = each.value.enable_monitoring
   create_iam_instance_profile = true
+  update_default_version      = each.value.update_default_version
+  instance_refresh            = each.value.instance_refresh
   iam_role_policies = each.value.iam_role_policies != null ? {
     for key, value in each.value.iam_role_policies :
     key => strcontains(value, "arn:aws") ? value : aws_iam_policy.this[value].arn
@@ -61,6 +63,9 @@ module "asg" {
       ebs = value.ebs != null ? {
         delete_on_termination = value.ebs.delete_on_termination
         encrypted             = value.ebs.encrypted
+        kms_key_id            = value.ebs.encrypted == false ? null : module.kms[value.ebs.kms_key_id].key_arn
+        throughput            = value.ebs.throughput
+        iops                  = value.ebs.iops
         volume_size           = value.ebs.volume_size
         volume_type           = value.ebs.volume_type
       } : null
