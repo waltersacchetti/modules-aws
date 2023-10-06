@@ -81,14 +81,14 @@ module "asg" {
       security_groups       = [for value in value.security_groups : module.sg[value].security_group_id]
     }
   ]
-  user_data         = base64encode(each.value.user_data_script)
+  user_data = base64encode(each.value.user_data_script)
   target_group_arns = each.value.target_groups == null ? [] : flatten([
     for tg_name in each.value.target_groups.target_group_names :
-      each.value.target_groups.load_balancer_type == "alb" ? [
-        for arn in module.alb[each.value.target_groups.load_balancer_key].target_group_arns : arn if strcontains(arn,"${local.translation_regions[var.aws.region]}-${var.aws.profile}-${each.value.target_groups.load_balancer_key}-${tg_name}")
+    each.value.target_groups.load_balancer_type == "alb" ? [
+      for arn in module.alb[each.value.target_groups.load_balancer_key].target_group_arns : arn if strcontains(arn, "${local.translation_regions[var.aws.region]}-${var.aws.profile}-${each.value.target_groups.load_balancer_key}-${tg_name}")
       ] : [
-        for arn in module.nlb[each.value.target_groups.load_balancer_key].target_group_arns : arn if strcontains(arn,"${local.translation_regions[var.aws.region]}-${var.aws.profile}-${each.value.target_groups.load_balancer_key}-${tg_name}")
-      ]
+      for arn in module.nlb[each.value.target_groups.load_balancer_key].target_group_arns : arn if strcontains(arn, "${local.translation_regions[var.aws.region]}-${var.aws.profile}-${each.value.target_groups.load_balancer_key}-${tg_name}")
+    ]
   ])
-  tags              = merge(local.common_tags, each.value.tags)
+  tags = merge(local.common_tags, each.value.tags)
 }
