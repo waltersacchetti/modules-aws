@@ -179,6 +179,7 @@ variable "aws" {
           delete_on_termination = optional(bool, true)
           encrypted             = optional(bool, false)
           kms_key_id            = optional(string, null)
+          iops                  = optional(number, null)
           volume_type           = optional(string, "gp3")
           throughput            = optional(number, 125)
           volume_size           = optional(number, 100)
