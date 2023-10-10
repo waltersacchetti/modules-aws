@@ -1,19 +1,18 @@
 
 locals {
-  ec2_list_additional_network_interace = flatten([
+  ec2_list_network_interace = flatten([
     for key, value in var.aws.resources.ec2 : [
-      for index, interface in value.additional_network_interfaces : {
+      for index, interface in value.network_interfaces : {
         ec2    = key
         vpc    = interface.vpc
         subnet = interface.subnet
-        index  = index + 1
+        index  = index
         sg     = interface.sg
-        tags   = interface.tags
       }
     ]
   ])
-  ec2_map_additional_network_interface = {
-    for interface in local.ec2_list_additional_network_interace : "${interface.ec2}_${interface.index}" => interface
+  ec2_map_network_interface = {
+    for interface in local.ec2_list_network_interace : "${interface.ec2}_${interface.index}" => interface
   }
 
   ec2_list_block_device_mappings = flatten([
@@ -38,11 +37,12 @@ locals {
 }
 
 
+
 # ╔══════════════════════════════════════════════════════════════════════════════════════════════╗
 # ║                                             Data                                             ║
 # ╚══════════════════════════════════════════════════════════════════════════════════════════════╝
 data "aws_subnets" "ec2_network" {
-  for_each = var.aws.resources.ec2
+  for_each = { for k, v in var.aws.resources.ec2 : k => v if v.subnet != null }
   filter {
     name   = "vpc-id"
     values = [module.vpc[each.value.vpc].vpc_id]
@@ -54,7 +54,7 @@ data "aws_subnets" "ec2_network" {
 }
 
 data "aws_subnets" "ec2_network_interfaces" {
-  for_each = local.ec2_map_additional_network_interface
+  for_each = local.ec2_map_network_interface
   filter {
     name   = "vpc-id"
     values = [module.vpc[each.value.vpc].vpc_id]
@@ -103,17 +103,25 @@ resource "aws_key_pair" "this" {
   tags       = merge(local.common_tags, each.value.key_pair_tags)
 }
 
+resource "aws_network_interface" "this" {
+  for_each        = local.ec2_map_network_interface
+  subnet_id       = element(data.aws_subnets.ec2_network_interfaces[each.key].ids, 0)
+  security_groups = [module.sg[each.value.sg].security_group_id]
+}
+
 module "ec2" {
-  source                      = "terraform-aws-modules/ec2-instance/aws"
-  version                     = "5.5.0"
-  for_each                    = var.aws.resources.ec2
-  name                        = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-ec2-${each.key}"
-  instance_type               = each.value.instance_type
-  ami                         = each.value.ami == null ? data.aws_ami.amazon-linux-2.id : each.value.ami
-  key_name                    = aws_key_pair.this[each.key].key_name
-  monitoring                  = each.value.monitoring
-  vpc_security_group_ids      = [module.sg[each.value.sg].security_group_id]
-  subnet_id                   = data.aws_subnets.ec2_network[each.key].ids[0]
+  source        = "terraform-aws-modules/ec2-instance/aws"
+  version       = "5.5.0"
+  for_each      = var.aws.resources.ec2
+  name          = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-ec2-${each.key}"
+  instance_type = each.value.instance_type
+  ami           = each.value.ami == null ? data.aws_ami.amazon-linux-2.id : each.value.ami
+  key_name      = aws_key_pair.this[each.key].key_name
+  monitoring    = each.value.monitoring
+
+  vpc_security_group_ids = length(each.value.network_interfaces) == 0 ? [module.sg[each.value.sg].security_group_id] : null
+  subnet_id              = length(each.value.network_interfaces) == 0 ? data.aws_subnets.ec2_network[each.key].ids[0] : null
+
   user_data_base64            = each.value.user_data != null ? base64encode(each.value.user_data) : null
   user_data_replace_on_change = each.value.user_data_replace_on_change
   enable_volume_tags          = false
@@ -130,12 +138,20 @@ module "ec2" {
     {
       delete_on_termination = each.value.root_block_device.delete_on_termination
       encrypted             = each.value.root_block_device.encrypted
-      kms_key_id            = each.value.root_block_device.encrypted == false ? null : module.kms[each.value.root_block_device.kms_key_id].key_arn
+      kms_key_id            = each.value.root_block_device.encrypted == false || each.value.root_block_device.kms_key_id == null ? null : module.kms[each.value.root_block_device.kms_key_id].key_arn
       iops                  = each.value.root_block_device.iops
       volume_type           = each.value.root_block_device.volume_type
       throughput            = each.value.root_block_device.throughput
       volume_size           = each.value.root_block_device.volume_size
       tags                  = merge({ "Instance" = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-ec2-${each.key}" }, local.common_tags, each.value.root_block_device.tags)
+    }
+  ]
+  network_interface = length(each.value.network_interfaces) == 0 ? [] : [
+    for index, value in each.value.network_interfaces :
+    {
+      device_index          = index
+      network_interface_id  = aws_network_interface.this["${each.key}_${index}"].id
+      delete_on_termination = false
     }
   ]
 }
@@ -151,22 +167,10 @@ resource "aws_ebs_volume" "this" {
   for_each          = local.ec2_map_block_device_mappings
   availability_zone = module.ec2[each.value.ec2].availability_zone
   encrypted         = each.value.encrypted
-  kms_key_id        = each.value.encrypted == false ? null : module.kms[each.value.kms_key_id].key_arn
+  kms_key_id        = each.value.encrypted == false || each.value.kms_key_id == null ? null : module.kms[each.value.kms_key_id].key_arn
   iops              = each.value.iops
   type              = each.value.type
   throughput        = each.value.throughput
   size              = each.value.size
   tags              = merge({ "Instance" = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-ec2-${each.value.ec2}" }, local.common_tags, each.value.tags)
-}
-
-resource "aws_network_interface" "this" {
-  for_each        = local.ec2_map_additional_network_interface
-  subnet_id       = element(data.aws_subnets.ec2_network_interfaces[each.key].ids, 0)
-  security_groups = [module.sg[each.value.sg].security_group_id]
-  description     = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-ec2-${each.value.ec2}"
-  tags            = merge(local.common_tags, each.value.tags)
-  attachment {
-    instance     = module.ec2[each.value.ec2].id
-    device_index = each.value.index
-  }
 }

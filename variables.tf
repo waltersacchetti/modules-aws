@@ -195,11 +195,10 @@ variable "aws" {
           tags       = optional(map(string), {})
         })), {})
         iam_role_policies = optional(map(string), null)
-        additional_network_interfaces = optional(list(object({
+        network_interfaces = optional(list(object({
           vpc    = string
           subnet = string
           sg     = string
-          tags   = optional(map(string), {})
         })), [])
       })), {})
       elc = optional(map(object({
@@ -236,15 +235,16 @@ variable "aws" {
         iam_role_additional_policies = optional(map(string), null)
 
         eks_managed_node_groups = optional(map(object({
-          ami_type              = optional(string, "AL2_x86_64")
-          desired_size          = optional(number, 1)
-          max_size              = optional(number, 2)
-          min_size              = optional(number, 1)
-          instance_type         = optional(string, "t3.medium")
-          kubelet_extra_args    = optional(string, "")
-          subnets               = optional(list(string), [])
-          block_device_mappings = optional(map(map(any)), null)
-          labels                = optional(map(string), {})
+          ami_type                              = optional(string, "AL2_x86_64")
+          desired_size                          = optional(number, 1)
+          max_size                              = optional(number, 2)
+          min_size                              = optional(number, 1)
+          instance_type                         = optional(string, "t3.medium")
+          kubelet_extra_args                    = optional(string, "")
+          subnets                               = optional(list(string), [])
+          block_device_mappings                 = optional(any, null)
+          default_block_device_mappings_cmk_key = optional(string, null)
+          labels                                = optional(map(string), {})
           taints = optional(list(object({
             key    = string
             value  = string

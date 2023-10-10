@@ -214,18 +214,31 @@ module "eks" {
 
   eks_managed_node_groups = {
     for name, value in each.value.eks_managed_node_groups : name => {
-      name                  = "${local.translation_regions[var.aws.region]}-emng-${each.key}-${name}"
-      ami_type              = value.ami_type
-      desired_size          = value.desired_size
-      instance_types        = [value.instance_type]
-      min_size              = value.min_size
-      max_size              = value.max_size
-      kubelet_extra_args    = value.kubelet_extra_args
-      subnet_ids            = data.aws_subnets.eks_mng_network["${each.key}_${name}"].ids
-      tags                  = merge(local.common_tags, each.value.tags, value.tags)
-      block_device_mappings = value.block_device_mappings == null ? local.eks_default_block_device_mappings : value.block_device_mappings
-      labels                = merge(value.labels, { "mova/nodegroup" = name, "mova/clustername" = each.key })
-      taints                = value.taints
+      name               = "${local.translation_regions[var.aws.region]}-emng-${each.key}-${name}"
+      ami_type           = value.ami_type
+      desired_size       = value.desired_size
+      instance_types     = [value.instance_type]
+      min_size           = value.min_size
+      max_size           = value.max_size
+      kubelet_extra_args = value.kubelet_extra_args
+      subnet_ids         = data.aws_subnets.eks_mng_network["${each.key}_${name}"].ids
+      tags               = merge(local.common_tags, each.value.tags, value.tags)
+      block_device_mappings = value.block_device_mappings == null && value.default_block_device_mappings_cmk_key == null ? local.eks_default_block_device_mappings : value.default_block_device_mappings_cmk_key != null ? {
+        # block_device_mappings by default with CMK encryption
+        xvda = {
+          device_name = "/dev/xvda"
+          ebs = {
+            volume_size           = 100
+            volume_type           = "gp3"
+            iops                  = 300
+            encrypted             = true
+            kms_key_id            = module.kms[value.default_block_device_mappings_cmk_key].key_arn
+            delete_on_termination = true
+          }
+        }
+      } : value.block_device_mappings
+      labels = merge(value.labels, { "mova/nodegroup" = name, "mova/clustername" = each.key })
+      taints = value.taints
     }
   }
   tags = merge(local.common_tags, each.value.tags)
