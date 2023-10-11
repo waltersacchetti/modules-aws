@@ -63,7 +63,7 @@ module "asg" {
       ebs = value.ebs != null ? {
         delete_on_termination = value.ebs.delete_on_termination
         encrypted             = value.ebs.encrypted
-        kms_key_id            = value.ebs.encrypted == false ? null : module.kms[value.ebs.kms_key_id].key_arn
+        kms_key_id            = value.ebs.encrypted == false || value.ebs.kms_key_id == null ? null : module.kms[value.ebs.kms_key_id].key_arn
         throughput            = value.ebs.throughput
         iops                  = value.ebs.iops
         volume_size           = value.ebs.volume_size
