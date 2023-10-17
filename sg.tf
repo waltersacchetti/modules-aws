@@ -59,4 +59,17 @@ module "sg_ingress_rules" {
       ]
     ]
   ])
+  ingress_with_cidr_blocks = flatten([
+    for value in each.value.ingress : [
+      for cidr in value.cidr_blocks : [
+        for port in value.ports : {
+          from_port   = port.from
+          to_port     = port.to != null ? port.to : port.from
+          protocol    = value.protocol
+          cidr_blocks = cidr
+          description = "${value.protocol}/${port.from} - Access from ${cidr} to ${each.key}"
+        }
+      ]
+    ]
+  ])
 }

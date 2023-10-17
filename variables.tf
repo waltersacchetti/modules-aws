@@ -430,7 +430,8 @@ variable "aws" {
             to   = optional(number, null)
           }))
           protocol               = optional(string, "tcp")
-          source_security_groups = list(string)
+          source_security_groups = optional(list(string), [])
+          cidr_blocks            = optional(list(string), [])
         })), [])
       })), {})
       vpc = optional(map(object({
