@@ -216,6 +216,7 @@ module "eks" {
     for name, value in each.value.eks_managed_node_groups : name => {
       name               = "${local.translation_regions[var.aws.region]}-emng-${each.key}-${name}"
       ami_type           = value.ami_type
+      ami_id             = value.ami_id
       desired_size       = value.desired_size
       instance_types     = [value.instance_type]
       min_size           = value.min_size
