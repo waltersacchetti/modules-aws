@@ -237,6 +237,7 @@ variable "aws" {
         eks_managed_node_groups = optional(map(object({
           ami_type                              = optional(string, "AL2_x86_64")
           ami_id                                = optional(string, "")
+          enable_bootstrap_user_data            = optional(bool, false)
           desired_size                          = optional(number, 1)
           max_size                              = optional(number, 2)
           min_size                              = optional(number, 1)

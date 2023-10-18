@@ -240,6 +240,7 @@ module "eks" {
       } : value.block_device_mappings
       labels = merge(value.labels, { "mova/nodegroup" = name, "mova/clustername" = each.key })
       taints = value.taints
+      enable_bootstrap_user_data = value.enable_bootstrap_user_data
     }
   }
   tags = merge(local.common_tags, each.value.tags)
