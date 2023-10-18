@@ -111,18 +111,17 @@ resource "aws_network_interface" "this" {
 }
 
 module "ec2" {
-  source        = "terraform-aws-modules/ec2-instance/aws"
-  version       = "5.5.0"
-  for_each      = var.aws.resources.ec2
-  name          = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-ec2-${each.key}"
-  instance_type = each.value.instance_type
-  ami           = each.value.ami == null ? data.aws_ami.amazon-linux-2.id : each.value.ami
-  key_name      = aws_key_pair.this[each.key].key_name
-  monitoring    = each.value.monitoring
-
-  vpc_security_group_ids = length(each.value.network_interfaces) == 0 ? [module.sg[each.value.sg].security_group_id] : null
-  subnet_id              = length(each.value.network_interfaces) == 0 ? data.aws_subnets.ec2_network[each.key].ids[0] : null
-
+  source                      = "terraform-aws-modules/ec2-instance/aws"
+  version                     = "5.5.0"
+  for_each                    = var.aws.resources.ec2
+  name                        = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-ec2-${each.key}"
+  instance_type               = each.value.instance_type
+  ami                         = each.value.ami == null ? data.aws_ami.amazon-linux-2.id : each.value.ami
+  key_name                    = aws_key_pair.this[each.key].key_name
+  monitoring                  = each.value.monitoring
+  associate_public_ip_address = each.value.associate_public_ip_address
+  vpc_security_group_ids      = length(each.value.network_interfaces) == 0 ? [module.sg[each.value.sg].security_group_id] : null
+  subnet_id                   = length(each.value.network_interfaces) == 0 ? data.aws_subnets.ec2_network[each.key].ids[0] : null
   user_data_base64            = each.value.user_data != null ? base64encode(each.value.user_data) : null
   user_data_replace_on_change = each.value.user_data_replace_on_change
   enable_volume_tags          = false

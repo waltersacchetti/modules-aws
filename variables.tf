@@ -167,6 +167,7 @@ variable "aws" {
         instance_type               = optional(string, "t3.micro")
         key_name                    = optional(string, null)
         monitoring                  = optional(bool, false)
+        associate_public_ip_address = optional(bool, null)
         ami                         = optional(string, null)
         vpc                         = optional(string, null)
         subnet                      = optional(string, null)
