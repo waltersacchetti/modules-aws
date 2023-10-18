@@ -134,6 +134,8 @@ module "ec2" {
     } : {
     AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
   }
+  iam_role_name            = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-iam-role-ec2-${each.key}"
+  iam_role_use_name_prefix = false
   root_block_device = [
     {
       delete_on_termination = each.value.root_block_device.delete_on_termination

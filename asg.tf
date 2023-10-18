@@ -31,30 +31,32 @@ data "aws_ami" "asg-amazon-linux-2" {
 # ║                                             Module                                           ║
 # ╚══════════════════════════════════════════════════════════════════════════════════════════════╝
 module "asg" {
-  source                      = "terraform-aws-modules/autoscaling/aws"
-  version                     = "6.10.0"
-  for_each                    = var.aws.resources.asg
-  name                        = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-asg-${each.key}"
-  min_size                    = each.value.min_size
-  max_size                    = each.value.max_size
-  desired_capacity            = each.value.desired_capacity
-  health_check_type           = each.value.health_check_type
-  vpc_zone_identifier         = data.aws_subnets.asg_network[each.key].ids
-  image_id                    = each.value.image_id == null ? data.aws_ami.asg-amazon-linux-2.id : each.value.image_id
-  instance_type               = each.value.instance_type
-  ebs_optimized               = each.value.ebs_optimized
-  enable_monitoring           = each.value.enable_monitoring
-  create_iam_instance_profile = true
-  update_default_version      = each.value.update_default_version
-  instance_refresh            = each.value.instance_refresh
+  source                          = "terraform-aws-modules/autoscaling/aws"
+  version                         = "6.10.0"
+  for_each                        = var.aws.resources.asg
+  name                            = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-asg-${each.key}"
+  use_name_prefix                 = false
+  launch_template_use_name_prefix = false
+  min_size                        = each.value.min_size
+  max_size                        = each.value.max_size
+  desired_capacity                = each.value.desired_capacity
+  health_check_type               = each.value.health_check_type
+  vpc_zone_identifier             = data.aws_subnets.asg_network[each.key].ids
+  image_id                        = each.value.image_id == null ? data.aws_ami.asg-amazon-linux-2.id : each.value.image_id
+  instance_type                   = each.value.instance_type
+  ebs_optimized                   = each.value.ebs_optimized
+  enable_monitoring               = each.value.enable_monitoring
+  create_iam_instance_profile     = true
+  update_default_version          = each.value.update_default_version
+  instance_refresh                = each.value.instance_refresh
   iam_role_policies = each.value.iam_role_policies != null ? {
     for key, value in each.value.iam_role_policies :
     key => strcontains(value, "arn:aws") ? value : aws_iam_policy.this[value].arn
     } : {
     AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
   }
-  iam_role_name            = "iam-role-${local.translation_regions[var.aws.region]}-${var.aws.profile}-asg-${each.key}"
-  iam_role_use_name_prefix = true
+  iam_role_name            = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-iam-role-asg-${each.key}"
+  iam_role_use_name_prefix = false
   block_device_mappings = length(each.value.block_device_mappings) == 0 ? [] : [
     for key, value in each.value.block_device_mappings :
     {
