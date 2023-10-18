@@ -140,7 +140,7 @@ module "ec2" {
     {
       delete_on_termination = each.value.root_block_device.delete_on_termination
       encrypted             = each.value.root_block_device.encrypted
-      kms_key_id            = each.value.root_block_device.encrypted == false || each.value.root_block_device.kms_key_id == null ? null : module.kms[each.value.root_block_device.kms_key_id].key_arn
+      kms_key_id            = each.value.root_block_device.encrypted == false || each.value.root_block_device.kms_key_id == null ? null : startswith(each.value.root_block_device.kms_key_id, "arn") ? each.value.root_block_device.kms_key_id : module.kms[each.value.root_block_device.kms_key_id].key_arn
       iops                  = each.value.root_block_device.iops
       volume_type           = each.value.root_block_device.volume_type
       throughput            = each.value.root_block_device.throughput
@@ -169,7 +169,7 @@ resource "aws_ebs_volume" "this" {
   for_each          = local.ec2_map_block_device_mappings
   availability_zone = module.ec2[each.value.ec2].availability_zone
   encrypted         = each.value.encrypted
-  kms_key_id        = each.value.encrypted == false || each.value.kms_key_id == null ? null : module.kms[each.value.kms_key_id].key_arn
+  kms_key_id        = each.value.encrypted == false || each.value.kms_key_id == null ? null : startswith(each.value.kms_key_id, "arn") ? each.value.kms_key_id : module.kms[each.value.kms_key_id].key_arn
   iops              = each.value.iops
   type              = each.value.type
   throughput        = each.value.throughput
