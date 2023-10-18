@@ -193,6 +193,7 @@ variable "aws" {
           kms_key_id = optional(string, null)
           iops       = optional(number, null)
           tags       = optional(map(string), {})
+          attach     = optional(bool, true)
         })), {})
         iam_role_policies = optional(map(string), null)
         network_interfaces = optional(list(object({

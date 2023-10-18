@@ -27,6 +27,7 @@ locals {
         throughput  = ebs_value.throughput
         iops        = ebs_value.iops
         tags        = ebs_value.tags
+        attach      = ebs_value.attach
       }
     ]
   ])
@@ -158,13 +159,6 @@ module "ec2" {
   ]
 }
 
-resource "aws_volume_attachment" "this" {
-  for_each    = local.ec2_map_block_device_mappings
-  device_name = "/dev/${each.value.device_name}"
-  volume_id   = aws_ebs_volume.this[each.key].id
-  instance_id = module.ec2[each.value.ec2].id
-}
-
 resource "aws_ebs_volume" "this" {
   for_each          = local.ec2_map_block_device_mappings
   availability_zone = module.ec2[each.value.ec2].availability_zone
@@ -175,4 +169,11 @@ resource "aws_ebs_volume" "this" {
   throughput        = each.value.throughput
   size              = each.value.size
   tags              = merge({ "Instance" = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-ec2-${each.value.ec2}" }, local.common_tags, each.value.tags)
+}
+
+resource "aws_volume_attachment" "this" {
+  for_each    = { for k, v in local.ec2_map_block_device_mappings : k => v if v.attach == true }
+  device_name = "/dev/${each.value.device_name}"
+  volume_id   = aws_ebs_volume.this[each.key].id
+  instance_id = module.ec2[each.value.ec2].id
 }
