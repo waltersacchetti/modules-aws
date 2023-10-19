@@ -252,7 +252,8 @@ resource "aws_ec2_client_vpn_authorization_rule" "this" {
   for_each               = var.aws.resources.vpn
   client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.this[each.key].id
   target_network_cidr    = each.value.target_network_cidr
-  authorize_all_groups   = true
+  access_group_id        = each.value.access_group_id
+  authorize_all_groups   = each.value.access_group_id == null ? true : null
 }
 
 # ╔═════════════════════════════╗

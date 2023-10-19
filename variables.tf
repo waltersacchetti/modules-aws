@@ -489,6 +489,7 @@ variable "aws" {
         split_tunnel          = optional(bool, true)
         vpn_port              = optional(number, 443)
         session_timeout_hours = optional(number, 8)
+        access_group_id       = optional(string, null)
 
         saml_file = optional(string, null)
 
