@@ -43,24 +43,21 @@ resource "random_password" "rds" {
 }
 
 module "rds" {
-  source     = "terraform-aws-modules/rds/aws"
-  version    = "6.1.0"
-  for_each   = var.aws.resources.rds
-  tags       = merge(local.common_tags, each.value.tags)
-  identifier = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-rds-${each.key}"
-
-  db_subnet_group_name   = module.vpc[each.value.vpc].database_subnet_group
-  create_db_subnet_group = each.value.create_db_subnet_group
-  vpc_security_group_ids = [module.sg[each.value.sg].security_group_id]
-
-  engine               = each.value.engine
-  engine_version       = each.value.engine_version
-  family               = each.value.family
-  major_engine_version = each.value.major_engine_version
-
-  instance_class    = each.value.instance_class
-  allocated_storage = each.value.allocated_storage
-
+  source                              = "terraform-aws-modules/rds/aws"
+  version                             = "6.1.0"
+  for_each                            = var.aws.resources.rds
+  tags                                = merge(local.common_tags, each.value.tags)
+  identifier                          = "${local.translation_regions[var.aws.region]}-${var.aws.profile}-rds-${each.key}"
+  db_subnet_group_name                = module.vpc[each.value.vpc].database_subnet_group
+  create_db_subnet_group              = each.value.create_db_subnet_group
+  vpc_security_group_ids              = [module.sg[each.value.sg].security_group_id]
+  engine                              = each.value.engine
+  engine_version                      = each.value.engine_version
+  family                              = each.value.family
+  major_engine_version                = each.value.major_engine_version
+  auto_minor_version_upgrade          = each.value.auto_minor_version_upgrade
+  instance_class                      = each.value.instance_class
+  allocated_storage                   = each.value.allocated_storage
   db_name                             = each.value.db_name
   username                            = each.value.username
   manage_master_user_password         = false
